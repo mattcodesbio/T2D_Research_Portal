@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - T2D Project{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>SNP Search</h1>
+    <p>Use this form to search for SNP information. Fill in the required fields and click "Search" to see the results.</p>
+    <ul>
+        <li><strong>SNP Name:</strong> Enter the SNP identifier, e.g., <code>rs12345</code>.</li>
+        <li><strong>Chromosome:</strong> Specify the chromosome number, e.g., <code>1</code> or <code>X</code>.</li>
+        <li><strong>Start Coordinate:</strong> Provide the starting position of the SNP on the chromosome.</li>
+        <li><strong>End Coordinate:</strong> Enter the ending position of the SNP on the chromosome.</li>
+        <li><strong>Gene Name (Optional):</strong> Include the associated gene name, if applicable.</li>
+    </ul>
+    <form method="POST" action="{{ url_for('home') }}">
+        <!-- SNP Name -->
+        <div class="form-group">
+            <label for="snp_name">SNP Name:</label>
+            <input type="text" id="snp_name" name="snp_name" class="form-control" placeholder="e.g., rs12345">
+        </div>
+        <!-- Chromosome -->
+        <div class="form-group">
+            <label for="chromosome">Chromosome:</label>
+            <input type="text" id="chromosome" name="chromosome" class="form-control" placeholder="e.g., 1">
+        </div>
+         <!-- Start Position -->
+        <div class="form-group">
+            <label for="start">Start Coordinate:</label>
+            <input type="number" id="start" name="start" class="form-control" placeholder="e.g., 123456">
+        </div>
+        <!-- End Position -->
+        <div class="form-group">
+            <label for="end">End Coordinate:</label>
+            <input type="number" id="end" name="end" class="form-control" placeholder="e.g., 123789">
+        </div>
+        <!-- Gene Name -->
+        <div class="form-group">
+            <label for="gene_name">Gene Name:</label>
+            <input type="text" id="gene_name" name="gene_name" class="form-control" placeholder="e.g., GENE1">
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+</div>
+{% endblock %}

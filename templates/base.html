@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}Welcome{% endblock %}</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif; 
+            background-color: #f4f4f4;
+            margin: 0; /* Reset default margin */
+        }
+
+        header {
+            background-color: #1b52a4;
+            color: white;
+            padding: 15px 0;
+            text-align: center;
+        }
+
+        nav {
+            background-color: #1b52a4;
+            padding: 10px 15px;
+            text-align: center; /* Center the navigation links */
+        }
+
+        nav a {
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            font-size: 1.1em;
+            margin: 0 10px; /* Add space between links */
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+      .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: white;
+            padding: 30px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-radius: 8px; /* Add rounded corners */
+        }
+
+        h1 {
+            color: rgb(5, 5, 5);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+      .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #5b5151;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        input[type="text"]::placeholder, input[type="number"]::placeholder {
+        color: #666;
+        font-size: 1.1em; /* Use a darker gray color */
+        }
+
+        button[type="submit"] {
+            background-color: #1b52a4;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease; /* Add a smooth transition */
+        }
+
+        button[type="submit"]:hover {
+            background-color: #164280; /* Darken the color on hover */
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px 0;
+            background-color: #333;
+            color: white;
+            position: fixed; /* Fixed footer at the bottom */
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{% block header %}Welcome to the T2D Web Development Project{% endblock %}</h1>
+    </header>
+
+    <nav>
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+    </nav>
+
+    <div class="container">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <footer>
+        <p>&copy; 2025 T2D Project. All rights reserved.</p>
+    </footer>
+</body>
+</html>
