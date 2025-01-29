@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}SNP Query Results - T2D Project{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1>SNP Query Results</h1>
+        {% if snp_info %}
+        <table>
+            <thead>
+                <tr>
+                    <th>SNP Name</th>
+                    <th>Chromosome</th>
+                    <th>Position</th>
+                    <th>p-value</th>
+                    <th>Gene Name</th>
+                    <th>Stat 1</th>
+                    <th>Stat 2</th>
+                    <th>External Link</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for snp in snp_info %}
+                <tr>
+                    <td>{{ snp.snp_name }}</td>
+                    <td>{{ snp.chromosome }}</td>
+                    <td>{{ snp.position }}</td>
+                    <td>{{ snp.p_value }}</td>
+                    <td>{{ snp.gene_name }}</td>
+                    <td>{{ snp.positive_selection_stat_1 }}</td>
+                    <td>{{ snp.positive_selection_stat_2 }}</td>
+                    <td><a href="{{ snp.external_link }}" target="_blank">View</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No results found. Try another search.</p>
+        {% endif %}
+        <p><a href="/">Back to Search</a></p>
+    </div>
+{% endblock %}
