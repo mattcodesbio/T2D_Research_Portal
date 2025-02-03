@@ -23,14 +23,24 @@ db = SQLAlchemy(app)
 # Define the model based on the structure of your CSV
 class DataEntry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    column1 = db.Column(db.String(50))  # Adjust column names and types as per your CSV
-    column2 = db.Column(db.String(50))
-    # Add other columns as needed
+    snp_id = db.Column(db.String(20), primary_key=True)
+    chromosome = db.Column(db.Integer, nullable=False)
+    population = db.Column(db.String(60), nullable=False)
+    position = db.Column(db.Integer, nullable=False)
+    gene_id = db.Column(db.String(20), db.ForeignKey('gene.gene_id'))
+    p_value = db.Column(db.Float)
+    positive_selection_stat = db.Column(db.Float, nullable=True)
+    external_link = db.Column(db.String(200), nullable=True)
 
     def __init__(self, column1, column2):
-        self.column1 = column1
-        self.column2 = column2
-        # Initialize other columns as needed
+        self.snp_id = snp_id
+        self.chromosome = chromosome
+        self.population = population
+        self.position = position
+        self.gene_id = gene_id
+        self.p_value = p_value
+        self.positive_selection_stat = positive_selection_stat
+        self.external_link = external_link 
 
 # Route to fetch all entries
 @app.route('/data', methods=['GET'])
