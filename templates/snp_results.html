@@ -6,30 +6,30 @@
     <div class="container">
         <h1>SNP Query Results</h1>
         {% if snp_info %}
-        <table>
+        <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>SNP Name</th>
+                    <th>SNP ID</th>
                     <th>Chromosome</th>
-                    <th>Position</th>
+                    <th>Start Position</th>
+                    <th>End Position</th>
+                    <th>Gene</th>
+                    <th>Risk Allele</th>
                     <th>p-value</th>
-                    <th>Gene Name</th>
-                    <th>Stat 1</th>
-                    <th>Stat 2</th>
-                    <th>External Link</th>
+                    <th>Population</th>
                 </tr>
             </thead>
             <tbody>
                 {% for snp in snp_info %}
                 <tr>
-                    <td>{{ snp.snp_name }}</td>
+                    <td>{{ snp.snp_id }}</td>
                     <td>{{ snp.chromosome }}</td>
-                    <td>{{ snp.position }}</td>
+                    <td>{{ snp.start_position }}</td>
+                    <td>{{ snp.end_position }}</td>
+                    <td><a href="{{ url_for('gene_terms', gene_name=snp.gene) }}">{{ snp.gene }}</a></td>
+                    <td>{{ snp.risk_allele }}</td>
                     <td>{{ snp.p_value }}</td>
-                    <td>{{ snp.gene_name }}</td>
-                    <td>{{ snp.positive_selection_stat_1 }}</td>
-                    <td>{{ snp.positive_selection_stat_2 }}</td>
-                    <td><a href="{{ snp.external_link }}" target="_blank">View</a></td>
+                    <td>{{ snp.population }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -37,6 +37,6 @@
         {% else %}
         <p>No results found. Try another search.</p>
         {% endif %}
-        <p><a href="/">Back to Search</a></p>
+        <p><a href="/" class="btn-back">Back to Search</a></p>
     </div>
 {% endblock %}
