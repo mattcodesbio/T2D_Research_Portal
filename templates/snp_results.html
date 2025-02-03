@@ -5,10 +5,22 @@
 {% block content %}
     <div class="container">
         <h1>SNP Query Results</h1>
+        <style>
+            /* CSS to remove underline by default */
+            a {
+                text-decoration: none;  /* Removes the underline */
+            }
+
+            /* CSS to add underline on hover */
+            a:hover {
+                text-decoration: underline;  /* Adds the underline when hovered */
+            }
+        </style>
         {% if snp_info %}
-        <table class="table table-striped">
+        <form method="POST" action="{{ url_for('select_population') }}">        <table class="table table-striped">
             <thead>
                 <tr>
+                    <th>Select</th>
                     <th>SNP ID</th>
                     <th>Chromosome</th>
                     <th>Start Position</th>
@@ -22,6 +34,7 @@
             <tbody>
                 {% for snp in snp_info %}
                 <tr>
+                    <td><input type="checkbox" name="selected_populations" value="{{ snp.population }}"></td>
                     <td>{{ snp.snp_id }}</td>
                     <td>{{ snp.chromosome }}</td>
                     <td>{{ snp.start_position }}</td>
@@ -34,9 +47,10 @@
                 {% endfor %}
             </tbody>
         </table>
-        {% else %}
-        <p>No results found. Try another search.</p>
-        {% endif %}
-        <p><a href="/" class="btn-back">Back to Search</a></p>
-    </div>
+        <button type="submit" class="btn btn-primary">Get Population Info</button>
+    </form>
+    {% else %}
+    <p>No results found. Try another search.</p>
+    {% endif %}
+</div>
 {% endblock %}
