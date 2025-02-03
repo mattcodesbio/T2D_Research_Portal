@@ -32,49 +32,78 @@ def about():
     return render_template('about.html')
 
 
-# Define your route for displaying gene terms
 @app.route('/gene_terms/<gene_name>')
 def gene_terms(gene_name):
     # Extract gene name inside parentheses if any
     gene_name = extract_gene_name(gene_name)
 
-    # Get GO terms for the gene
+    # Get GO terms for the gene using Ensembl API
     go_terms = get_gene_ontology_terms(gene_name)
 
     if go_terms:
-        return render_template('ontology.html', gene_name=gene_name, terms=go_terms)
+        terms = []
+        
+        # Loop through all terms and extract relevant information
+        for term in go_terms:
+            term_data = {
+                'name': term.get('name', 'N/A'),
+                'accession': term.get('accession', 'N/A'),
+                'namespace': term.get('namespace', 'N/A'),
+                'definition': term.get('definition', 'No definition available'),
+                'synonyms': term.get('synonyms', ['No synonyms available']),
+                'children': term.get('children', []),
+                'parents': term.get('parents', [])  # Collect parent terms for each entry
+            }
+            terms.append(term_data)
+
+        # Collect parent terms from all the terms
+        all_parents = []
+        for term in terms:
+            all_parents.extend(term['parents'])  # Flatten the list of parent terms
+
+        return render_template('ontology.html', gene_name=gene_name, terms=terms, all_parents=all_parents)
     else:
-        return render_template('ontology.html', gene_name=gene_name, terms=None)
-    
+        return render_template('ontology.html', gene_name=gene_name, terms=None, all_parents=None)
+
 
 def extract_gene_name(gene_name):
-    # Regular expression to capture the portion inside parentheses
+    # Extract the gene symbol from parentheses, e.g., "Adiponectin, C1Q and Collagen Domain Containing (ADIPOQ)" -> "ADIPOQ"
     match = re.search(r'\((.*?)\)', gene_name)
     if match:
-        return match.group(1)  # Return the gene name inside the parentheses
+        return match.group(1).strip()  # Return the gene symbol inside the parentheses
     return gene_name  # Return the original gene name if no parentheses are found
 
-
-# Function to fetch gene ontology terms from Ensembl API
 def get_gene_ontology_terms(gene_name):
-    server = "https://rest.ensembl.org"
-    ext = f"/lookup/symbol/human/{gene_name}?content-type=application/json"  # Modify to include the gene name
-
-    # Sending GET request to Ensembl API
-    r = requests.get(server + ext, headers={"Content-Type": "application/json"})
-
-    # Handling error if the request fails
-    if not r.ok:
-        r.raise_for_status()
-
-    # Parsing the response from the API
-    decoded = r.json()
-
-    # Print out the entire decoded response for inspection
-    print(f"API Response for {gene_name}: {decoded}")
-
-    # Check if 'go_terms' is part of the response and return it
-    if 'go_terms' in decoded and decoded['go_terms']:
-        return decoded['go_terms']
+    url = f"https://rest.ensembl.org/ontology/name/{quote_plus(gene_name)}?content-type=application/json"
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        go_terms = response.json()
+        return go_terms  # Return the entire JSON data of GO terms
     else:
-        return f"No Gene Ontology terms found for gene: {gene_name}"
+        return None  # Handle failed requests
+
+@app.route('/select_population', methods=['POST'])
+def select_population():
+    selected_populations = request.form.getlist('selected_populations')
+    
+    # Assuming we have a dictionary or function that maps population names to geographical information
+    population_info = get_population_info(selected_populations)
+    
+    return render_template('population_info.html', population_info=population_info)
+
+def get_population_info(populations):
+    # Example dictionary mapping populations to their geographical descriptions
+    population_map = {
+        'haryana/northern india': "Haryana is a northern state of India, known for its agricultural economy and historical sites.",
+        'coimbatore/tamilnadu/southern india': "Coimbatore is a major city in Tamil Nadu, India, known for its industrial growth and proximity to the Western Ghats."
+        # Add more population descriptions as needed
+    }
+
+    # Collect the information for selected populations
+    info = {}
+    for population in populations:
+        if population in population_map:
+            info[population] = population_map[population]
+    
+    return info
