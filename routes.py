@@ -96,7 +96,7 @@ def get_population_info(populations):
     # Example dictionary mapping populations to their geographical descriptions
     population_map = {
         'haryana/northern india': "Haryana is a northern state of India, known for its agricultural economy and historical sites.",
-        'coimbatore/tamilnadu/southern india': "Coimbatore is a major city in Tamil Nadu, India, known for its industrial growth and proximity to the Western Ghats."
+        'tamilnadu/southern india': "Tamil Nadu, India, known for its industrial growth and proximity to the Western Ghats."
         # Add more population descriptions as needed
     }
 

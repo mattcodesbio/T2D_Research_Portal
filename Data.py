@@ -2,6 +2,7 @@ from docx import Document
 import pandas as pd
 import requests
 import time
+import re
 
 # Load the .docx document
 doc_path = "/Users/Coding/Downloads/mmc1.docx"  # Update with your file path
@@ -38,6 +39,16 @@ if len(snp_data) > 1:  # Only apply headers if there's actual data
     df = pd.DataFrame(snp_data[1:], columns=column_names)  # Skip first row (header)
 else:
     df = pd.DataFrame(snp_data, columns=column_names)  # Use full data if only one row
+
+# Function to extract the odds ratio before the brackets
+def extract_odds_ratio(odds_ratio_str):
+    match = re.match(r'([0-9.]+)\(', odds_ratio_str)  # Match the number before the opening parenthesis
+    if match:
+        return float(match.group(1))  # Convert it to float
+    return None  # Return None if the format doesn't match
+
+# Apply the function to the 'odds_ratio' column
+df['odds_ratio'] = df['odds_ratio'].apply(extract_odds_ratio)
 
 # Convert numeric columns safely
 df["odds_ratio"] = pd.to_numeric(df["odds_ratio"], errors="coerce")
@@ -129,3 +140,9 @@ print(df.head())
 df.to_csv("snps_with_positions.csv", index=False)
 
 print("\nData with start and end positions has been saved.")
+
+# Apply the cleaning to the 'population' column
+df['population'] = df['population'].apply(lambda x: x.split('/')[2] if len(x.split('/')) > 2 else x)
+
+# Preview the updated DataFrame
+print(df['population'].head())

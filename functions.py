@@ -70,7 +70,6 @@ def load_snps_from_csv(csv_file):
                 # Check if SNP with same snp_id and population already exists
                 existing_snp = SNP.query.filter_by(snp_id=row["snp_id"], population=row["population"]).first()
                 if existing_snp:
-                    print(f"SNP {row['snp_id']} for population {row['population']} already exists.")
                     continue  # Skip the existing SNP
 
                 # Create a new SNP entry

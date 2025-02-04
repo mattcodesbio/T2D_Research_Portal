@@ -4,6 +4,7 @@
 
 {% block content %}
     <div class="container">
+        <button class ="back-button" onclick="window.history.back();">Back</button>
         <h1 class="main-title">Ontology Terms for Gene: {{ gene_name }}</h1>
 
         {% if terms %}
