@@ -52,7 +52,11 @@ df['odds_ratio'] = df['odds_ratio'].apply(extract_odds_ratio)
 
 # Convert numeric columns safely
 df["odds_ratio"] = pd.to_numeric(df["odds_ratio"], errors="coerce")
-df["p_value"] = pd.to_numeric(df["p_value"], errors="coerce")
+# Handle '<' values in the 'p_value' column (e.g., <0.0001) and convert others to numeric
+df['p_value'] = df['p_value'].apply(lambda x: x if isinstance(x, str) and '<' in x else pd.to_numeric(x, errors='coerce'))
+
+# Replace NaN values with "N/A"
+df['p_value'].fillna("N/A", inplace=True)
 df["reference_id"] = pd.to_numeric(df["reference_id"], errors="coerce")
 
 # **Replace missing values with "N/A"**
@@ -139,10 +143,11 @@ print(df.head())
 # Save the updated dataframe as CSV for database import
 df.to_csv("snps_with_positions.csv", index=False)
 
-print("\nData with start and end positions has been saved.")
-
-# Apply the cleaning to the 'population' column
-df['population'] = df['population'].apply(lambda x: x.split('/')[2] if len(x.split('/')) > 2 else x)
+# Apply the cleaning to the 'population' column to keep only the second-to-last and last parts
+df['population'] = df['population'].apply(lambda x: '/'.join(x.split('/')[-2:]) if len(x.split('/')) > 1 else x)
 
 # Preview the updated DataFrame
 print(df['population'].head())
+
+# Save the updated dataframe as CSV for database import
+df.to_csv("snps_with_positions.csv", index=False)

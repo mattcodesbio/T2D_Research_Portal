@@ -8,13 +8,13 @@ ATP binding cassette subfamily C member 8 (ABCC8),11,rs1799854,Splice Region Var
 ATP binding cassette subfamily C member 8 (ABCC8),11,rs1801261,Synonymous Variant,C/T,PCR - RFLP,Punjab/Northern India,200 ; 200,1.00,0.13,0.097,20,17415318,17415318
 ATP binding cassette subfamily C member 8 (ABCC8),11,rs1801261,Synonymous Variant,C/T,PCR - RFLP,Tamilnadu/Southern India,637 ; 663,0.16,1.04,0.72,28,17415318,17415318
 "Adiponectin, C1Q and Collagen Domain Containing (ADIPOQ)",3,rs12495941,Intron variant,G/T,TaqMan Genotyping Assays,"Punjab, Haryana, Himachal Pradesh, Delhi, and Jammu and Kashmir/Northern India",554 ; 309,0.17,0.83,0.22,11,186850391,186850391
-"Adiponectin, C1Q and Collagen Domain Containing (ADIPOQ)",3,rs1501299,Intron variant,G/T,PCR - RFLP,Tamilnadu/Southern India,1100 ; 1100,0.99,1.64,N/A,21,186853334,186853334
+"Adiponectin, C1Q and Collagen Domain Containing (ADIPOQ)",3,rs1501299,Intron variant,G/T,PCR - RFLP,Tamilnadu/Southern India,1100 ; 1100,0.99,1.64,<0.0001,21,186853334,186853334
 "Adiponectin, C1Q and Collagen Domain Containing (ADIPOQ)",3,rs1501299,Intron variant,G/T,PCR - RFLP,Maharashtra/Western India,150 ; 150,0.56,1.42,0.059,36,186853334,186853334
 "Adiponectin, C1Q and Collagen Domain Containing (ADIPOQ)",3,rs17300539,Regulatory Region Variant,G/A,PCR - RFLP,Tamilnadu/Southern India,1100 ; 1100,0.56,0.96,0.74,21,186841671,186841671
 "Adiponectin, C1Q and Collagen Domain Containing (ADIPOQ)",3,rs17366743,Missense Variant,T/C,PCR - RFLP,Tamilnadu/Southern India,1100 ; 1100,0.92,1.14,0.17,21,186854300,186854300
 "Adiponectin, C1Q and Collagen Domain Containing (ADIPOQ)",3,rs17846866,Non Coding Transcript Exon Variant,T/G,PCR - Sequencing,Tamilnadu/Southern India,2000 ; 2000,0.22,1.28,0.0068,3,186852957,186852957
 "Adiponectin, C1Q and Collagen Domain Containing (ADIPOQ)",3,rs182052,Intron variant,G/A,Taqman Genotyping Assays,"Punjab, Haryana, Himachal Pradesh, Delhi, and Jammu and Kashmir/Northern India",554 ; 309,0.79,1.23,0.029,11,186842993,186842993
-"Adiponectin, C1Q and Collagen Domain Containing (ADIPOQ)",3,rs2241766,Synonymous Variant,T/G,MassArray Genotyping,Telangana/Southern India,500 ; 500,>0.05,3.72,N/A,52,186853103,186853103
+"Adiponectin, C1Q and Collagen Domain Containing (ADIPOQ)",3,rs2241766,Synonymous Variant,T/G,MassArray Genotyping,Telangana/Southern India,500 ; 500,>0.05,3.72,<0.0001,52,186853103,186853103
 "Adiponectin, C1Q and Collagen Domain Containing (ADIPOQ)",3,rs2241766,Synonymous Variant,T/G,PCR - RFLP,Punjab/Northern India,200 ; 200,1.00,2.38,0.0094,20,186853103,186853103
 "Adiponectin, C1Q and Collagen Domain Containing (ADIPOQ)",3,rs2241766,Synonymous Variant,T/G,PCR - RFLP,Maharashtra/Western India,150 ; 150,0.97,2.01,0.017,36,186853103,186853103
 "Adiponectin, C1Q and Collagen Domain Containing (ADIPOQ)",3,rs2241766,Synonymous Variant,T/G,PCR - RFLP,Punjab/Northern India,155 ; 203,0.53,2.19,0.013,30,186853103,186853103
@@ -25,8 +25,8 @@ ATP binding cassette subfamily C member 8 (ABCC8),11,rs1801261,Synonymous Varian
 "Adiponectin, C1Q and Collagen Domain Containing (ADIPOQ)",3,rs3821799,Intron variant,C/T,Taqman Genotyping Assays,"Punjab, Haryana, Himachal Pradesh, Delhi, and Jammu and Kashmir/Northern India",554 ; 309,0.72,1.17,0.21,11,186853697,186853697
 "Adiponectin, C1Q and Collagen Domain Containing (ADIPOQ)",3,rs6773957,3 Prime UTR Variant,G/A,Taqman Genotyping Assays,"Punjab, Haryana, Himachal Pradesh, Delhi, and Jammu and Kashmir/Northern India",554 ; 309,0.23,1.25,0.087,11,186855916,186855916
 "Adiponectin, C1Q and Collagen Domain Containing (ADIPOQ)",3,rs7649121,Intron variant,A/T,Taqman Genotyping Assays,"Punjab, Haryana, Himachal Pradesh, Delhi, and Jammu and Kashmir/Northern India",554 ; 309,0.16,1.36,0.029,11,186850996,186850996
-"Adiponectin, C1Q and Collagen Domain Containing (ADIPOQ)",3,rs822393,Intron variant,C/T,PCR - RFLP,Tamilnadu/Southern India,1100 ; 1100,0.73,1.84,N/A,21,186848537,186848537
-"Adiponectin, C1Q and Collagen Domain Containing (ADIPOQ)",3,rs822396,Intron variant,A/G,PCR - RFLP,Tamilnadu/Southern India,1100 ; 1100,0.69,1.39,N/A,21,186849088,186849088
+"Adiponectin, C1Q and Collagen Domain Containing (ADIPOQ)",3,rs822393,Intron variant,C/T,PCR - RFLP,Tamilnadu/Southern India,1100 ; 1100,0.73,1.84,<0.0001,21,186848537,186848537
+"Adiponectin, C1Q and Collagen Domain Containing (ADIPOQ)",3,rs822396,Intron variant,A/G,PCR - RFLP,Tamilnadu/Southern India,1100 ; 1100,0.69,1.39,<0.0001,21,186849088,186849088
 Bromodomain adjacent to zinc finger domain 1B (BAZ1B),7,rs12056034,Intron variant,A/G,MassArray Genotyping,Tamilnadu/Southern India,926 ; 812,0.0011,0.65,0.028,10,73464315,73464315
 Chromosome 9 open reading frame 3 (C9orf3),9,rs3802457,Intron variant,G/A,MassArray Genotyping,Telangana/Southern India,500 ; 500,>0.05,0.67,0.041,52,94979054,94979054
 Calpain 10 (CAPN10),2,rs2975760,Non Coding Transcript Exon Variant,T/C,PCR,Tamilnadu/Southern India,649 ; 794,0.39,1.17,0.084,7,240591746,240591746
@@ -59,23 +59,23 @@ Cyclin dependent kinase inhibitor 2A (CDKN2A),9,rs10811661,Intergenic Variant,T/
 Cyclin dependent kinase inhibitor 2A (CDKN2A),9,rs10811661,Intergenic Variant,T/C,PCR - RFLP,Karnataka/Southern India,578 ; 578,0.99,0.98,0.86,35,22134095,22134095
 Cyclin dependent kinase inhibitor 2A (CDKN2A),9,rs10811661,Intergenic Variant,T/C,Illumina Golden Gate assay,New Delhi/Northern India,1019 ; 1006,0.34,1.3,0.0094,13,22134095,22134095
 Cyclin dependent kinase inhibitor 2A (CDKN2A),9,rs10811661,Intergenic Variant,T/C,MassArray Genotyping,Maharashtra/Western India.,1431 ; 1086,0.21,1.43,0.0094,13,22134095,22134095
-Cyclin dependent kinase inhibitor 2A (CDKN2A),9,rs10811661,Intergenic Variant,T/C,MassArray Genotyping,Tamilnadu/Southern India,877 ; 838,0.33,1.54,N/A,34,22134095,22134095
+Cyclin dependent kinase inhibitor 2A (CDKN2A),9,rs10811661,Intergenic Variant,T/C,MassArray Genotyping,Tamilnadu/Southern India,877 ; 838,0.33,1.54,<0.0001,34,22134095,22134095
 Cyclin dependent kinase inhibitor 2A (CDKN2A),9,rs10811661,Intergenic Variant,C/T,MassArray Genotyping,Telangana/Southern India,758 ; 621,0.059,1.28,0.029,33,22134095,22134095
 Cyclin dependent kinase inhibitor 2A (CDKN2A),9,rs10811661,Intergenic Variant,C/T,MassArray Genotyping,Telangana/Southern India,758 ; 621,>0.05,1.2,0.19,32,22134095,22134095
-Cyclin dependent kinase inhibitor 2A (CDKN2A),9,rs10965250,Intergenic Variant,G/A,MassArray Genotyping,Tamilnadu/Southern India,877 ; 838,0.59,1.51,N/A,34,22133285,22133285
-Cyclin dependent kinase inhibitor 2A (CDKN2A),9,rs2383208,Intergenic Variant,A/G,MassArray Genotyping,Tamilnadu/Southern India,877 ; 838,0.95,1.56,N/A,34,22132077,22132077
-Cyclin dependent kinase inhibitor 2A (CDKN2A),9,rs7020996,Regulatory Region Variant,C/T,MassArray Genotyping,Tamilnadu/Southern India,877 ; 838,0.039,1.66,N/A,34,22129580,22129580
+Cyclin dependent kinase inhibitor 2A (CDKN2A),9,rs10965250,Intergenic Variant,G/A,MassArray Genotyping,Tamilnadu/Southern India,877 ; 838,0.59,1.51,<0.0001,34,22133285,22133285
+Cyclin dependent kinase inhibitor 2A (CDKN2A),9,rs2383208,Intergenic Variant,A/G,MassArray Genotyping,Tamilnadu/Southern India,877 ; 838,0.95,1.56,<0.0001,34,22132077,22132077
+Cyclin dependent kinase inhibitor 2A (CDKN2A),9,rs7020996,Regulatory Region Variant,C/T,MassArray Genotyping,Tamilnadu/Southern India,877 ; 838,0.039,1.66,<0.0001,34,22129580,22129580
 Cordon-bleu WH2 repeat protein like 1 (COBLL1),2,rs7607980,Missense Variant,,Taqman Genotyping Assays,Jammu and Kashmir/Northern India,651 ; 558,0.059,1.01,0.96,38,164694691,164694691
 C-reactive protein (CRP),1,rs1800947,Splice Region Variant,G/C,ARMS - PCR,Punjab/Northern India,266 ; 235,<0.0001,2.93,0.0047,23,159713648,159713648
-Dipeptidyl Peptidase -IV (DPP-IV),2,rs3788979,Intron variant,A/G,PCR - RFLP,Haryana/Northern India,100 ; 100,0.31,2.9,N/A,56,162044379,162044379
+Dipeptidyl Peptidase -IV (DPP-IV),2,rs3788979,Intron variant,A/G,PCR - RFLP,Haryana/Northern India,100 ; 100,0.31,2.9,<0.0001,56,162044379,162044379
 Dipeptidyl Peptidase -IV (DPP-IV),2,rs7608798,Intron variant,C/T,PCR - RFLP,Haryana/Northern India,100 ; 100,0.56,2.24,0.00019,56,162033707,162033707
-Engulfment and cell motility 1 (ELMO1),7,rs1882080,Intron variant,A/G,MassArray Genotyping,Mizoram/North - Eastern India,384 ; 384,0.12,0.61,N/A,50,36916236,36916236
-Engulfment and cell motility 1 (ELMO1),7,rs741301,Intron variant,C/T,MassArray Genotyping,Mizoram/North - Eastern India,384 ; 384,0.082,0.34,N/A,50,36878390,36878390
+Engulfment and cell motility 1 (ELMO1),7,rs1882080,Intron variant,A/G,MassArray Genotyping,Mizoram/North - Eastern India,384 ; 384,0.12,0.61,<0.0001,50,36916236,36916236
+Engulfment and cell motility 1 (ELMO1),7,rs741301,Intron variant,C/T,MassArray Genotyping,Mizoram/North - Eastern India,384 ; 384,0.082,0.34,<0.0001,50,36878390,36878390
 Ectonucleotide pyrophosphatase phosphodiesterase 1 (ENPP1),6,rs1044498,Missense Variant,A/C,MassArray Genotyping,Punjab/Northern India,649 ; 600,0.029,1.37,0.0038,27,131851228,131851228
 Ectonucleotide pyrophosphatase phosphodiesterase 1 (ENPP1),6,rs1044498,Missense Variant,A/C,MassArray Genotyping,Jammu and Kashmir/Northern India,507 ; 300,0.029,1.39,0.018,27,131851228,131851228
 Ectonucleotide pyrophosphatase phosphodiesterase 1 (ENPP1),6,rs1044498,Missense Variant,A/C,MassArray Genotyping,Orissa/Eastern India,427 ; 417,0.58,1.24,1.059,27,131851228,131851228
 fatty acid desaturase 2 (FADS2),11,rs174575,Intron variant,C/G,PCR - Sequencing,Karnataka/Southern India,213 ; 216,>0.05,3.15,0.0012,51,61834531,61834531
-fem-1 homolog B (FEM1B),15,rs6494730,3 Prime UTR Variant,G/T,MassArray Genotyping,Telangana/Southern India,500 ; 500,>0.05,2.34,N/A,52,68292218,68292218
+fem-1 homolog B (FEM1B),15,rs6494730,3 Prime UTR Variant,G/T,MassArray Genotyping,Telangana/Southern India,500 ; 500,>0.05,2.34,<0.0001,52,68292218,68292218
 Follistatin (FST),5,rs11745088,Missense Variant,G/C,MassArray Genotyping,Telangana/Southern India,500 ; 500,>0.05,0.27,0.0012,52,53483680,53483680
 FTO alpha-ketoglutarate dependent dioxygenase (FTO),16,rs1421085,Intron variant,C/T,Illumina Golden Gate assay,New Delhi/Northern India,1012 ; 1750,0.44,1.11,0.066,15,53767042,53767042
 FTO alpha-ketoglutarate dependent dioxygenase (FTO),16,rs1421085,Intron variant,T/C,MassArray Genotyping,Telangana/Southern India,500 ; 500,>0.05,1.21,0.098,52,53767042,53767042
@@ -101,7 +101,7 @@ FTO alpha-ketoglutarate dependent dioxygenase (FTO),16,rs9939609,Intron variant,
 FTO alpha-ketoglutarate dependent dioxygenase (FTO),16,rs9939609,Intron variant,A/T,Illumina Golden Gate assay,New Delhi/Northern India,1019 ;1006,0.81,1.06,0.38,15,53786615,53786615
 FTO alpha-ketoglutarate dependent dioxygenase (FTO),16,rs9939699,Intron variant,T/A,PCR - RFLP,New Delhi/Northern India,300 ; 100,1.00,1.47,0.12,45,11751669,11751669
 FTO alpha-ketoglutarate dependent dioxygenase (FTO),16,rs9940128,Intron variant,G/A,MassArray Genotyping,Telangana/Southern India,500 ; 500,>0.05,1.31,0.0019,52,53766842,53766842
-FTO alpha-ketoglutarate dependent dioxygenase (FTO),16,rs9940128,Intron variant,A/G,PCR - RFLP,Uttar Pradesh/North Indian,110 ; 110,0.89,1.6,N/A,41,53766842,53766842
+FTO alpha-ketoglutarate dependent dioxygenase (FTO),16,rs9940128,Intron variant,A/G,PCR - RFLP,Uttar Pradesh/North Indian,110 ; 110,0.89,1.6,<0.0001,41,53766842,53766842
 Gastric inhibitory polypeptide (GIP),17,rs2291725,Missense Variant,A/G,ARMS - PCR,Kerala/Southern India,1000 ; 1000,0.56,1.02,0.73,9,48961770,48961770
 Gastric inhibitory polypeptide (GIP),17,rs2291726,Intron variant,G/A,ARMS - PCR,Kerala/Southern India,1000 ; 1000,0.11,1.0,0.97,9,48961892,48961892
 Gastric inhibitory polypeptide (GIP),17,rs937301,Intergenic Variant,C/T,ARMS - PCR,Kerala/Southern India,1000 ; 1000,0.11,1.0,0.97,9,48968914,48968914
@@ -113,7 +113,7 @@ GLIS family zinc finger 3 (GLIS3),9,rs7034200,Intron variant,C/A,PCR - RFLP,New 
 Hematopoietically expressed homeobox  (HHEX),10,rs1111875,Intergenic Variant,T/C,Taqman Genotyping Assays,"Punjab, Haryana, Himachal Pradesh, Delhi, and Jammu and Kashmir/Northern India",532 ; 386,0.27,1.22,0.15,4,92703125,92703125
 Hematopoietically expressed homeobox  (HHEX),10,rs1111875,Intergenic Variant,T/C,PCR - Sequencing,New Delhi/Northern India,219 ; 184,0.22,0.58,0.24,14,92703125,92703125
 Hematopoietically expressed homeobox  (HHEX),10,rs1111875,Intergenic Variant,A/G,MassArray Genotyping,Punjab/Northern India,649 ; 600,0.69,1.22,0.012,27,92703125,92703125
-Hematopoietically expressed homeobox  (HHEX),10,rs1111875,Intergenic Variant,A/G,MassArray Genotyping,Jammu and Kashmir/Northern India,507 ; 300,0.69,1.5,N/A,27,92703125,92703125
+Hematopoietically expressed homeobox  (HHEX),10,rs1111875,Intergenic Variant,A/G,MassArray Genotyping,Jammu and Kashmir/Northern India,507 ; 300,0.69,1.5,<0.0001,27,92703125,92703125
 Hematopoietically expressed homeobox  (HHEX),10,rs1111875,Intergenic Variant,A/G,MassArray Genotyping,Orissa/Eastern India,427 ; 417,0.32,1.13,0.21,27,92703125,92703125
 Hematopoietically expressed homeobox  (HHEX),10,rs1111875,Intergenic Variant,A/G,MassArray Genotyping,Telangana/Southern India,758 ; 621,>0.05,0.79,0.024,32,92703125,92703125
 Hematopoietically expressed homeobox  (HHEX),10,rs1111875,Intergenic Variant,C/T,PCR - RFLP,Karnataka/Southern India,578 ; 578,0.99,0.91,0.33,35,92703125,92703125
@@ -123,7 +123,7 @@ Hematopoietically expressed homeobox  (HHEX),10,rs1111875,Intergenic Variant,G/A
 Hematopoietically expressed homeobox  (HHEX),10,rs1111875,Intergenic Variant,G/A,MassArray Genotyping,Maharashtra/Western India.,1454 ; 1598,0.96,1.2,0.017,13,92703125,92703125
 Hematopoietically expressed homeobox  (HHEX),10,rs5015480,Intergenic Variant,C/T,PCR - Sequencing,New Delhi/Northern India,219 ; 184,0.19,2.41,0.056,14,92705802,92705802
 Hematopoietically expressed homeobox  (HHEX),10,rs5015480,Intergenic Variant,T/C,MassArray Genotyping,Punjab/Northern India,649 ; 600,0.21,1.2,0.027,27,92705802,92705802
-Hematopoietically expressed homeobox  (HHEX),10,rs5015480,Intergenic Variant,T/C,MassArray Genotyping,Jammu and Kashmir/Northern India,507 ; 300,0.21,1.63,N/A,27,92705802,92705802
+Hematopoietically expressed homeobox  (HHEX),10,rs5015480,Intergenic Variant,T/C,MassArray Genotyping,Jammu and Kashmir/Northern India,507 ; 300,0.21,1.63,<0.0001,27,92705802,92705802
 Hematopoietically expressed homeobox  (HHEX),10,rs5015480,Intergenic Variant,T/C,MassArray Genotyping,Orissa/Eastern India,427 ; 417,0.49,1.18,0.091,27,92705802,92705802
 Hematopoietically expressed homeobox  (HHEX),10,rs7923837,Intergenic Variant,A/G,MassArray Genotyping,Tamilnadu/Southern India,926 ; 812,0.54,1.11,0.49,10,92722160,92722160
 Hematopoietically expressed homeobox  (HHEX),10,rs7923837,Intergenic Variant,A/G,MassArray Genotyping,Telangana/Southern India,758 ; 621,0.79,0.97,0.71,33,92722160,92722160
@@ -132,7 +132,7 @@ Hydroxysteroid 11-beta dehydrogenase 1 (HSD11B1),1,rs12086634,Intron variant,T/G
 Hydroxysteroid 11-beta dehydrogenase 1 (HSD11B1),1,rs846910,Intron variant,G/A,,Karnataka/Southern India,207 ; 207,0.51,1.62,0.029,37,209701909,209701909
 Insulin degrading enzyme (IDE),10,rs1887922,Intron variant,T/C,MassArray Genotyping,Punjab/Northern India,649 ; 600,0.51,1.32,0.011,27,92464408,92464408
 Insulin degrading enzyme (IDE),10,rs1887922,Intron variant,T/C,MassArray Genotyping,Jammu and Kashmir/Northern India,507 ; 300,0.51,1.47,0.0064,27,92464408,92464408
-Insulin degrading enzyme (IDE),10,rs1887922,Intron variant,T/C,MassArray Genotyping,Orissa/Eastern India,427 ; 417,0.067,1.44,N/A,27,92464408,92464408
+Insulin degrading enzyme (IDE),10,rs1887922,Intron variant,T/C,MassArray Genotyping,Orissa/Eastern India,427 ; 417,0.067,1.44,<0.0001,27,92464408,92464408
 Insulin like growth factor 2 (IGF2),11,rs680,3 Prime UTR Variant,A/G,PCR - RFLP,Telangana/Southern India,250 ; 250,0.67,1.6,0.018,31,2132404,2132404
 Insulin like growth factor 2 mRNA binding protein 2 (IGF2BP2),3,rs1470579,Intron variant,A/C,MassArray Genotyping,Telangana/Southern India,758 ; 621,0.78,1.11,0.18,25,185811292,185811292
 Insulin like growth factor 2 mRNA binding protein 2 (IGF2BP2),3,rs1470579,Intron variant,C/A,MassArray Genotyping,Telangana/Southern India,758 ; 621,0.78,1.31,0.0096,31,185811292,185811292
@@ -144,9 +144,9 @@ Insulin like growth factor 2 mRNA binding protein 2 (IGF2BP2),3,rs4402960,Intron
 Insulin like growth factor 2 mRNA binding protein 2 (IGF2BP2),3,rs4402960,Intron variant,G/T,PCR - RFLP,Punjab and Haryana/Northern India,225 ; 231,0.59,0.99,0.96,65,185793899,185793899
 Interleukin 10 (IL-10),1,rs1800872,2KB Upstream,A/C,PCR - RFLP,Uttar Pradesh/Northern India,406 ; 168,0.049,0.89,0.42,17,206773062,206773062
 Interleukin 10 (IL-10),1,rs1800872,2KB Upstream,C/A,PCR - RFLP,Telangana/Southern India,200 ; 200,0.019,2.44,0.0087,61,206773062,206773062
-Interleukin 10 (IL-10),1,rs1800896,Intron variant,G/A,PCR - RFLP,Telangana/Southern India,200 ; 200,<0.0001,2.39,N/A,61,206773552,206773552
+Interleukin 10 (IL-10),1,rs1800896,Intron variant,G/A,PCR - RFLP,Telangana/Southern India,200 ; 200,<0.0001,2.39,<0.0001,61,206773552,206773552
 Insulin induced gene 2 (INSIG2),2,rs2161829,Intron variant,G/A,MassArray Genotyping,Telangana/Southern India,500 ; 500,>0.05,1.23,0.048,52,118099338,118099338
-Insulin receptor (INSR),19,rs1799817,Synonymous Variant,G/A,MassArray Genotyping,Telangana/Southern India,500 ; 500,>0.05,0.54,N/A,52,7125286,7125286
+Insulin receptor (INSR),19,rs1799817,Synonymous Variant,G/A,MassArray Genotyping,Telangana/Southern India,500 ; 500,>0.05,0.54,<0.0001,52,7125286,7125286
 Insulin receptor (INSR),19,rs2059806,Synonymous Variant,C/T,MassArray Genotyping,Telangana/Southern India,500 ; 500,>0.05,1.4,0.00029,52,7166365,7166365
 Insulin receptor (INSR),19,rs7248104,Intron variant,C/A,MassArray Genotyping,Telangana/Southern India,500 ; 500,>0.05,1.29,0.016,52,7224420,7224420
 Insulin receptor substrate 1 (IRS1),2,rs1801278,Missense Variant,G/A,MassArray Genotyping,Telangana/Southern India,758 ; 621,>0.05,1.21,0.45,32,226795828,226795828
@@ -161,18 +161,18 @@ Potassium inwardly rectifying channel subfamily J member 11 (KCNJ11),11,rs5219,S
 Potassium inwardly rectifying channel subfamily J member 11 (KCNJ11),11,rs5219,Stop Gained,C/T,,Karnataka/Southern India,578 ; 578,0.019,0.99,0.92,35,17388025,17388025
 Potassium inwardly rectifying channel subfamily J member 11 (KCNJ11),11,rs5219,Stop Gained,C/T,Taqman Genotyping Assays,"Punjab, Haryana, Himachal Pradesh, Delhi, and Jammu and Kashmir/Northern India",532 ; 386,0.75,0.9,0.46,4,17388025,17388025
 Potassium inwardly rectifying channel subfamily J member 11 (KCNJ11),11,rs5219,Stop Gained,T/C,Illumina Golden Gate assay,New Delhi/Northern India,1017 ; 1006,0.84,1.17,0.019,13,17388025,17388025
-Potassium inwardly rectifying channel subfamily J member 11 (KCNJ11),11,rs5219,Stop Gained,T/C,MassArray Genotyping,Maharashtra/Western India.,1417 ; 1397,0.59,1.84,N/A,13,17388025,17388025
+Potassium inwardly rectifying channel subfamily J member 11 (KCNJ11),11,rs5219,Stop Gained,T/C,MassArray Genotyping,Maharashtra/Western India.,1417 ; 1397,0.59,1.84,<0.0001,13,17388025,17388025
 Potassium inwardly rectifying channel subfamily J member 11 (KCNJ11),11,rs5219,Stop Gained,C/T,PCR - RFLP,Haryana/Northern India,100 ; 100,0.96,2.72,0.00019,63,17388025,17388025
 Potassium voltage-gated channel subfamily Q member 1(KCNQ1),11,rs2237892,Intron variant,C/T,Taqman Genotyping Assays,"Haryana, and Delhi/Northern India",1019 ; 1290,0.54,1.49,0.14,16,2818521,2818521
 Potassium voltage-gated channel subfamily Q member 1(KCNQ1),11,rs2237892,Intron variant,C/T,PCR - RFLP,Karnataka/Southern India,578 ; 578,0.36,0.99,0.92,35,2818521,2818521
 Potassium voltage-gated channel subfamily Q member 1(KCNQ1),11,rs2237892,Intron variant,C/T,PCR - RFLP,Punjab and Haryana/Northern India,225 ; 231,0.13,1.63,0.0074,65,2818521,2818521
 Potassium voltage-gated channel subfamily Q member 1(KCNQ1),11,rs2237895,Intron variant,C/A,Taqman Genotyping Assays,"Haryana, and Delhi/Northern India",1020 ; 1285,0.34,1.14,0.029,16,2835964,2835964
 Potassium voltage-gated channel subfamily Q member 1(KCNQ1),11,rs231362,Intron variant,G/A,Taqman Genotyping Assays,"Haryana, and Delhi/Northern India",1032 ; 1287,0.78,1.24,0.0027,16,2670241,2670241
-Leptin (LEP),7,rs7799039,Intergenic variant,G/A,PCR - RFLP,Jammu & Kashmir/Northern India,390 ; 408,0.0099,7.1,N/A,57,128238730,128238730
+Leptin (LEP),7,rs7799039,Intergenic variant,G/A,PCR - RFLP,Jammu & Kashmir/Northern India,390 ; 408,0.0099,7.1,< 0.0001,57,128238730,128238730
 Leptin receptor (LEPR ),1,rs1805094,Missense Variant,G/C,MassArray Genotyping,Telangana/Southern India,500 ; 500,>0.05,0.83,0.27,52,65610269,65610269
-Leptin receptor (LEPR ),1,rs1137101,Intergenic variant,A/G,PCR - RFLP,Jammu & Kashmir/Northern India,390 ; 408,<0.0001,5.7,N/A,57,65592830,65592830
+Leptin receptor (LEPR ),1,rs1137101,Intergenic variant,A/G,PCR - RFLP,Jammu & Kashmir/Northern India,390 ; 408,<0.0001,5.7,< 0.0001,57,65592830,65592830
 Leptin receptor (LEPR ),1,rs1137101,Intergenic variant,A/G,ARMS - PCR,Tamilnadu/Southern India,154 ; 157,<0.0001,0.72,0.056,66,65592830,65592830
-Lipase C (LIPC),15,rs2070895,Intron variant,G/A,PCR - RFLP,Haryana/Northern India,168 ; 102,0.46,3.21,N/A,58,58431740,58431740
+Lipase C (LIPC),15,rs2070895,Intron variant,G/A,PCR - RFLP,Haryana/Northern India,168 ; 102,0.46,3.21,< 0.0001,58,58431740,58431740
 Lipoprotein lipase (LPL),Unknown,T93G,_,T/G,PCR - RFLP,Tamilnadu/Southern India,619 ; 731,0.96,0.74,0.13,2,Unknown,Unknown
 Lipoprotein lipase (LPL),Unknown,G53C,_,G/C,PCR - RFLP,Tamilnadu/Southern India,619 ; 731,0.97,0.52,0.036,2,Unknown,Unknown
 Leucine rich repeat containing 31 (LRRC31),3,rs16847897,Intron variant,C/G,MassArray Genotyping,Mizoram/North - Eastern India,384 ; 384,0.059,1.27,0.069,50,169850328,169850328
@@ -180,12 +180,12 @@ Melanocortin 4 receptor (MC4R),18,rs12970134,Intergenic Variant,G/A,PCR - RFLP,N
 Matrix metallopeptidase 9 (MMP-9),Unknown,(1562C>T),_,C/T,PCR - RFLP,Uttar Pradesh/Northern India,149 ; 267,0.3,1.82,0.00011,24,Unknown,Unknown
 Melatonin receptor 1B (MTNR1B),11,rs10830963,Intron variant,C/G,Taqman Genotyping Assays,Punjab/Northern India,1201 ; 1021,0.39,0.99,0.89,18,92975544,92975544
 Melatonin receptor 1B (MTNR1B),11,rs10830963,Intron variant,C/G,PCR - RFLP,Gujrat/Western India,478 ; 502,0.043,0.99,0.91,39,92975544,92975544
-Melatonin receptor 1B (MTNR1B),11,rs1374645,Intergenic Variant,C/T,Taqman Genotyping Assays,Punjab/Northern India,1201 ; 1021,0.63,1.0,1.0,18,92940715,92940715
-Melatonin receptor 1B (MTNR1B),11,rs1387153,Intergenic Variant,C/T,Taqman Genotyping Assays,Punjab/Northern India,1201 ; 1021,0.15,1.0,1.0,18,92940662,92940662
+Melatonin receptor 1B (MTNR1B),11,rs1374645,Intergenic Variant,C/T,Taqman Genotyping Assays,Punjab/Northern India,1201 ; 1021,0.63,1.0,1,18,92940715,92940715
+Melatonin receptor 1B (MTNR1B),11,rs1387153,Intergenic Variant,C/T,Taqman Genotyping Assays,Punjab/Northern India,1201 ; 1021,0.15,1.0,1,18,92940662,92940662
 Melatonin receptor 1B (MTNR1B),11,rs4753426,Intergenic Variant,C/T,PCR - RFLP,Gujrat/Western India,478 ; 502,0.49,0.94,0.49,39,92968430,92968430
 NLR family pyrin domain containing 3 (NLRP3),1,rs10754558,3 Prime UTR Variant,C/G,PCR - RFLP,Haryana/Northeren Indina,168 ; 102,0.14,1.77,0.0073,53,247448734,247448734
-Paraoxonase 1 (PON1),7,rs662,Missense Variant,Q/R,PCR - RFLP,Tamilnadu/Southern India,287 ; 293,0.46,1.68,N/A,40,95308134,95308134
-Paraoxonase 1 (PON1),7,rs854560,Missense Variant,L/M,PCR - RFLP,Tamilnadu/Southern India,287 ; 293,0.99,2.24,N/A,40,95316772,95316772
+Paraoxonase 1 (PON1),7,rs662,Missense Variant,Q/R,PCR - RFLP,Tamilnadu/Southern India,287 ; 293,0.46,1.68,<0.0001,40,95308134,95308134
+Paraoxonase 1 (PON1),7,rs854560,Missense Variant,L/M,PCR - RFLP,Tamilnadu/Southern India,287 ; 293,0.99,2.24,<0.0001,40,95316772,95316772
 Peroxisome proliferator activated receptor gamma (PPARγ),3,rs10510419,Intron variant,G/T,Taqman Genotyping Assays,"Punjab, Haryana, Himachal Pradesh, Delhi, and Jammu and Kashmir/Northern India",554 ; 309,0.23,0.71,0.33,11,12385437,12385437
 Peroxisome proliferator activated receptor gamma (PPARγ),3,rs11715073,Intron variant,C/G,Taqman Genotyping Assays,"Punjab, Haryana, Himachal Pradesh, Delhi, and Jammu and Kashmir/Northern India",554 ; 309,0.29,0.52,0.012,11,12311472,12311472
 Peroxisome proliferator activated receptor gamma (PPARγ),3,rs12490265,Intron variant,G/A,Taqman Genotyping Assays,"Punjab, Haryana, Himachal Pradesh, Delhi, and Jammu and Kashmir/Northern India",554 ; 309,0.26,1.15,0.31,11,12343043,12343043
@@ -238,36 +238,36 @@ Transcription factor 7 like 2 (TCF7L2),10,rs10885409,Intron variant,T/C,Taqman G
 Transcription factor 7 like 2 (TCF7L2),10,rs10885409,Intron variant,T/C,PCR - Sequencing,West Bengal/Eastern India,200 : 200,0.49,1.24,0.13,60,113048313,113048313
 Transcription factor 7 like 2 (TCF7L2),10,rs11196205,Intron variant,G/C,Taqman Genotyping Assays,"Punjab, Haryana, Himachal Pradesh, Delhi, and Jammu and Kashmir/Northern India",556 ; 537,0.16,1.44,0.011,5,113047288,113047288
 Transcription factor 7 like 2 (TCF7L2),10,rs11196205,Intron variant,C/G,MassArray Genotyping,Tamilnadu/Southern India,758 ; 621,0.79,1.23,0.011,26,113047288,113047288
-Transcription factor 7 like 2 (TCF7L2),10,rs12243326,Intron variant,T/C,MassArray Genotyping,Tamilnadu/Southern India,877 ; 838,0.65,1.49,N/A,34,113029056,113029056
-Transcription factor 7 like 2 (TCF7L2),10,rs12255372,Intron variant,G/T,PCR - Sequencing,Maharashtra/Western India.,955 ; 399,0.83,1.6,N/A,1,113049143,113049143
+Transcription factor 7 like 2 (TCF7L2),10,rs12243326,Intron variant,T/C,MassArray Genotyping,Tamilnadu/Southern India,877 ; 838,0.65,1.49,<0.0001,34,113029056,113029056
+Transcription factor 7 like 2 (TCF7L2),10,rs12255372,Intron variant,G/T,PCR - Sequencing,Maharashtra/Western India.,955 ; 399,0.83,1.6,<0.0001,1,113049143,113049143
 Transcription factor 7 like 2 (TCF7L2),10,rs12255372,Intron variant,G/T,Taqman Genotyping Assays,"Punjab, Haryana, Himachal Pradesh, Delhi, and Jammu and Kashmir/Northern India",556 ; 537,0.29,1.19,0.17,5,113049143,113049143
 Transcription factor 7 like 2 (TCF7L2),10,rs12255372,Intron variant,G/T,PCR - Sequencing,New Delhi/Northern India,219 ; 184,0.058,1.7,0.027,14,113049143,113049143
 Transcription factor 7 like 2 (TCF7L2),10,rs12255372,Intron variant,G/T,MassArray Genotyping,Punjab/Northern India,649 ;600,0.26,1.32,0.0017,48,113049143,113049143
 Transcription factor 7 like 2 (TCF7L2),10,rs12255372,Intron variant,G/T,MassArray Genotyping,Jammu and Kashmir/Northern India,507 ; 300,0.19,1.42,0.0049,48,113049143,113049143
 Transcription factor 7 like 2 (TCF7L2),10,rs12255372,Intron variant,G/T,MassArray Genotyping,Orissa/Eastern India,427 ; 417,0.55,1.44,0.00069,48,113049143,113049143
-Transcription factor 7 like 2 (TCF7L2),10,rs12255372,Intron variant,T/G,MassArray Genotyping,Telangana/Southern India,758 ; 621,0.43,1.51,N/A,26,113049143,113049143
-Transcription factor 7 like 2 (TCF7L2),10,rs12255372,Intron variant,T/G,,Tamilnadu/Southern India,877 ; 838,0.73,1.45,N/A,34,113049143,113049143
+Transcription factor 7 like 2 (TCF7L2),10,rs12255372,Intron variant,T/G,MassArray Genotyping,Telangana/Southern India,758 ; 621,0.43,1.51,<0.0001,26,113049143,113049143
+Transcription factor 7 like 2 (TCF7L2),10,rs12255372,Intron variant,T/G,,Tamilnadu/Southern India,877 ; 838,0.73,1.45,<0.0001,34,113049143,113049143
 Transcription factor 7 like 2 (TCF7L2),10,rs12255372,Intron variant,G/T,PCR - Sequencing,West Bengal/Eastern India,200 ; 200,0.46,1.42,0.024,60,113049143,113049143
 Transcription factor 7 like 2 (TCF7L2),10,rs12255372,Intron variant,G/T,PCR - RFLP,Assam/North - Eastern India,155 ; 100,0.018,1.42,0.27,48,113049143,113049143
 Transcription factor 7 like 2 (TCF7L2),10,rs12255372,Intron variant,G/T,PCR - RFLP,Uttar Pradesh/Northern India,154 ; 154,0.95,0.63,0.019,64,113049143,113049143
-Transcription factor 7 like 2 (TCF7L2),10,rs12255372,Intron variant,G/T,Taqman Genotyping Assays,Punjab and Haryana/Northern India,225 ; 231,0.24,2.42,N/A,65,113049143,113049143
+Transcription factor 7 like 2 (TCF7L2),10,rs12255372,Intron variant,G/T,Taqman Genotyping Assays,Punjab and Haryana/Northern India,225 ; 231,0.24,2.42,<0.0001,65,113049143,113049143
 Transcription factor 7 like 2 (TCF7L2),10,rs290475,Intron variant,C/T,MassArray Genotyping,Mizoram/North - Eastern India,384 ; 384,0.59,1.5,0.029,50,113114260,113114260
-Transcription factor 7 like 2 (TCF7L2),15,rs450656,Intergenic Variant,T/A,MassArray Genotyping,Tamilnadu/Southern India,877 ; 838,0.13,1.4,N/A,34,67916314,67916314
-Transcription factor 7 like 2 (TCF7L2),10,rs4506565,Intron variant,A/T,PCR - Sequencing,Maharashtra/Western India.,955 ; 399,0.89,1.48,N/A,1,112996282,112996282
+Transcription factor 7 like 2 (TCF7L2),15,rs450656,Intergenic Variant,T/A,MassArray Genotyping,Tamilnadu/Southern India,877 ; 838,0.13,1.4,<0.0001,34,67916314,67916314
+Transcription factor 7 like 2 (TCF7L2),10,rs4506565,Intron variant,A/T,PCR - Sequencing,Maharashtra/Western India.,955 ; 399,0.89,1.48,<0.0001,1,112996282,112996282
 Transcription factor 7 like 2 (TCF7L2),10,rs4506565,Intron variant,A/T,PCR - Sequencing,New Delhi/Northern India,219 ; 184,0.92,2.1,0.0026,14,112996282,112996282
 Transcription factor 7 like 2 (TCF7L2),10,rs4918789,Intron variant,T/G,Taqman Genotyping Assays,"Punjab, Haryana, Himachal Pradesh, Delhi, and Jammu and Kashmir/Northern India",556 ; 537,0.49,1.36,0.031,5,113062048,113062048
 Transcription factor 7 like 2 (TCF7L2),10,rs7901695,Intron variant,T/C,Taqman Genotyping Assays,"Punjab, Haryana, Himachal Pradesh, Delhi, and Jammu and Kashmir/Northern India",556 ; 537,0.17,1.25,0.083,5,112994329,112994329
-Transcription factor 7 like 2 (TCF7L2),10,rs7901695,Intron variant,T/C,Taqman Genotyping Assays,Punjab and Haryana/Northern India,225 ; 231,0.15,2.47,N/A,65,112994329,112994329
+Transcription factor 7 like 2 (TCF7L2),10,rs7901695,Intron variant,T/C,Taqman Genotyping Assays,Punjab and Haryana/Northern India,225 ; 231,0.15,2.47,<0.0001,65,112994329,112994329
 Transcription factor 7 like 2 (TCF7L2),10,rs7903146,Intron variant,C/T,PCR - Sequencing,Maharashtra/Western India.,955 ; 399,0.94,1.53,0.0031,1,112998590,112998590
 Transcription factor 7 like 2 (TCF7L2),10,rs7903146,Intron variant,C/T,MassArray Genotyping,Jammu and Kashmir/Northern India,507;300,0.69,1.48,0.00039,48,112998590,112998590
 Transcription factor 7 like 2 (TCF7L2),10,rs7903146,Intron variant,C/T,,Orissa/Eastern India,427 ; 417,0.69,1.44,0.00069,48,112998590,112998590
 Transcription factor 7 like 2 (TCF7L2),10,rs7903146,Intron variant,C/T,PCR - RFLP,Telangana/Southern India,250 ; 250,0.52,1.8,0.00089,31,112998590,112998590
-Transcription factor 7 like 2 (TCF7L2),10,rs7903146,Intron variant,C/T,MassArray Genotyping,Telangana/Southern India,758 ; 621,>0.05,2.02,N/A,31,112998590,112998590
-Transcription factor 7 like 2 (TCF7L2),10,rs7903146,Intron variant,T/C,MassArray Genotyping,Tamilnadu/Southern India,877 ; 838,0.19,1.46,N/A,30,112998590,112998590
+Transcription factor 7 like 2 (TCF7L2),10,rs7903146,Intron variant,C/T,MassArray Genotyping,Telangana/Southern India,758 ; 621,>0.05,2.02,<0.0001,31,112998590,112998590
+Transcription factor 7 like 2 (TCF7L2),10,rs7903146,Intron variant,T/C,MassArray Genotyping,Tamilnadu/Southern India,877 ; 838,0.19,1.46,<0.0001,30,112998590,112998590
 Transcription factor 7 like 2 (TCF7L2),10,rs7903146,Intron variant,C/T,PCR - RFLP,Karnataka/Southern India,578 ; 578,0.95,1.46,0.0019,35,112998590,112998590
 Transcription factor 7 like 2 (TCF7L2),10,rs7903146,Intron variant,C/T,PCR - Sequencing,West Bengal/Eastern India,200 ; 200,0.81,1.55,0.00011,60,112998590,112998590
 Transcription factor 7 like 2 (TCF7L2),10,rs7903146,Intron variant,C/T,ARMS - PCR,Bihar/Northern India,194 ; 180,0.88,1.53,0.011,67,112998590,112998590
-Transcription factor 7 like 2 (TCF7L2),10,rs7903146,Intron variant,T/C,Illumina Golden Gate assay,New Delhi/Northern India,1017 ; 1006,0.59,1.67,N/A,13,112998590,112998590
+Transcription factor 7 like 2 (TCF7L2),10,rs7903146,Intron variant,T/C,Illumina Golden Gate assay,New Delhi/Northern India,1017 ; 1006,0.59,1.67,<0.0001,13,112998590,112998590
 Transcription factor 7 like 2 (TCF7L2),10,rs7903146,Intron variant,C/T,Taqman Genotyping Assays,Punjab and Haryana/Northern India,225 ; 231,0.24,1.23,0.031,65,112998590,112998590
 Transcription factor 7 like 2 (TCF7L2),10,rs7903146,Intron variant,C/T,Taqman Genotyping Assays,"Punjab, Haryana, Himachal Pradesh, Delhi, and Jammu and Kashmir/Northern India",556 ; 537,0.14,1.39,0.011,5,112998590,112998590
 Transcription factor 7 like 2 (TCF7L2),10,rs7903146,Intron variant,C/T,PCR - Sequencing,New Delhi/Northern India,219 ; 184,0.92,2.0,0.0026,14,112998590,112998590
@@ -277,9 +277,9 @@ Telomeric repeat binding factor 1 (TERF1),8,rs6982126,Non Coding Transcript Exon
 Trans membrane protein 163 (TMEM163),2,rs998451,Intron variant,,Taqman Genotyping Assays,Jammu and Kashmir/Northern India,651 ; 558,0.97,0.71,0.48,38,134671718,134671718
 Trans membrane protein 163 (TMEM163),2,rs6723108,Non Coding Transcript Exon Variant,,Taqman Genotyping Assays,Jammu and Kashmir/Northern India,651 ; 558,0.73,1.8,0.19,38,134722410,134722410
 Tumor necrosis factor alpha-like (TNF-α),6,rs1800629,Regulatory Region Variant,G/A,ARMS - PCR,Punjab/Northern India,155 ; 203,0.31,1.23,0.52,30,31575254,31575254
-Tumor necrosis factor alpha-like (TNF-α),6,rs1800629,,G/A,PCR - RFLP,Telangana/Southern India,200 ; 200,<0.0001,2.56,N/A,61,31575254,31575254
+Tumor necrosis factor alpha-like (TNF-α),6,rs1800629,,G/A,PCR - RFLP,Telangana/Southern India,200 ; 200,<0.0001,2.56,<0.0001,61,31575254,31575254
 Tumor necrosis factor alpha-like (TNF-α),6,rs361525,Intergenic Variant,G/A,PCR - RFLP,Telangana/Southern India,200 ; 200,<0.0001,1.44,0.078,61,31575324,31575324
 Uncoupling protein 2 (UCP2),11,rs659366,Non Coding Transcript Exon Variant,G/A,PCR - RFLP,Tamilnadu/Southern India,318 ; 312,0.79,0.6,0.0017,44,73983709,73983709
 Urotensin 2 (UTS2),1,rs228648,Missense Variant,G/A,PCR - RFLP,Haryana/Northeren Indina,168 ; 102,0.94,1.09,0.64,49,7853370,7853370
 Urotensin 2 (UTS2),1,rs2890565,Missense Variant,C/T,PCR - RFLP,Haryana/Northeren Indina,168 ; 102,0.92,3.4,0.0021,49,7849677,7849677
-Vascular endothelial growth factor A (VEGFA),6,rs2010963,5 Prime UTR Variant,C/G,MassArray Genotyping,Mizoram/North - Eastern India,384 ; 384,0.29,2.67,N/A,50,43770613,43770613
+Vascular endothelial growth factor A (VEGFA),6,rs2010963,5 Prime UTR Variant,C/G,MassArray Genotyping,Mizoram/North - Eastern India,384 ; 384,0.29,2.67,<0.0001,50,43770613,43770613
