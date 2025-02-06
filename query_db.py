@@ -1,4 +1,4 @@
-from app import create_app  # Import create_app from your app.py
+from app import create_app  # Import create_app from  app.py
 from models import db, SNP, Gene, Population  # Import necessary models
 
 app = create_app()  # Initialize the app using create_app
