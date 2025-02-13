@@ -140,33 +140,63 @@ def clean_p_value(value):
     except (AttributeError, ValueError):
         return None
 
+
+from models import db, SNP
+import pandas as pd
+import re
+from flask import current_app  # Use current_app instead of importing app
+
 def load_snps_from_csv(csv_file):
-    from main import app  # Import inside function for context management
-    
     df = pd.read_csv(csv_file)
     
-    # Clean and validate data
-    df = df.drop_duplicates(subset=["dbSNP"])  # Primary key deduplication
+    # Clean data
+    df = df.drop_duplicates(subset=["dbSNP"])
     df['P_Value'] = df['P_Value'].apply(clean_p_value)
     df['zScore'] = pd.to_numeric(df['zScore'], errors='coerce')
     df['Position'] = pd.to_numeric(df['Position'], errors='coerce').astype('Int64')
-    
-    # Remove invalid entries
     df = df.dropna(subset=["dbSNP", "Chromosome", "Position", "P_Value"])
-    
-    with app.app_context():
-        # Bulk insert for better performance
+
+    # Use Flask's application context
+    with current_app.app_context():
         try:
-            db.session.bulk_insert_mappings(
-                SNP,
-                df.to_dict(orient='records'),
-                return_defaults=False
-            )
+            db.session.bulk_insert_mappings(SNP, df.to_dict(orient='records'))
             db.session.commit()
-            print(f"Successfully loaded {len(df)} SNPs")
+            print(f"Loaded {len(df)} SNPs from {csv_file}")
         except Exception as e:
             db.session.rollback()
-            print(f"Error loading data: {str(e)}")
+            print(f"Error: {str(e)}")
+
+# def load_snps_from_csv(csv_file):
+#     from main import app  # Import inside function for context management
+    
+#     df = pd.read_csv(csv_file)
+    
+#     # Clean and validate data
+#     df = df.drop_duplicates(subset=["dbSNP"])  # Primary key deduplication
+#     df['P_Value'] = df['P_Value'].apply(clean_p_value)
+#     df['zScore'] = pd.to_numeric(df['zScore'], errors='coerce')
+#     df['Position'] = pd.to_numeric(df['Position'], errors='coerce').astype('Int64')
+    
+#     # Remove invalid entries
+#     df = df.dropna(subset=["dbSNP", "Chromosome", "Position", "P_Value"])
+    
+#     with app.app_context():
+#         # Bulk insert for better performance
+#         try:
+#             db.session.bulk_insert_mappings(
+#                 SNP,
+#                 df.to_dict(orient='records'),
+#                 return_defaults=False
+#             )
+#             db.session.commit()
+#             print(f"Successfully loaded {len(df)} SNPs")
+#         except Exception as e:
+#             db.session.rollback()
+#             print(f"Error loading data: {str(e)}")
+
+
+
+
 
 # Run this function once to populate the database
 if __name__ == "__main__":
