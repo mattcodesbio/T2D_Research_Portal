@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+<!-- {% extends 'base.html' %}
 
 {% block title %}SNP Query Results - T2D Project{% endblock %}
 
@@ -52,6 +52,55 @@
     </form>
     {% else %}
     <p>No results found. Try another search.</p>
+    {% endif %}
+</div>
+{% endblock %} -->
+
+
+{% extends 'base.html' %}
+
+{% block title %}SNP Results - T2D Project{% endblock %}
+
+{% block content %}
+<div class="container">
+    <button class="back-button" onclick="window.history.back();">Back to Search</button>
+    <h1>SNP Query Results</h1>
+
+    {% if snp_info %}
+    <table>
+        <thead>
+            <tr>
+                <th>SNP ID</th>
+                <th>Chromosome</th>
+                <th>Position</th>
+                <th>Gene</th>
+                <th>Minor Allele</th>
+                <th>P-Value</th>
+                <th>zScore</th>
+                <th>Variant ID</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for snp in snp_info %}
+            <tr>
+                <td>{{ snp.dbSNP }}</td>
+                <td>{{ snp.Chromosome }}</td>
+                <td>{{ snp.Position }}</td>
+                <td>
+                    <a href="{{ url_for('gene_terms', gene_name=snp.Gene) }}">
+                        {{ snp.Gene }}
+                    </a>
+                </td>
+                <td>{{ snp.Minor_Allele }}</td>
+                <td>{{ snp.P_Value }}</td>
+                <td>{{ snp.zScore | round(2) if snp.zScore else 'N/A' }}</td>
+                <td>{{ snp.varId }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No SNPs found matching your criteria.</p>
     {% endif %}
 </div>
 {% endblock %}
