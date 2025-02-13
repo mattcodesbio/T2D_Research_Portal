@@ -5,27 +5,48 @@ from functions import get_snp_info
 import re
 from urllib.parse import quote_plus  # For URL encoding
 
+from flask import render_template, request, current_app
+from functions import get_snp_info
+import requests, re
+from urllib.parse import quote_plus
+
 @app.route('/', methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
+        # Get form inputs
         snp_id = request.form.get('snp_name')
         chromosome = request.form.get('chromosome')
         start = request.form.get('start')
-        end = request.form.get('end')   
+        end = request.form.get('end')
         gene_name = request.form.get('gene_name')
 
-        # Extract only the numeric part of the chromosome for searching
+        # Clean chromosome input (extract numeric part)
         if chromosome:
-            chromosome = ''.join(filter(str.isdigit, chromosome))  # Extract number before 'q'
+            chromosome = ''.join(filter(str.isdigit, chromosome))
 
-        print(f"Search Query: SNP={snp_id}, Chromosome={chromosome}, Start={start}, End={end}, Gene={gene_name}")
+        # Process position range
+        position_range = None
+        position = None
+        try:
+            if start and end:
+                position_range = (int(start), int(end))
+            elif start:
+                position = int(start)
+        except ValueError:
+            pass  # Handle invalid numeric input
 
-        # Get results
-        snp_info = get_snp_info(snp_id, chromosome, start, end, gene_name)
+        # Query SNPs
+        snp_info = get_snp_info(
+            dbSNP=snp_id,
+            chromosome=chromosome,
+            position=position,
+            gene=gene_name,
+            position_range=position_range
+        )
+
         return render_template('snp_results.html', snp_info=snp_info)
-
+    
     return render_template('index.html')
-
 
 @app.route('/about')
 def about():
