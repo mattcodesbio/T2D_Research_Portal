@@ -200,4 +200,4 @@ def load_snps_from_csv(csv_file):
 
 # Run this function once to populate the database
 if __name__ == "__main__":
-    load_snps_from_csv("SEC_DATA.csv")
+    load_snps_from_csv("DATA/SEC_DATA.csv")
