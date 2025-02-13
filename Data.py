@@ -4,6 +4,12 @@ import requests
 import time
 import re
 
+
+
+###### NOT NEEDED #######
+
+
+
 # Load the .docx document
 doc_path = "/Users/Coding/Downloads/mmc1.docx"  # Update with your file path
 doc = Document(doc_path)
