@@ -50,7 +50,7 @@ with app.app_context():
     
     # Load data only if the SNP table is empty
     if not SNP.query.first():
-        load_snps_from_csv("SEC_DATA.csv")  # Updated CSV name
+        load_snps_from_csv("DATA/SEC_DATA.csv")
 
 if __name__ == '__main__':
     app.run(debug=True)
