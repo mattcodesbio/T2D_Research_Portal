@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+<!-- {% extends 'base.html' %}
 
 {% block title %}Gene Terms for {{ gene_name }}{% endblock %}
 
@@ -11,7 +11,7 @@
             <h3 class="section-title">Main Ontology Term: "{{ terms[0]['name'] }}"</h3>
 
             <!-- Root Object Information -->
-            <div class="section">
+<!--             <div class="section">
                 <ul class="go-term-info">
                     <li><strong>Accession ID:</strong> {{ terms[0]['accession'] }}</li>
                     <li><strong>Namespace:</strong> {{ terms[0]['namespace'] }}</li>
@@ -25,9 +25,9 @@
                     </li>
                 </ul>
             </div>
-
+ -->
             <!-- Parent Terms -->
-            <div class="section">
+<!--             <div class="section">
                 <h4>Parent Terms</h4>
                 {% if all_parents %}
                     <ul>
@@ -48,16 +48,16 @@
                         {% endfor %}
                     </ul>
                 {% else %}
-                    <p>No parent terms available.</p>
-                {% endif %}
+                    <p>No parent terms available.</p> -->
+<!--                 {% endif %}
             </div>
 
             <!-- Child Terms -->
-            <div class="section">
+<!--             <div class="section">
                 <h4>Child Terms</h4>
                 {% if terms[0]['children'] %}
-                    <ul>
-                        {% for child in terms[0]['children'] %}
+                    <ul> -->
+<!--                         {% for child in terms[0]['children'] %}
                             <li class="child-term">
                                 <strong>{{ child['name'] }}</strong> (<em>accession: {{ child['accession'] }}</em>)
                                 <ul class="go-term-info">
@@ -79,7 +79,7 @@
             </div>
 
             <!-- Subsets -->
-            <div class="section">
+<!--             <div class="section">
                 <h4>Subsets</h4>
                 {% if terms[0]['subsets'] %}
                     <ul>
@@ -205,5 +205,132 @@
                 padding-left: 10px;
             }
         }
+    </style>
+{% endblock %}
+ --> --> --> -->
+
+
+
+
+
+
+
+ {% extends 'base.html' %}
+
+{% block title %}Gene Terms for {{ gene_name }}{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <button class="back-button" onclick="window.history.back();">Back</button>
+        <h1 class="main-title">Ontology Terms for Gene: {{ gene_name }}</h1>
+
+        {% if terms and terms[0] %}
+            <!-- Main Term -->
+            <h3 class="section-title">Main Ontology Term: "{{ terms[0].get('name', 'N/A') }}"</h3>
+
+            <!-- Root Object Information -->
+            <div class="section">
+                <ul class="go-term-info">
+                    <li><strong>Accession ID:</strong> {{ terms[0].get('accession', 'N/A') }}</li>
+                    <li><strong>Namespace:</strong> {{ terms[0].get('namespace', 'N/A') }}</li>
+                    <li><strong>Definition:</strong> "{{ terms[0].get('definition', 'No definition available') }}"</li>
+                    <li><strong>Synonyms:</strong>
+                        {% if terms[0].get('synonyms') %}
+                            <ul>
+                                {% for synonym in terms[0]['synonyms'] %}
+                                    <li>{{ synonym }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <span>None available</span>
+                        {% endif %}
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Parent Terms -->
+            <div class="section">
+                <h4>Parent Terms</h4>
+                {% if all_parents %}
+                    <ul>
+                        {% for parent in all_parents %}
+                            <li class="parent-term">
+                                <strong>{{ parent.get('name', 'N/A') }}</strong>
+                                <em>(accession: {{ parent.get('accession', 'N/A') }})</em>
+                                <ul class="go-term-info">
+                                    <li><strong>Definition:</strong> "{{ parent.get('definition', 'No definition') }}"</li>
+                                    {% if parent.get('synonyms') %}
+                                        <li><strong>Synonyms:</strong>
+                                            <ul>
+                                                {% for synonym in parent['synonyms'] %}
+                                                    <li>{{ synonym }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>No parent terms available.</p>
+                {% endif %}
+            </div>
+
+            <!-- Child Terms -->
+            <div class="section">
+                <h4>Child Terms</h4>
+                {% if terms[0].get('children') %}
+                    <ul>
+                        {% for child in terms[0]['children'] %}
+                            <li class="child-term">
+                                <strong>{{ child.get('name', 'N/A') }}</strong>
+                                <em>(accession: {{ child.get('accession', 'N/A') }})</em>
+                                <ul class="go-term-info">
+                                    <li><strong>Definition:</strong> "{{ child.get('definition', 'No definition') }}"</li>
+                                    {% if child.get('synonyms') %}
+                                        <li><strong>Synonyms:</strong>
+                                            <ul>
+                                                {% for synonym in child['synonyms'] %}
+                                                    <li>{{ synonym }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>No child terms available.</p>
+                {% endif %}
+            </div>
+
+            <!-- Subsets -->
+            <div class="section">
+                <h4>Subsets</h4>
+                {% if terms[0].get('subsets') %}
+                    <ul>
+                        {% for subset in terms[0]['subsets'] %}
+                            <li>{{ subset }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>No subsets available.</p>
+                {% endif %}
+            </div>
+
+        {% else %}
+            <p>No Gene Ontology terms found for this gene.</p>
+        {% endif %}
+    </div>
+
+    <style>
+        /* Keep all existing CSS styles from your original code */
+        .main-title { color: #1b52a4; text-align: center; }
+        .section { background-color: #f9f9f9; padding: 15px; margin-bottom: 20px; }
+        .go-term-info { list-style-type: none; padding-left: 20px; }
+        .parent-term, .child-term { background-color: #e7f1ff; padding: 10px; margin-bottom: 10px; }
+        /* ... rest of your CSS ... */
     </style>
 {% endblock %}
