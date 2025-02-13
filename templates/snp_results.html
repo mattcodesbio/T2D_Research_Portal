@@ -56,16 +56,15 @@
 </div>
 {% endblock %} -->
 
-
 {% extends 'base.html' %}
 
-{% block title %}SNP Results - T2D Project{% endblock %}
+{% block title %}Results - T2D Project{% endblock %}
 
 {% block content %}
 <div class="container">
-    <button class="back-button" onclick="window.history.back();">Back to Search</button>
-    <h1>SNP Query Results</h1>
-
+    <button class="back-button" onclick="window.history.back()">← Back</button>
+    <h1>Search Results</h1>
+    
     {% if snp_info %}
     <table>
         <thead>
@@ -94,7 +93,7 @@
                 <td>{{ snp.Minor_Allele }}</td>
                 <td>{{ snp.P_Value }}</td>
                 <td>{{ snp.zScore | round(2) if snp.zScore else 'N/A' }}</td>
-                <td>{{ snp.varId }}</td>
+                <td class="long-text">{{ snp.varId }}</td>
             </tr>
             {% endfor %}
         </tbody>
