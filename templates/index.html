@@ -5,34 +5,34 @@
 {% block content %}
 <div class="search-container">
     <h1>🔍 SNP Search</h1>
-    <p class="subtitle">Find genetic variants by multiple criteria</p>
+    <p class="subtitle">Explore genetic variants associated with Type 2 Diabetes</p>
     
     <form method="POST" action="{{ url_for('home') }}">
         <div class="form-group">
             <label>SNP ID (e.g., rs7903146)</label>
-            <input type="text" name="snp_name" placeholder="Enter SNP identifier...">
+            <input type="text" name="snp_name" placeholder="Enter SNP identifier..." class="modern-input">
         </div>
 
         <div class="form-group">
             <label>Chromosome Number</label>
-            <input type="text" name="chromosome" placeholder="Example: 10">
+            <input type="text" name="chromosome" placeholder="Example: 10" class="modern-input">
         </div>
 
         <div class="form-group">
             <label>Genomic Position</label>
             <div class="input-group">
-                <input type="number" name="start" placeholder="Start position">
+                <input type="number" name="start" placeholder="Start position" class="modern-input range-input">
                 <span class="input-divider">–</span>
-                <input type="number" name="end" placeholder="End position (optional)">
+                <input type="number" name="end" placeholder="End position" class="modern-input range-input">
             </div>
         </div>
 
         <div class="form-group">
             <label>Associated Gene</label>
-            <input type="text" name="gene_name" placeholder="Example: TCF7L2">
+            <input type="text" name="gene_name" placeholder="Example: TCF7L2" class="modern-input">
         </div>
 
-        <button type="submit">Search Variants</button>
+        <button type="submit" class="modern-button">Search Variants →</button>
     </form>
 </div>
 
@@ -40,17 +40,49 @@
     .search-container {
         max-width: 600px;
         margin: 0 auto;
+        padding: 2rem;
     }
 
     h1 {
         color: var(--primary);
         margin-bottom: 0.5rem;
-        font-size: 2rem;
+        font-size: 2.25rem;
+        text-align: center;
     }
 
     .subtitle {
         color: #64748b;
         margin-bottom: 2rem;
+        text-align: center;
+        font-size: 1.1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 0.75rem;
+        color: var(--dark);
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+
+    .modern-input {
+        width: 100%;
+        padding: 0.9rem 1.2rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 0.75rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    .modern-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
     }
 
     .input-group {
@@ -59,9 +91,47 @@
         align-items: center;
     }
 
+    .range-input {
+        flex: 1;
+    }
+
     .input-divider {
         color: #94a3b8;
-        padding: 0 0.5rem;
+        font-weight: 500;
+    }
+
+    .modern-button {
+        width: 100%;
+        padding: 1rem 1.5rem;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 0.75rem;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .modern-button:hover {
+        background: #4338ca;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+    }
+
+    @media (max-width: 768px) {
+        .search-container {
+            padding: 1.5rem;
+        }
+        
+        h1 {
+            font-size: 1.8rem;
+        }
     }
 </style>
 {% endblock %}
