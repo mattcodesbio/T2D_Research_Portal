@@ -130,7 +130,7 @@ def get_snp_info(dbSNP=None, chromosome=None, position=None, gene=None, position
         'Minor_Allele': snp.Minor_Allele,
         'zScore': round(snp.zScore, 2) if snp.zScore else None,
         'varId': snp.varId
-    } for snp in snps] if snps else None
+    } for snp in snps] if snps else []
 
 # Function to load SNPs from CSV
 def clean_p_value(value):

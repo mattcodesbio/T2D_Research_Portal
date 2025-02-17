@@ -1,357 +1,130 @@
-<!-- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Welcome{% endblock %}</title>
-
+    <title>{% block title %}T2D SNP Database{% endblock %}</title>
     <style>
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            background-color: #f4f4f4;
+        :root {
+            --primary: #4f46e5;
+            --secondary: #6366f1;
+            --accent: #ec4899;
+            --light: #f8fafc;
+            --dark: #0f172a;
+        }
+
+        * {
             margin: 0;
-            line-height: 1.6; /* Adjust line-height for better readability */
-            padding-top: 50px; /* Added padding for header space */
-        }
-
-        header {
-            background-color: #1b52a4;
-            color: white;
-            padding: 15px 0;
-            text-align: center;
-            position: fixed;
-            width: 100%;
-            top: 0;
-            z-index: 10;
-        }
-
-        nav {
-            background-color: #1b52a4;
-            padding: 10px 15px;
-            text-align: center;
-            margin-top: 70px; /* Offset for the fixed header */
-        }
-
-        nav a {
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            font-size: 1.1em;
-            margin: 0 10px;
-        }
-
-        nav a:hover {
-            text-decoration: underline;
-        }
-
-        .container {
-            max-width: 100%;
-            margin: 20px auto;
-            background-color: white;
-            padding: 30px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-        }
-
-        h1 {
-            color: rgb(5, 5, 5);
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        input[type="text"], input[type="number"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #5b5151;
-            border-radius: 5px;
+            padding: 0;
             box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
         }
 
-        input[type="text"]::placeholder, input[type="number"]::placeholder {
-            color: #666;
-            font-size: 1.1em;
-        }
-
-        button[type="submit"] {
-            background-color: #1b52a4;
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1.1em;
-            transition: background-color 0.3s ease;
-        }
-
-        button[type="submit"]:hover {
-            background-color: #164280;
-        }
-
-        .back-button {
-            background-color: #1b52a4;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1.1em;
-            transition: background-color 0.3s ease;
-            margin-bottom: 20px;
-        }
-
-        .back-button:hover {
-            background-color: #164280;
-        }
-
-
-        footer {
-            text-align: center;
-            padding: 20px 0;
-            background-color: #333;
-            color: white;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            font-size: 1.1em;
-            word-wrap: break-word; /* Ensures long words wrap */
-            table-layout: auto; /* Allows the table columns to resize as needed */
-        }
-
-        th, td {
-            padding: 15px;
-            text-align: center; /* Aligns text to the left for readability */
-            border-bottom: 1px solid #ddd;
-            word-wrap: break-word; /* Prevents text from overflowing */
-        }
-
-        th {
-            background-color: #1b52a4;
-            color: white;
-            font-weight: bold;
-            position: sticky;
-            top: 130px;
-            z-index: 1;
-        }
-
-        td {
-            text-align: center; /* Keeps the content left-aligned */
-        }
-
-        td .long-text {
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            white-space: normal; /* Ensures content wraps properly in longer text */
-        }
-        @media screen and (max-width: 768px) {
-            table, th, td {
-                font-size: 0.9em;
-            }
-
-            td, th {
-                padding: 10px;
-            }
-        }
-    </style>
-</head>
-<body>
-
-    <header>
-        <h1>{% block header %}Welcome to the T2D Web Development Project{% endblock %}</h1>
-    </header>
-
-    <nav>
-        <a href="/">Home</a>
-        <a href="/about">About</a>
-    </nav>
-
-    <div class="container">
-        {% block content %}
-        {% endblock %}
-    </div>
-
-    <footer>
-        <p>&copy; 2025 T2D Project. All rights reserved.</p>
-    </footer>
-
-</body>
-</html>
- -->
-
-
-
- <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Welcome{% endblock %}</title>
-    <style>
         body {
-            font-family: Arial, Helvetica, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
+            background: var(--light);
+            color: var(--dark);
             line-height: 1.6;
-            padding-top: 50px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
+        /* Header with Title */
         header {
-            background-color: #1b52a4;
-            color: white;
-            padding: 15px 0;
-            text-align: center;
-            position: fixed;
-            width: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 1rem 0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            position: sticky;
             top: 0;
-            z-index: 10;
+            z-index: 100;
+            animation: slideDown 0.5s ease;
         }
 
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .site-title {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 600;
+            letter-spacing: -0.025em;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Navigation */
         nav {
-            background-color: #1b52a4;
-            padding: 10px 15px;
-            text-align: center;
-            margin-top: 70px;
+            display: flex;
+            gap: 1.5rem;
+            padding: 0.5rem 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         nav a {
             color: white;
-            padding: 10px 20px;
             text-decoration: none;
-            font-size: 1.1em;
-            margin: 0 10px;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
         }
 
         nav a:hover {
-            text-decoration: underline;
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
         }
 
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
+        /* Main Content Area */
         .container {
-            max-width: 100%;
-            margin: 20px auto;
-            background-color: white;
-            padding: 30px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
+            flex: 1;
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            animation: fadeIn 0.5s ease;
         }
 
-        h1 {
-            color: rgb(5, 5, 5);
-            text-align: center;
-            margin-bottom: 30px;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        input[type="text"], input[type="number"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #5b5151;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
-
-        button[type="submit"] {
-            background-color: #1b52a4;
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1.1em;
-            transition: background-color 0.3s ease;
-        }
-
-        button[type="submit"]:hover {
-            background-color: #164280;
-        }
-
-        .back-button {
-            background-color: #1b52a4;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1.1em;
-            margin-bottom: 20px;
-        }
-
+        /* Footer */
         footer {
+            background: var(--dark);
+            color: white;
             text-align: center;
-            padding: 20px 0;
-            background-color: #333;
-            color: white;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
+            padding: 1.5rem;
+            margin-top: auto;
+            font-size: 0.9rem;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            font-size: 1.1em;
-            table-layout: auto;
-        }
-
-        th, td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-            word-wrap: break-word;
-        }
-
-        th {
-            background-color: #1b52a4;
-            color: white;
-            position: sticky;
-            top: 130px;
-        }
-
-        @media screen and (max-width: 768px) {
-            table, th, td {
-                font-size: 0.9em;
-                padding: 10px;
-            }
-        }
+        /**/
     </style>
 </head>
 <body>
     <header>
-        <h1>{% block header %}T2D SNP Database{% endblock %}</h1>
+        <div class="header-content">
+            <h1 class="site-title">T2D SNP Database</h1>
+            <nav>
+                <a href="/">Home</a>
+                <a href="/about">About</a>
+            </nav>
+        </div>
     </header>
 
-    <nav>
-        <a href="/">Home</a>
-        <a href="/about">About</a>
-    </nav>
-
     <div class="container">
-        {% block content %}
-        {% endblock %}
+        {% block content %}{% endblock %}
     </div>
 
     <footer>

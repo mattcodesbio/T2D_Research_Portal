@@ -1,105 +1,152 @@
-<!-- {% extends 'base.html' %}
+{% extends 'base.html' %}
 
-{% block title %}SNP Query Results - T2D Project{% endblock %}
+{% block title %}Search Results - T2D Project{% endblock %}
 
 {% block content %}
-    <div class="container">
-        <button class ="back-button" onclick="window.history.back();">Back to Search</button>
-        <h1>SNP Query Results</h1>
-        <style>
-            /* CSS to remove underline by default */
-            a {
-                text-decoration: none;  /* Removes the underline */
-            }
-
-            /* CSS to add underline on hover */
-            a:hover {
-                text-decoration: underline;  /* Adds the underline when hovered */
-            }
-        </style>
+<div class="results-container">
+    <div class="results-header">
+        <button class="back-button" onclick="window.history.back()">← Back to Search</button>
+        <h2>📊 Search Results</h2>
+        
         {% if snp_info %}
-        <form method="POST" action="{{ url_for('select_population') }}">        <table class="table table-striped">
+            <p class="result-count">{{ snp_info|length }} variant{% if snp_info|length != 1 %}s{% endif %} found</p>
+        {% endif %}
+    </div>
+
+    {% if snp_info %}
+    <div class="table-container">
+        <table class="modern-table">
             <thead>
                 <tr>
-                    <th>Select</th>
                     <th>SNP ID</th>
                     <th>Chromosome</th>
-                    <th>Start Position</th>
-                    <th>End Position</th>
+                    <th>Position</th>
                     <th>Gene</th>
-                    <th>Risk Allele</th>
-                    <th>p-value</th>
-                    <th>Population</th>
+                    <th>Minor Allele</th>
+                    <th>P-Value</th>
+                    <th>zScore</th>
                 </tr>
             </thead>
             <tbody>
                 {% for snp in snp_info %}
                 <tr>
-                    <td><input type="checkbox" name="selected_populations" value="{{ snp.population }}"></td>
-                    <td>{{ snp.snp_id }}</td>
-                    <td>{{ snp.chromosome }}</td>
-                    <td>{{ snp.start_position }}</td>
-                    <td>{{ snp.end_position }}</td>
-                    <td><a href="{{ url_for('gene_terms', gene_name=snp.gene) }}">{{ snp.gene }}</a></td>
-                    <td>{{ snp.risk_allele }}</td>
-                    <td>{{ snp.p_value }}</td>
-                    <td>{{ snp.population }}</td>
+                    <td>{{ snp.dbSNP }}</td>
+                    <td>{{ snp.Chromosome }}</td>
+                    <td>{{ snp.Position }}</td>
+                    <td>
+                        <a href="{{ url_for('gene_terms', gene_name=snp.Gene) }}" class="gene-link">
+                            {{ snp.Gene }}
+                        </a>
+                    </td>
+                    <td>{{ snp.Minor_Allele }}</td>
+                    <td>{{ snp.P_Value }}</td>
+                    <td>{{ snp.zScore | default('N/A', true) }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-        <button type="submit" class="btn btn-primary">Get Population Info</button>
-    </form>
+    </div>
     {% else %}
-    <p>No results found. Try another search.</p>
+    <div class="no-results">
+        <div class="no-results-icon">🧬</div>
+        <h3>No Variants Found</h3>
+        <p>Try adjusting your search criteria</p>
+    </div>
     {% endif %}
 </div>
-{% endblock %} -->
 
-{% extends 'base.html' %}
+<style>
+    .results-container {
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
 
-{% block title %}Results - T2D Project{% endblock %}
+    .results-header {
+        margin-bottom: 2rem;
+        position: relative;
+    }
 
-{% block content %}
-<div class="container">
-    <button class="back-button" onclick="window.history.back()">← Back</button>
-    <h1>Search Results</h1>
-    
-    {% if snp_info %}
-    <table>
-        <thead>
-            <tr>
-                <th>SNP ID</th>
-                <th>Chromosome</th>
-                <th>Position</th>
-                <th>Gene</th>
-                <th>Minor Allele</th>
-                <th>P-Value</th>
-                <th>zScore</th>
-                <th>Variant ID</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for snp in snp_info %}
-            <tr>
-                <td>{{ snp.dbSNP }}</td>
-                <td>{{ snp.Chromosome }}</td>
-                <td>{{ snp.Position }}</td>
-                <td>
-                    <a href="{{ url_for('gene_terms', gene_name=snp.Gene) }}">
-                        {{ snp.Gene }}
-                    </a>
-                </td>
-                <td>{{ snp.Minor_Allele }}</td>
-                <td>{{ snp.P_Value }}</td>
-                <td>{{ snp.zScore | round(2) if snp.zScore else 'N/A' }}</td>
-                <td class="long-text">{{ snp.varId }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <p>No SNPs found matching your criteria.</p>
-    {% endif %}
-</div>
+    .back-button {
+        background: none;
+        border: none;
+        color: #4f46e5;
+        padding: 0.5rem 1rem;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .back-button:hover {
+        background-color: #f1f5f9;
+        border-radius: 0.5rem;
+    }
+
+    .result-count {
+        color: #64748b;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+
+    .table-container {
+        overflow-x: auto;
+    }
+
+    .modern-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .modern-table th,
+    .modern-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .modern-table th {
+        background-color: #f8fafc;
+        font-weight: 600;
+    }
+
+    .modern-table tr:hover {
+        background-color: #f8fafc;
+    }
+
+    .no-results {
+        text-align: center;
+        padding: 3rem;
+        background: #f8fafc;
+        border-radius: 1rem;
+        margin-top: 2rem;
+    }
+
+    .no-results-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .no-results h3 {
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+    }
+
+    .no-results p {
+        color: #64748b;
+    }
+
+    .gene-link {
+        color: #4f46e5;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s ease;
+    }
+
+    .gene-link:hover {
+        color: #6366f1;
+        text-decoration: underline;
+    }
+</style>
 {% endblock %}

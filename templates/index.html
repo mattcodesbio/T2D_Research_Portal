@@ -1,93 +1,67 @@
-<!-- {% extends 'base.html' %}
-
-{% block title %}Home - T2D Project{% endblock %}
-
-{% block content %}
-<div class="container">
-    <h1>SNP Search</h1>
-    <p>Use this form to search for SNP information. Fill in the required fields and click "Search" to see the results.</p>
-    <ul>
-        <li><strong>SNP Name:</strong> Enter the SNP identifier, e.g., <code>rs12345</code>.</li>
-        <li><strong>Chromosome:</strong> Specify the chromosome number, e.g., <code>1</code> or <code>X</code>.</li>
-        <li><strong>Start Coordinate:</strong> Provide the starting position of the SNP on the chromosome.</li>
-        <li><strong>End Coordinate:</strong> Enter the ending position of the SNP on the chromosome.</li>
-        <li><strong>Gene Name (Optional):</strong> Include the associated gene name, if applicable.</li>
-    </ul>
-    <form method="POST" action="{{ url_for('home') }}">
-        <!-- SNP Name -->
-<!--         <div class="form-group">
-            <label for="snp_name">SNP ID:</label>
-            <input type="text" id="snp_name" name="snp_name" class="form-control" placeholder="e.g., rs12345">
-        </div>
-        <!-- Chromosome -->
-<!--         <div class="form-group">
-            <label for="chromosome">Chromosome:</label>
-            <input type="text" id="chromosome" name="chromosome" class="form-control" placeholder="e.g., 1">
-        </div>
-         <!-- Start Position -->
-<!--         <div class="form-group">
-            <label for="start">Start Coordinate:</label>
-            <input type="number" id="start" name="start" class="form-control" placeholder="e.g., 123456">
-        </div>
-        <!-- End Position -->
-<!--         <div class="form-group">
-            <label for="end">End Coordinate:</label>
-            <input type="number" id="end" name="end" class="form-control" placeholder="e.g., 123789">
-        </div> 
-        <!-- Gene Name -->
-<!--         <div class="form-group">
-            <label for="gene_name">Gene Name:</label>
-            <input type="text" id="gene_name" name="gene_name" class="form-control" placeholder="e.g., GENE1">
-        </div>
-        <button type="submit" class="btn btn-primary">Search</button>
-    </form>
-</div>
-{% endblock %} --> --> --> --> --> -->
-
-
-
-
-
 {% extends 'base.html' %}
 
 {% block title %}SNP Search - T2D Project{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1>Search SNPs</h1>
-    <p>Find SNPs by ID, chromosome, position, or gene.</p>
+<div class="search-container">
+    <h1>🔍 SNP Search</h1>
+    <p class="subtitle">Find genetic variants by multiple criteria</p>
     
     <form method="POST" action="{{ url_for('home') }}">
-        <!-- SNP ID -->
         <div class="form-group">
-            <label for="snp_name">SNP ID (e.g., rs7903146):</label>
-            <input type="text" id="snp_name" name="snp_name">
-        </div>
-
-        <!-- Chromosome -->
-        <div class="form-group">
-            <label for="chromosome">Chromosome (e.g., 10):</label>
-            <input type="text" id="chromosome" name="chromosome">
-        </div>
-
-        <!-- Position Range -->
-        <div class="form-group">
-            <label for="start">Position/Start:</label>
-            <input type="number" id="start" name="start">
+            <label>SNP ID (e.g., rs7903146)</label>
+            <input type="text" name="snp_name" placeholder="Enter SNP identifier...">
         </div>
 
         <div class="form-group">
-            <label for="end">End (optional):</label>
-            <input type="number" id="end" name="end">
+            <label>Chromosome Number</label>
+            <input type="text" name="chromosome" placeholder="Example: 10">
         </div>
 
-        <!-- Gene -->
         <div class="form-group">
-            <label for="gene_name">Gene (e.g., TCF7L2):</label>
-            <input type="text" id="gene_name" name="gene_name">
+            <label>Genomic Position</label>
+            <div class="input-group">
+                <input type="number" name="start" placeholder="Start position">
+                <span class="input-divider">–</span>
+                <input type="number" name="end" placeholder="End position (optional)">
+            </div>
         </div>
 
-        <button type="submit">Search</button>
+        <div class="form-group">
+            <label>Associated Gene</label>
+            <input type="text" name="gene_name" placeholder="Example: TCF7L2">
+        </div>
+
+        <button type="submit">Search Variants</button>
     </form>
 </div>
+
+<style>
+    .search-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    h1 {
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+        font-size: 2rem;
+    }
+
+    .subtitle {
+        color: #64748b;
+        margin-bottom: 2rem;
+    }
+
+    .input-group {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .input-divider {
+        color: #94a3b8;
+        padding: 0 0.5rem;
+    }
+</style>
 {% endblock %}
