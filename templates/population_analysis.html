@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Population Analysis{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1>Population Analysis</h1>
+
+        {% for pop, info in selected_population_info.items() %}
+            <p><strong>{{ pop }}:</strong> {{ info }}</p>
+        {% endfor %}
+
+        <h2>Interactive Tajima's D Plots (Chromosome {{ selected_chromosome }})</h2>
+
+        <label for="t2d_filter">Show only T2D-associated SNPs:</label>
+        <input type="checkbox" id="t2d_filter" onchange="updatePlot()">
+
+        <div id="plots-container"></div> <!-- Multiple plots will go here -->
+
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <script>
+            let tajimaDData = {{ tajima_d_data | safe }};
+            let t2dSnps = {{ t2d_snp_data | safe }};
+
+            function updatePlot() {
+                let showT2D = document.getElementById("t2d_filter").checked;
+                let container = document.getElementById("plots-container");
+                container.innerHTML = "";  // Clear previous plots
+
+                for (let pop in tajimaDData) {
+                    let plotDiv = document.createElement("div");
+                    plotDiv.id = "plot-" + pop;
+                    container.appendChild(plotDiv);
+
+                    let binPositions = tajimaDData[pop].map(d => (d.bin_start + d.bin_end) / 2); // Midpoints
+                    let tajimaValues = tajimaDData[pop].map(d => d.tajima_d);
+
+                    let traces = [{
+                        x: binPositions,
+                        y: tajimaValues,
+                        mode: 'lines',
+                        type: 'scatter',
+                        name: `Tajima's D - ${pop}`,
+                        line: { color: "blue" }
+                    }];
+
+                    // Add T2D SNP markers if enabled
+                    if (showT2D) {
+                        let snpPositions = t2dSnps.map(snp => snp.position);
+                        let snpValues = snpPositions.map(pos => {
+                            let closestBin = tajimaDData[pop].reduce((prev, curr) =>
+                                Math.abs(curr.bin_start - pos) < Math.abs(prev.bin_start - pos) ? curr : prev
+                            );
+                            return closestBin.tajima_d;
+                        });
+
+                        let t2dSnpTrace = {
+                            x: snpPositions,
+                            y: snpValues,
+                            mode: 'markers+text',
+                            type: 'scatter',
+                            text: t2dSnps.map(snp => snp.snp_id),
+                            textposition: "top center",
+                            marker: {color: 'red', size: 10},
+                            name: 'T2D SNPs'
+                        };
+                        traces.push(t2dSnpTrace);
+                    }
+
+                    let layout = {
+                        title: `Tajima's D for ${pop} (Chromosome {{ selected_chromosome }})`,
+                        xaxis: { title: "Genomic Position (bp)" },
+                        yaxis: { title: "Tajima's D" },
+                        showlegend: true
+                    };
+
+                    Plotly.newPlot(plotDiv.id, traces, layout);
+                }
+            }
+
+            updatePlot();
+        </script>
+    </div>
+{% endblock %}
