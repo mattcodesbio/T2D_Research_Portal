@@ -3,6 +3,7 @@ from models import SNP, TajimaD
 from functions import get_snp_info, get_gene_ontology_terms
 from main import app
 import json
+import pandas as pd
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
@@ -118,10 +119,12 @@ def about():
 
 @app.route('/gene_terms/<gene_name>')
 def gene_terms(gene_name):
-    """Retrieve and display Gene Ontology terms for a given gene using the GO API."""
     go_terms = get_gene_ontology_terms(gene_name)
+    
+    if not go_terms:
+        return render_template("ontology.html", gene_name=gene_name, go_terms={})
 
-    return render_template('ontology.html', gene_name=gene_name, go_terms=go_terms)
+    return render_template("ontology.html", gene_name=gene_name, go_terms=go_terms)
 
 
 # @app.route('/select_population', methods=['POST'])

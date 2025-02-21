@@ -5,53 +5,127 @@
 {% block content %}
     <div class="container">
         <button class="back-button" onclick="window.history.back();">Back</button>
-        <h1 class="main-title">Gene Ontology Terms for {{ gene_name }}</h1>
+        <h1 class="main-title">Gene Ontology Terms for <span class="highlight">{{ gene_name }}</span></h1>
 
         {% if go_terms %}
-            {% for category, terms in go_terms.items() %}
-                <h2>{{ category.replace('_', ' ') | title }}</h2>
-                <ul>
-                    {% for term in terms %}
-                        <li><strong>{{ term.id }}</strong>: {{ term.name }}</li>
-                        <p><strong>Definition:</strong> {{ term.definition }}</p>
-                        <p><strong>Namespace:</strong> {{ term.namespace }}</p>
-                        {% if term.synonyms %}
-                            <p><strong>Synonyms:</strong> {{ term.synonyms | join(', ') }}</p>
+            <div class="ontology-sections">
+                {% for category, terms in go_terms.items() %}
+                    <div class="ontology-category">
+                        <h2>{{ category.replace('_', ' ') | title }}</h2>
+                        {% if terms %}
+                            <div class="go-card-container">
+                                {% for term in terms %}
+                                    <div class="go-card">
+                                        <h3 class="go-title">{{ term.id }}: {{ term.name }}</h3>
+                                        <p class="go-description"><strong>Description:</strong> {{ term.description }}</p>
+                                        {% if term.synonyms %}
+                                            <p class="go-synonyms"><strong>Synonyms:</strong> {{ term.synonyms | join(', ') }}</p>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="no-terms">No terms found in this category.</p>
                         {% endif %}
-                    {% endfor %}
-                </ul>
-            {% endfor %}
-
-            <h3>Raw JSON Output</h3>
-            <pre>{{ go_terms | tojson(indent=2) }}</pre>  <!-- Displays raw JSON output -->
+                    </div>
+                {% endfor %}
+            </div>
         {% else %}
-            <p>No Gene Ontology terms found for this gene.</p>
+            <p class="no-results">No Gene Ontology terms found for this gene.</p>
         {% endif %}
     </div>
 
     <style>
-        .go-term {
-            background-color: #f9f9f9;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        
-        .go-term h2 {
-            color: #1b52a4;
+        /* General container styling */
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
         }
 
-        .go-term p {
-            font-size: 1.1em;
+        .highlight {
+            color: #1b52a4;
+            font-weight: bold;
+        }
+
+        .main-title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 20px;
             color: #333;
         }
 
-        pre {
-            background-color: #eee;
-            padding: 10px;
+        /* Ontology category section */
+        .ontology-category {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .ontology-category h2 {
+            color: #1b52a4;
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+
+        /* GO term cards */
+        .go-card-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .go-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            flex: 1 1 calc(50% - 15px);
+            min-width: 250px;
+        }
+
+        .go-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1b52a4;
+            margin-bottom: 10px;
+        }
+
+        .go-description, .go-synonyms {
+            font-size: 14px;
+            color: #444;
+        }
+
+        .no-terms, .no-results {
+            text-align: center;
+            color: #888;
+            font-style: italic;
+        }
+
+        /* Responsive design */
+        @media (max-width: 600px) {
+            .go-card {
+                flex: 1 1 100%;
+            }
+        }
+
+        .back-button {
+            display: inline-block;
+            background: #1b52a4;
+            color: white;
+            padding: 10px 15px;
+            border: none;
             border-radius: 5px;
-            white-space: pre-wrap; /* Ensures text wraps */
+            cursor: pointer;
+            text-decoration: none;
+            margin-bottom: 15px;
+        }
+
+        .back-button:hover {
+            background: #164280;
         }
     </style>
 {% endblock %}

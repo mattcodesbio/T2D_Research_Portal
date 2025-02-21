@@ -1,6 +1,7 @@
 import pandas as pd
 from models import db, SNP, TajimaD, Fst
 import requests
+import plotly.graph_objects as go
 from urllib.parse import quote_plus
 import os
 
@@ -53,57 +54,80 @@ def load_snps_from_csv(csv_file):
     db.session.commit()
 
 
+
 def get_gene_ontology_terms(gene_name):
     """
-    Fetch Gene Ontology terms for a given gene and retrieve detailed GO descriptions.
+    Step 1: Fetch GO term IDs from MyGene.info API
+    Step 2: Query QuickGO API to fetch details for each GO term ID
     """
-    # Step 1: Get Ensembl Gene ID for the given gene name
-    lookup_url = f"https://rest.ensembl.org/xrefs/symbol/homo_sapiens/{quote_plus(gene_name)}?content-type=application/json"
-    response = requests.get(lookup_url)
 
-    if response.status_code == 200:
-        data = response.json()
-        if data:
-            ensembl_gene_id = data[0]["id"]  # Extract Ensembl Gene ID
+    # Step 1: Query MyGene.info to get GO term IDs
+    mygene_url = f"https://mygene.info/v3/query?q={gene_name}&species=human&fields=go"
 
-            # Step 2: Fetch GO terms from MyGeneInfo API
-            url = f"https://mygene.info/v3/gene/{ensembl_gene_id}"
-            params = {"fields": "go"}
-            response = requests.get(url, params=params, headers={"accept": "application/json"})
+    response = requests.get(mygene_url)
 
-            if response.status_code == 200:
-                go_data = response.json().get("go", {})
+    if response.status_code != 200:
+        return None  # API request failed
 
-                # Extract top 2 GO terms per category
-                biological_process = go_data.get("BP", [])[:2]
-                molecular_function = go_data.get("MF", [])[:2]
-                cellular_component = go_data.get("CC", [])[:2]
+    data = response.json()
 
-                # Fetch detailed GO term info
-                enriched_go_terms = {}
-                for category, go_terms in zip(["biological_process", "molecular_function", "cellular_component"], 
-                                              [biological_process, molecular_function, cellular_component]):
+    if "hits" not in data or not data["hits"]:
+        return None  # No results found
 
-                    enriched_go_terms[category] = []
-                    
-                    for go_term in go_terms:
-                        go_id = go_term["id"]
-                        go_detail_url = f"https://api.geneontology.org/api/ontology/term/{quote_plus(go_id)}"
-                        go_response = requests.get(go_detail_url)
+    # Extract GO term IDs from MyGene.info response
+    go_terms = {
+        "biological_process": [],
+        "molecular_function": [],
+        "cellular_component": []
+    }
 
-                        if go_response.status_code == 200:
-                            enriched_data = go_response.json()
-                            enriched_go_terms[category].append({
-                                "id": go_id,
-                                "name": enriched_data.get("label", "N/A"),
-                                "definition": enriched_data["definition"]["text"] if isinstance(enriched_data.get("definition"), dict) else enriched_data.get("definition", "No definition available"),
-                                "synonyms": enriched_data.get("synonyms", []),
-                                "namespace": enriched_data.get("namespace", "N/A")
-                            })
+    go_categories = data["hits"][0].get("go", {})
+    go_ids = set()  # Store unique GO term IDs
 
-                return enriched_go_terms  # Return enriched GO terms
-    
-    return None  # Return None if no data is found
+    for category, terms in go_categories.items():
+        for term in terms:
+            go_id = term["id"]
+            go_ids.add(go_id)  # Collect GO IDs for QuickGO lookup
+
+    if not go_ids:
+        return None  # No GO terms found
+
+    # Step 2: Query EBI QuickGO API with retrieved GO term IDs
+    quickgo_url = "https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms"
+
+    # Convert GO IDs to a comma-separated string
+    go_id_list = ",".join(go_ids)
+
+    quickgo_response = requests.get(f"{quickgo_url}/{go_id_list}", headers={"Accept": "application/json"})
+
+    if quickgo_response.status_code == 200:
+        quickgo_data = quickgo_response.json().get("results", [])
+
+        for result in quickgo_data:
+            go_id = result["id"]
+            go_name = result["name"]
+            go_category = result["aspect"]  # BP, MF, CC
+            go_description = result.get("definition", {}).get("text", "No description available")
+
+            # Extract only the synonym names (ignore type)
+            go_synonyms = [syn["name"] for syn in result.get("synonyms", []) if "name" in syn]
+
+            go_entry = {
+                "id": go_id,
+                "name": go_name,
+                "description": go_description,
+                "synonyms": go_synonyms  # Now a clean list of names
+            }
+
+            if go_category == "biological_process":
+                go_terms["biological_process"].append(go_entry)
+            elif go_category == "molecular_function":
+                go_terms["molecular_function"].append(go_entry)
+            elif go_category == "cellular_component":
+                go_terms["cellular_component"].append(go_entry)
+
+    return go_terms  # Returns structured GO terms categorized by BP, MF, and CC
+
 
 
 
