@@ -1,6 +1,6 @@
-from flask import render_template, request
+from flask import render_template, request, jsonify, session
 from models import SNP, TajimaD
-from functions import get_snp_info, get_gene_ontology_terms
+from functions import get_snp_info, get_gene_ontology_terms, get_gene_coordinates_ensembl
 from main import app
 import json
 import pandas as pd
@@ -61,8 +61,26 @@ def home():
 
     return render_template('index.html')
 
-@app.route('/population_analysis', methods=['POST'])
+
+
+@app.route('/population_analysis', methods=['GET', 'POST'])
 def population_analysis():
+    """
+    Handles whole chromosome Tajima's D analysis.
+    - GET: Loads the page with default values.
+    - POST: Handles user selection for specific populations and chromosome.
+    """
+    if request.method == 'GET':  
+        # Default: Load the page with no filters
+        return render_template(
+            'population_analysis.html',
+            selected_population_info={},
+            tajima_d_data=json.dumps({}),
+            t2d_snp_data=json.dumps({}),
+            selected_chromosome="10"  # Default chromosome
+        )
+
+    # Handle POST request for user selection
     selected_populations = request.form.getlist('selected_population')
     selected_chromosome = request.form.get('selected_chromosome', '10')
 
@@ -85,6 +103,7 @@ def population_analysis():
         .all()
     )
 
+
     # Organize Tajima's D data per population
     tajima_d_data = {}
     for pop in selected_populations:
@@ -97,7 +116,7 @@ def population_analysis():
     t2d_snps = (
         SNP.query
         .filter(SNP.chromosome == selected_chromosome)
-        .filter(SNP.p_value < 5e-8)  # Filter for significant T2D SNPs
+        .filter(SNP.p_value < 5e-8)  # Significant T2D SNPs
         .all()
     )
 
@@ -111,6 +130,77 @@ def population_analysis():
         t2d_snp_data=json.dumps(t2d_snp_data),
         selected_chromosome=selected_chromosome
     )
+
+
+@app.route('/population_analysis_region', methods=['GET'])
+def population_analysis_region():
+    """
+    Fetches Tajima's D for a user-defined region and T2D SNPs.
+    """
+    start = request.args.get("start", type=int)
+    end = request.args.get("end", type=int)
+    gene_name = request.args.get("gene_name", type=str)
+    chromosome = request.args.get("chromosome", "10")
+    selected_populations = request.args.getlist("selected_population")
+
+    # If a gene name is provided, get the region from Ensembl
+    if gene_name:
+        gene_info = get_gene_coordinates_ensembl(gene_name)
+        if gene_info:
+            chromosome, start, end = gene_info["chromosome"], gene_info["start"], gene_info["end"]
+        else:
+            return jsonify({"error": f"Gene '{gene_name}' not found in Ensembl"}), 400
+
+    # Ensure valid region
+    if start is None or end is None:
+        return jsonify({"error": "Invalid region parameters"}), 400
+
+    # Fetch Tajima's D values for the selected populations in the region
+    tajima_d_results = (
+        TajimaD.query
+        .filter(TajimaD.chromosome == chromosome)
+        .filter(TajimaD.bin_start >= start, TajimaD.bin_end <= end)
+        .filter(TajimaD.population.in_(selected_populations))  # Only return selected populations
+        .all()
+    )
+
+    region_tajima_d = {pop: [] for pop in selected_populations}
+    for tajima in tajima_d_results:
+        region_tajima_d[tajima.population].append({
+            "bin_start": tajima.bin_start,
+            "bin_end": tajima.bin_end,
+            "tajima_d": tajima.tajima_d
+        })
+
+    # Fetch T2D SNPs in the region
+    t2d_snps = (
+        SNP.query
+        .filter(SNP.chromosome == chromosome)
+        .filter(SNP.grch38_start >= start, SNP.grch38_start <= end)
+        .filter(SNP.p_value < 5e-8)  # Ensure it's a significant T2D SNP
+        .all()
+    )
+
+    # Map SNPs to their nearest Tajima's D bin
+    t2d_snp_data = []
+    for snp in t2d_snps:
+        closest_tajima_d = (
+            TajimaD.query
+            .filter(TajimaD.chromosome == chromosome)
+            .filter(TajimaD.bin_start <= snp.grch38_start, TajimaD.bin_end >= snp.grch38_start)
+            .first()  # Get the closest match
+        )
+
+        t2d_snp_data.append({
+            "snp_id": snp.snp_id,
+            "position": snp.grch38_start,
+            "tajima_d": closest_tajima_d.tajima_d if closest_tajima_d else None
+        })
+
+    return jsonify({
+        "tajima_d_data": region_tajima_d,
+        "t2d_snp_data": t2d_snp_data
+    })
 
 
 @app.route('/about')

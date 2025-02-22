@@ -45,7 +45,7 @@ def load_snps_from_csv(csv_file):
                 snp_id=row["dbSNP"],
                 chromosome=str(row["chromosome"]),
                 grch38_start=int(row["GRCh38_start"]),
-                gene_name=row["gene_name"].strip("[]").replace("\"", "") if row["gene_name"] else None,
+                gene_name=", ".join(eval(row["Mapped_Genes"])) if pd.notna(row["Mapped_Genes"]) else None,
                 p_value=row["pValue"],
                 reference_allele=row["reference"],
                 alternative_allele=row["alt"],
@@ -192,5 +192,67 @@ def load_tajima_d_results(directory):
                         ))
     db.session.commit()
 
-        
-        
+def get_gene_coordinates_ensembl(gene_name):
+    """
+    Fetch chromosome, start, and end position of a gene from Ensembl.
+    """
+    url = f"https://rest.ensembl.org/xrefs/symbol/homo_sapiens/{gene_name}?content-type=application/json"
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        data = response.json()
+        if data:
+            ensembl_gene_id = data[0]["id"]  # Extract Ensembl Gene ID
+
+            # Fetch gene location details
+            gene_url = f"https://rest.ensembl.org/lookup/id/{ensembl_gene_id}?content-type=application/json"
+            gene_response = requests.get(gene_url)
+
+            if gene_response.status_code == 200:
+                gene_data = gene_response.json()
+                return {
+                    "chromosome": gene_data["seq_region_name"],
+                    "start": gene_data["start"],
+                    "end": gene_data["end"]
+                }
+    
+    return None  # Return None if gene is not found
+
+
+
+# Load SNP dataframe with currect mapped genes 
+
+# Load your SNP data
+file_path = "converted_positions.csv"  # Update with the actual file path
+df = pd.read_csv(file_path)
+
+# Extract unique rsIDs
+rsids = df["dbSNP"].dropna().unique()
+
+# Ensembl API endpoint
+ENSEMBL_API = "https://rest.ensembl.org/variation/homo_sapiens/"
+
+# Function to query Ensembl API
+def get_mapped_genes(rsid):
+    url = f"{ENSEMBL_API}{rsid}?content-type=application/json"
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        # Extract mapped genes if available
+        mapped_genes = data.get("mappings", [])
+        if mapped_genes:
+            return [gene["gene_name"] for gene in mapped_genes if "gene_name" in gene]
+    return None  # No mapped gene found
+
+# Query Ensembl API for each SNP
+mapped_genes_dict = {rsid: get_mapped_genes(rsid) for rsid in rsids}
+
+# Convert to DataFrame
+mapped_genes_df = pd.DataFrame(list(mapped_genes_dict.items()), columns=["rsID", "Mapped_Genes"])
+
+# Merge with original data
+df = df.merge(mapped_genes_df, left_on="dbSNP", right_on="rsID", how="left")
+
+# Save updated file
+df.to_csv("updated_snp_data.csv", index=False)
+print("Updated file saved as updated_snp_data.csv")

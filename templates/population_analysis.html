@@ -10,12 +10,46 @@
             <p><strong>{{ pop }}:</strong> {{ info }}</p>
         {% endfor %}
 
-        <h2>Interactive Tajima's D Plots (Chromosome {{ selected_chromosome }})</h2>
+        <h2>Whole Chromosome Tajima's D Plot (Chromosome {{ selected_chromosome }})</h2>
 
         <label for="t2d_filter">Show only T2D-associated SNPs:</label>
         <input type="checkbox" id="t2d_filter" onchange="updatePlot()">
 
-        <div id="plots-container"></div> <!-- Multiple plots will go here -->
+        <div id="plots-container"></div> 
+
+        <!-- Region Selection Form -->
+        <div class="region-selection">
+            <h3>Select Region of Interest</h3>
+            <form id="region-form">
+                <label for="region_start">Start Position:</label>
+                <input type="number" id="region_start" name="region_start" placeholder="e.g., 100000">
+
+                <label for="region_end">End Position:</label>
+                <input type="number" id="region_end" name="region_end" placeholder="e.g., 500000">
+
+                <label for="gene_name">Gene Name (optional):</label>
+                <input type="text" id="gene_name" name="gene_name" placeholder="e.g., TCF7L2">
+
+                <div class="col-12">
+                    <label class="form-label">Select Population(s) for Region Analysis:</label>
+                    <div class="btn-group d-flex flex-wrap" role="group" id="population-buttons">
+                        {% for pop in ["BEB", "GIH", "ITU", "PJL", "STU"] %}
+                            <button type="button" class="btn btn-outline-secondary population-btn m-1" 
+                                    data-population="{{ pop }}" onclick="togglePopulation(this)">
+                                {{ pop }}
+                            </button>
+                        {% endfor %}
+                    </div>
+                    <input type="hidden" id="selected_populations" name="selected_populations">
+                </div>
+
+                <button type="button" onclick="fetchRegionData()">Show Region Graph</button>
+                <label for="t2d_region_filter">Show T2D-associated SNPs:</label>
+                <input type="checkbox" id="t2d_region_filter" checked onchange="fetchRegionData()">
+            </form>
+        </div>
+
+        <div id="region-plot-container"></div> 
 
         <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
         <script>
@@ -25,26 +59,24 @@
             function updatePlot() {
                 let showT2D = document.getElementById("t2d_filter").checked;
                 let container = document.getElementById("plots-container");
-                container.innerHTML = "";  // Clear previous plots
+                container.innerHTML = "";
 
                 for (let pop in tajimaDData) {
                     let plotDiv = document.createElement("div");
                     plotDiv.id = "plot-" + pop;
                     container.appendChild(plotDiv);
 
-                    let binPositions = tajimaDData[pop].map(d => (d.bin_start + d.bin_end) / 2); // Midpoints
+                    let binPositions = tajimaDData[pop].map(d => (d.bin_start + d.bin_end) / 2);
                     let tajimaValues = tajimaDData[pop].map(d => d.tajima_d);
 
                     let traces = [{
                         x: binPositions,
                         y: tajimaValues,
                         mode: 'lines',
-                        type: 'scatter',
                         name: `Tajima's D - ${pop}`,
                         line: { color: "blue" }
                     }];
 
-                    // Add T2D SNP markers if enabled
                     if (showT2D) {
                         let snpPositions = t2dSnps.map(snp => snp.position);
                         let snpValues = snpPositions.map(pos => {
@@ -57,8 +89,7 @@
                         let t2dSnpTrace = {
                             x: snpPositions,
                             y: snpValues,
-                            mode: 'markers+text',
-                            type: 'scatter',
+                            mode: 'markers',
                             text: t2dSnps.map(snp => snp.snp_id),
                             textposition: "top center",
                             marker: {color: 'red', size: 10},
@@ -67,15 +98,152 @@
                         traces.push(t2dSnpTrace);
                     }
 
-                    let layout = {
-                        title: `Tajima's D for ${pop} (Chromosome {{ selected_chromosome }})`,
-                        xaxis: { title: "Genomic Position (bp)" },
-                        yaxis: { title: "Tajima's D" },
-                        showlegend: true
-                    };
-
-                    Plotly.newPlot(plotDiv.id, traces, layout);
+                    Plotly.newPlot(plotDiv.id, traces);
                 }
+            }
+
+            let selectedPopulations = new Set(); // Store selected populations
+
+            // 🔹 Function to toggle population selection (affects regional analysis)
+            function togglePopulation(button) {
+                let pop = button.getAttribute("data-population");
+
+                if (selectedPopulations.has(pop)) {
+                    selectedPopulations.delete(pop);
+                    button.classList.remove("btn-primary");
+                    button.classList.add("btn-outline-primary");
+                } else {
+                    selectedPopulations.add(pop);
+                    button.classList.remove("btn-outline-primary");
+                    button.classList.add("btn-primary");
+                }
+
+                // Update hidden input field to store selected populations
+                document.getElementById("selected_populations").value = Array.from(selectedPopulations).join(",");
+            }
+
+            function fetchRegionData() {
+                let start = document.getElementById("region_start").value;
+                let end = document.getElementById("region_end").value;
+                let geneName = document.getElementById("gene_name").value;
+                let showT2D = document.getElementById("t2d_region_filter").checked; // Show T2D SNPs in the region plot
+
+                // Convert selected populations Set to an Array
+                let selectedPopulationsArray = Array.from(selectedPopulations);
+                document.getElementById("selected_populations").value = selectedPopulationsArray.join(",");
+
+                // Construct URL with selected populations
+                let url = `/population_analysis_region?start=${start}&end=${end}&gene_name=${geneName}`;
+                selectedPopulationsArray.forEach(pop => url += `&selected_population=${pop}`);
+
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById("region-plot-container").innerHTML = "<h2>Selected Region Tajima's D</h2>";
+
+                        let colors = ["blue", "green", "purple", "orange", "cyan"];
+                        let colorIndex = 0;
+
+                        let combinedTraces = []; // This will hold traces for the combined plot
+
+                        for (let pop in data.tajima_d_data) {
+                            let traces = [];
+
+                            // Plot Tajima's D values
+                            let binPositions = data.tajima_d_data[pop].map(d => (d.bin_start + d.bin_end) / 2);
+                            let tajimaValues = data.tajima_d_data[pop].map(d => d.tajima_d);
+
+                            // Line plot
+                            let lineTrace = {
+                                x: binPositions,
+                                y: tajimaValues,
+                                mode: 'lines',
+                                name: `Tajima's D - ${pop} (Line)`,
+                                line: { width: 2, color: colors[colorIndex] }
+                            };
+
+                            // Dot plot
+                            let dotTrace = {
+                                x: binPositions,
+                                y: tajimaValues,
+                                mode: 'markers',
+                                name: `Tajima's D - ${pop} (Dots)`,
+                                marker: { size: 6, color: colors[colorIndex] }
+                            };
+
+                            traces.push(lineTrace, dotTrace);
+                            combinedTraces.push(lineTrace, dotTrace); // **🔥 Add traces to the combined plot 🔥**
+
+                            colorIndex = (colorIndex + 1) % colors.length;
+
+                            // Add T2D SNPs with correct Tajima's D values
+                            if (showT2D && data.t2d_snp_data.length > 0) {
+                                let regionSnps = data.t2d_snp_data.filter(snp => snp.position >= start && snp.position <= end);
+
+                                let snpPositions = regionSnps.map(snp => snp.position);
+                                let snpTajimaDValues = snpPositions.map(pos => {
+                                    let closestBin = data.tajima_d_data[pop].reduce((prev, curr) => 
+                                        Math.abs(curr.bin_start - pos) < Math.abs(prev.bin_start - pos) ? curr : prev
+                                    );
+                                    return closestBin.tajima_d;
+                                });
+
+                                let snpLabels = regionSnps.map(snp => snp.snp_id);
+
+                                let snpTrace = {
+                                    x: snpPositions,
+                                    y: snpTajimaDValues,
+                                    mode: 'markers',
+                                    text: snpLabels,
+                                    hoverinfo: 'text+x+y',
+                                    marker: { color: 'red', size: 8 },
+                                    name: `T2D SNPs (${pop})`
+                                };
+
+                                traces.push(snpTrace);
+                            }
+
+                            let layout = {
+                                title: `Tajima's D for ${pop} (Selected Region)`,
+                                xaxis: { title: "Genomic Position (bp)" },
+                                yaxis: { title: "Tajima's D" },
+                                showlegend: true,
+                                height: 600,
+                                width: 1000,
+                                margin: { l: 50, r: 50, t: 50, b: 50 }
+                            };
+
+                            // Create a new div for each population's plot
+                            let plotDiv = document.createElement("div");
+                            plotDiv.id = `region-plot-${pop}`;
+                            document.getElementById("region-plot-container").appendChild(plotDiv);
+
+                            Plotly.newPlot(plotDiv.id, traces, layout);
+                        }
+
+                        // **🔥 Final combined plot with all selected populations (WITHOUT T2D SNPs) 🔥**
+                        if (selectedPopulationsArray.length > 1) {
+                            let combinedLayout = {
+                                title: "Combined Tajima's D for All Selected Populations",
+                                xaxis: { title: "Genomic Position (bp)" },
+                                yaxis: { title: "Tajima's D" },
+                                showlegend: true,
+                                height: 600,
+                                width: 1200,
+                                margin: { l: 50, r: 50, t: 50, b: 50 }
+                            };
+
+                            let combinedPlotDiv = document.createElement("div");
+                            combinedPlotDiv.id = `region-plot-combined`;
+                            document.getElementById("region-plot-container").appendChild(combinedPlotDiv);
+
+                            if (combinedTraces.length > 0) {
+                                Plotly.newPlot(combinedPlotDiv.id, combinedTraces, combinedLayout);
+                            } else {
+                                console.warn("No data found for selected populations in the region. The combined graph will be empty.");
+                            }
+                        }
+                    });
             }
 
             updatePlot();

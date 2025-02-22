@@ -4,18 +4,21 @@
 
 {% block content %}
     <div class="container">
-        <div class="top-buttons">
+        <!-- 🔹 Sticky Section for Selections -->
+        <div class="fixed-header">
             <button class="back-button" onclick="window.history.back();">Back to Search</button>
 
             <form method="POST" action="{{ url_for('population_analysis') }}">
                 <label for="selected_population">Select Population(s):</label>
-                <select name="selected_population" id="selected_population" multiple>
-                    <option value="BEB">BEB</option>
-                    <option value="GIH">GIH</option>
-                    <option value="ITU">ITU</option>
-                    <option value="PJL">PJL</option>
-                    <option value="STU">STU</option>
-                </select>
+                <div class="btn-group d-flex flex-wrap" role="group" id="population-buttons">
+                    {% for pop in ["BEB", "GIH", "ITU", "PJL", "STU"] %}
+                        <button type="button" class="btn btn-outline-primary population-btn m-1" 
+                                data-population="{{ pop }}" onclick="togglePopulation(this)">
+                            {{ pop }}
+                        </button>
+                    {% endfor %}
+                </div>
+                <input type="hidden" id="selected_populations" name="selected_population">
 
                 <label for="selected_chromosome">Chromosome:</label>
                 <select name="selected_chromosome" id="selected_chromosome">
@@ -33,43 +36,6 @@
         </div>
 
         <h1>SNP Query Results</h1>
-
-        <style>
-            /* CSS for dropdown */
-            .dropdown-content {
-                display: none;
-                background-color: #f9f9f9;
-                padding: 10px;
-                border: 1px solid #ccc;
-                margin-top: 5px;
-                border-radius: 5px;
-            }
-
-            .dropdown-content table {
-                width: 100%;
-                border-collapse: collapse;
-            }
-
-            .dropdown-content th, .dropdown-content td {
-                padding: 8px;
-                border: 1px solid #ddd;
-                text-align: center;
-            }
-
-            .toggle-btn {
-                background-color: #1b52a4;
-                color: white;
-                border: none;
-                padding: 8px;
-                cursor: pointer;
-                border-radius: 4px;
-                font-size: 14px;
-            }
-
-            .toggle-btn:hover {
-                background-color: #164280;
-            }
-        </style>
 
         {% if snp_info %}
         <form method="POST" action="{{ url_for('population_analysis') }}">
@@ -94,51 +60,27 @@
                         <td>{{ snp.snp_id }}</td>
                         <td>{{ snp.chromosome }}</td>
                         <td>{{ snp.grch38_start }}</td>
-                        <td><a href="{{ url_for('gene_terms', gene_name=snp.gene_name) }}">{{ snp.gene_name }}</a></td>
+                        <td>
+                            {% if snp.gene_name %}
+                                {% set genes = snp.gene_name.split() %}  {# Split multiple genes by space #}
+                                {% for gene in genes %}
+                                    <a href="{{ url_for('gene_terms', gene_name=gene) }}">{{ gene }}</a>{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <span>Unknown</span>
+                            {% endif %}
+                        </td>
                         <td>{{ snp.reference_allele }}</td>
                         <td>{{ snp.alternative_allele }}</td>
                         <td>{{ snp.p_value }}</td>
                         <td><button type="button" class="toggle-btn" onclick="toggleDropdown('{{ snp.snp_id }}')">Show Stats</button></td>
                     </tr>
-                    <tr id="dropdown-{{ snp.snp_id }}" class="dropdown-content">
-                        <td colspan="9">
-                            <strong>Tajima's D Statistics for SNP {{ snp.snp_id }}</strong>
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Population</th>
-                                        <th>Tajima's D</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for pop_stat in snp.positive_selection %}
-                                    <tr>
-                                        <td>{{ pop_stat.population }}</td>
-                                        <td>{{ pop_stat.tajima_d }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </td>
-                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
-            <button type="submit" class="btn btn-primary">Get Population Info</button>
         </form>
         {% else %}
         <p>No results found. Try another search.</p>
         {% endif %}
     </div>
-
-    <script>
-        function toggleDropdown(snpId) {
-            var dropdown = document.getElementById("dropdown-" + snpId);
-            if (dropdown.style.display === "none" || dropdown.style.display === "") {
-                dropdown.style.display = "table-row";
-            } else {
-                dropdown.style.display = "none";
-            }
-        }
-    </script>
 {% endblock %}

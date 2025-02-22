@@ -20,7 +20,8 @@ with app.app_context():
     db.create_all()
 
     # Load SNP and positive selection data into the database
-    # load_snps_from_csv("converted_positions.csv")
+    print("Loading SNP data into database...")
+    load_snps_from_csv("updated_snp_data_with_mapped_genes.csv")
     # load_tajima_d_results("population_statistics/tajima_d_10kb_results")
     # load_fst_results("population_statistics/fst_results")
 
