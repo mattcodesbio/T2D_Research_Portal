@@ -222,37 +222,37 @@ def get_gene_coordinates_ensembl(gene_name):
 
 # Load SNP dataframe with currect mapped genes 
 
-# Load your SNP data
-file_path = "converted_positions.csv"  # Update with the actual file path
-df = pd.read_csv(file_path)
+# # Load your SNP data
+# file_path = "converted_positions.csv"  # Update with the actual file path
+# df = pd.read_csv(file_path)
 
-# Extract unique rsIDs
-rsids = df["dbSNP"].dropna().unique()
+# # Extract unique rsIDs
+# rsids = df["dbSNP"].dropna().unique()
 
-# Ensembl API endpoint
-ENSEMBL_API = "https://rest.ensembl.org/variation/homo_sapiens/"
+# # Ensembl API endpoint
+# ENSEMBL_API = "https://rest.ensembl.org/variation/homo_sapiens/"
 
-# Function to query Ensembl API
-def get_mapped_genes(rsid):
-    url = f"{ENSEMBL_API}{rsid}?content-type=application/json"
-    response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()
-        # Extract mapped genes if available
-        mapped_genes = data.get("mappings", [])
-        if mapped_genes:
-            return [gene["gene_name"] for gene in mapped_genes if "gene_name" in gene]
-    return None  # No mapped gene found
+# # Function to query Ensembl API
+# def get_mapped_genes(rsid):
+#     url = f"{ENSEMBL_API}{rsid}?content-type=application/json"
+#     response = requests.get(url)
+#     if response.status_code == 200:
+#         data = response.json()
+#         # Extract mapped genes if available
+#         mapped_genes = data.get("mappings", [])
+#         if mapped_genes:
+#             return [gene["gene_name"] for gene in mapped_genes if "gene_name" in gene]
+#     return None  # No mapped gene found
 
-# Query Ensembl API for each SNP
-mapped_genes_dict = {rsid: get_mapped_genes(rsid) for rsid in rsids}
+# # Query Ensembl API for each SNP
+# mapped_genes_dict = {rsid: get_mapped_genes(rsid) for rsid in rsids}
 
-# Convert to DataFrame
-mapped_genes_df = pd.DataFrame(list(mapped_genes_dict.items()), columns=["rsID", "Mapped_Genes"])
+# # Convert to DataFrame
+# mapped_genes_df = pd.DataFrame(list(mapped_genes_dict.items()), columns=["rsID", "Mapped_Genes"])
 
-# Merge with original data
-df = df.merge(mapped_genes_df, left_on="dbSNP", right_on="rsID", how="left")
+# # Merge with original data
+# df = df.merge(mapped_genes_df, left_on="dbSNP", right_on="rsID", how="left")
 
-# Save updated file
-df.to_csv("updated_snp_data.csv", index=False)
-print("Updated file saved as updated_snp_data.csv")
+# # Save updated file
+# df.to_csv("updated_snp_data.csv", index=False)
+# print("Updated file saved as updated_snp_data.csv")
