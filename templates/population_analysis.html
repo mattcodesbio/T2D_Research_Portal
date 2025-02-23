@@ -46,7 +46,12 @@
                 <button type="button" onclick="fetchRegionData()">Show Region Graph</button>
                 <label for="t2d_region_filter">Show T2D-associated SNPs:</label>
                 <input type="checkbox" id="t2d_region_filter" checked onchange="fetchRegionData()">
+
             </form>
+        </div>
+
+        <div class="d-flex justify-content-end mt-3">
+            <button type="button" class="btn btn-success" onclick="downloadTajimaD()">Download Tajima's D Data</button>
         </div>
 
         <div id="region-plot-container"></div> 
@@ -80,10 +85,8 @@
                     if (showT2D) {
                         let snpPositions = t2dSnps.map(snp => snp.position);
                         let snpValues = snpPositions.map(pos => {
-                            let closestBin = tajimaDData[pop].reduce((prev, curr) =>
-                                Math.abs(curr.bin_start - pos) < Math.abs(prev.bin_start - pos) ? curr : prev
-                            );
-                            return closestBin.tajima_d;
+                            let bin = tajimaDData[pop].find(curr => pos >= curr.bin_start && pos <= curr.bin_end);
+                            return bin ? bin.tajima_d : null;
                         });
 
                         let t2dSnpTrace = {
@@ -144,63 +147,48 @@
                         let colors = ["blue", "green", "purple", "orange", "cyan"];
                         let colorIndex = 0;
 
-                        let combinedTraces = []; // This will hold traces for the combined plot
+                        let combinedTraces = [];
 
                         for (let pop in data.tajima_d_data) {
-                            let traces = [];
+                            let plotDiv = document.createElement("div");
+                            plotDiv.id = `region-plot-${pop}`;
+                            document.getElementById("region-plot-container").appendChild(plotDiv);
 
-                            // Plot Tajima's D values
                             let binPositions = data.tajima_d_data[pop].map(d => (d.bin_start + d.bin_end) / 2);
                             let tajimaValues = data.tajima_d_data[pop].map(d => d.tajima_d);
 
-                            // Line plot
                             let lineTrace = {
                                 x: binPositions,
                                 y: tajimaValues,
                                 mode: 'lines',
-                                name: `Tajima's D - ${pop} (Line)`,
-                                line: { width: 2, color: colors[colorIndex] }
+                                name: `Tajima's D - ${pop}`,
+                                line: { color: colors[colorIndex] }
                             };
 
-                            // Dot plot
-                            let dotTrace = {
-                                x: binPositions,
-                                y: tajimaValues,
-                                mode: 'markers',
-                                name: `Tajima's D - ${pop} (Dots)`,
-                                marker: { size: 6, color: colors[colorIndex] }
-                            };
+                            let traces = [lineTrace];
 
-                            traces.push(lineTrace, dotTrace);
-                            combinedTraces.push(lineTrace, dotTrace); // **🔥 Add traces to the combined plot 🔥**
-
+                            // **Ensure only Tajima's D values are included in the combined plot**
+                            combinedTraces.push(lineTrace);
                             colorIndex = (colorIndex + 1) % colors.length;
 
-                            // Add T2D SNPs with correct Tajima's D values
+                            // **Map T2D SNPs to their correct Tajima's D bins**
                             if (showT2D && data.t2d_snp_data.length > 0) {
-                                let regionSnps = data.t2d_snp_data.filter(snp => snp.position >= start && snp.position <= end);
-
-                                let snpPositions = regionSnps.map(snp => snp.position);
-                                let snpTajimaDValues = snpPositions.map(pos => {
-                                    let closestBin = data.tajima_d_data[pop].reduce((prev, curr) => 
-                                        Math.abs(curr.bin_start - pos) < Math.abs(prev.bin_start - pos) ? curr : prev
-                                    );
-                                    return closestBin.tajima_d;
+                                let snpPositions = data.t2d_snp_data.map(snp => snp.position);
+                                let snpValues = snpPositions.map(pos => {
+                                    let bin = data.tajima_d_data[pop].find(curr => pos >= curr.bin_start && pos <= curr.bin_end);
+                                    return bin ? bin.tajima_d : null;
                                 });
 
-                                let snpLabels = regionSnps.map(snp => snp.snp_id);
-
-                                let snpTrace = {
+                                let t2dSnpTrace = {
                                     x: snpPositions,
-                                    y: snpTajimaDValues,
+                                    y: snpValues,
                                     mode: 'markers',
-                                    text: snpLabels,
-                                    hoverinfo: 'text+x+y',
-                                    marker: { color: 'red', size: 8 },
-                                    name: `T2D SNPs (${pop})`
+                                    text: data.t2d_snp_data.map(snp => snp.snp_id),
+                                    textposition: "top center",
+                                    marker: { color: 'red', size: 10 },
+                                    name: 'T2D SNPs'
                                 };
-
-                                traces.push(snpTrace);
+                                traces.push(t2dSnpTrace);
                             }
 
                             let layout = {
@@ -213,12 +201,21 @@
                                 margin: { l: 50, r: 50, t: 50, b: 50 }
                             };
 
-                            // Create a new div for each population's plot
-                            let plotDiv = document.createElement("div");
-                            plotDiv.id = `region-plot-${pop}`;
-                            document.getElementById("region-plot-container").appendChild(plotDiv);
-
                             Plotly.newPlot(plotDiv.id, traces, layout);
+                            colorIndex = (colorIndex + 1) % colors.length;
+
+                             // ✅ Display mean and standard deviation next to each plot
+                            let summaryDiv = document.createElement("div");
+                            summaryDiv.innerHTML = `
+                                <p><strong>Population:</strong> ${pop}</p>
+                                <p><strong>Mean Tajima's D:</strong> ${data.summary_stats[pop].mean}</p>
+                                <p><strong>Std Dev Tajima's D:</strong> ${data.summary_stats[pop].std_dev}</p>
+                            `;
+                            summaryDiv.style.marginBottom = "20px";
+                            summaryDiv.style.fontSize = "16px";
+                            summaryDiv.style.fontWeight = "bold";
+                            
+                            document.getElementById("region-plot-container").appendChild(summaryDiv);
                         }
 
                         // **🔥 Final combined plot with all selected populations (WITHOUT T2D SNPs) 🔥**
@@ -244,7 +241,42 @@
                             }
                         }
                     });
-            }
+                }
+
+                function downloadTajimaD() {
+                    let start = document.getElementById("region_start").value.trim();
+                    let end = document.getElementById("region_end").value.trim();
+                    let geneName = document.getElementById("gene_name").value.trim();
+                    let chromosome = "{{ selected_chromosome }}"; 
+                    let selectedPopulationsArray = Array.from(selectedPopulations);
+
+                    if (selectedPopulationsArray.length === 0) {
+                        alert("Please select at least one population before downloading.");
+                        return;
+                    }
+
+                    // Construct the download URL
+                    let url = `/download_tajima_d?chromosome=${chromosome}`;
+                    
+                    if (geneName) {
+                        url += `&gene_name=${encodeURIComponent(geneName)}`;
+                    } else if (start && end) {
+                        url += `&start=${start}&end=${end}`;
+                    } else {
+                        alert("Please enter either a start and end position OR a gene name.");
+                        return;
+                    }
+
+                    selectedPopulationsArray.forEach(pop => url += `&selected_population=${pop}`);
+
+                    // Create an invisible anchor tag to force the browser to download the file
+                    let link = document.createElement("a");
+                    link.href = url;
+                    link.setAttribute("download", `TajimaD_chr${chromosome}_${start || geneName}_${end || ""}.txt`);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
 
             updatePlot();
         </script>

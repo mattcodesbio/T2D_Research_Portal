@@ -1,9 +1,11 @@
-from flask import render_template, request, jsonify, session
+from flask import render_template, request, jsonify, Response, session
 from models import SNP, TajimaD
 from functions import get_snp_info, get_gene_ontology_terms, get_gene_coordinates_ensembl
 from main import app
 import json
 import pandas as pd
+import numpy as np  
+
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
@@ -115,8 +117,7 @@ def population_analysis():
     # Fetch T2D-associated SNPs for the chromosome
     t2d_snps = (
         SNP.query
-        .filter(SNP.chromosome == selected_chromosome)
-        .filter(SNP.p_value < 5e-8)  # Significant T2D SNPs
+        .filter(SNP.chromosome == selected_chromosome) # Significant T2D SNPs
         .all()
     )
 
@@ -154,23 +155,36 @@ def population_analysis_region():
     # Ensure valid region
     if start is None or end is None:
         return jsonify({"error": "Invalid region parameters"}), 400
-
+    
     # Fetch Tajima's D values for the selected populations in the region
     tajima_d_results = (
         TajimaD.query
         .filter(TajimaD.chromosome == chromosome)
         .filter(TajimaD.bin_start >= start, TajimaD.bin_end <= end)
-        .filter(TajimaD.population.in_(selected_populations))  # Only return selected populations
+        .filter(TajimaD.population.in_(selected_populations))
         .all()
     )
 
     region_tajima_d = {pop: [] for pop in selected_populations}
+    summary_stats = {}  # Store mean & std deviation for each population
+
     for tajima in tajima_d_results:
         region_tajima_d[tajima.population].append({
             "bin_start": tajima.bin_start,
             "bin_end": tajima.bin_end,
             "tajima_d": tajima.tajima_d
         })
+
+    # Compute mean and standard deviation for each population
+    for pop in selected_populations:
+        values = [entry["tajima_d"] for entry in region_tajima_d[pop]]
+        if values:
+            summary_stats[pop] = {
+                "mean": round(np.mean(values), 4),
+                "std_dev": round(np.std(values), 4)
+            }
+        else:
+            summary_stats[pop] = {"mean": None, "std_dev": None}
 
     # Fetch T2D SNPs in the region
     t2d_snps = (
@@ -199,8 +213,82 @@ def population_analysis_region():
 
     return jsonify({
         "tajima_d_data": region_tajima_d,
-        "t2d_snp_data": t2d_snp_data
+        "t2d_snp_data": t2d_snp_data,
+        "summary_stats": summary_stats  # Include mean and std dev in response
     })
+
+
+@app.route('/download_tajima_d', methods=['GET'])
+def download_tajima_d():
+    """ Generates a text file with Tajima's D values for a requested genomic region. """
+
+    gene_name = request.args.get("gene_name")
+    start = request.args.get("start", type=int)
+    end = request.args.get("end", type=int)
+    chromosome = request.args.get("chromosome")
+    selected_populations = request.args.getlist("selected_population")
+
+    # If gene name is provided, fetch its genomic coordinates
+    if gene_name and (not start or not end):
+        gene_info = get_gene_coordinates_ensembl(gene_name)
+        if gene_info:
+            chromosome = gene_info["chromosome"]
+            start = gene_info["start"]
+            end = gene_info["end"]
+        else:
+            return jsonify({"error": f"Gene '{gene_name}' not found in Ensembl."}), 404
+
+    # Validate start and end
+    if not start or not end or not chromosome:
+        return jsonify({"error": "Invalid region parameters."}), 400
+
+    # Fetch Tajima's D values for selected populations and region
+    tajima_d_results = (
+        TajimaD.query
+        .filter(TajimaD.chromosome == chromosome)
+        .filter(TajimaD.bin_start >= start, TajimaD.bin_end <= end)
+        .filter(TajimaD.population.in_(selected_populations))
+        .all()
+    )
+
+    # If no data is found, return a file with a message instead of an error
+    if not tajima_d_results:
+        response_text = f"No Tajima's D data found for Chromosome {chromosome}, Region {start}-{end}.\n"
+        response = Response(response_text, mimetype="text/plain")
+        response.headers["Content-Disposition"] = f"attachment; filename=TajimaD_chr{chromosome}_{start}_{end}.txt"
+        return response
+
+    # Organize data and calculate statistics
+    tajima_d_data = {pop: [] for pop in selected_populations}
+    for tajima in tajima_d_results:
+        tajima_d_data[tajima.population].append(tajima.tajima_d)
+
+    # Generate file content
+    file_content = []
+    file_content.append(f"Tajima's D Data for Chromosome {chromosome}, Region {start}-{end}\n")
+    file_content.append("Population\tBin Start\tBin End\tTajima's D\n")
+
+    for tajima in tajima_d_results:
+        file_content.append(f"{tajima.population}\t{tajima.bin_start}\t{tajima.bin_end}\t{tajima.tajima_d:.4f}\n")
+
+    # Calculate statistics
+    file_content.append("\nSummary Statistics\n")
+    file_content.append("Population\tMean Tajima's D\tStd Dev Tajima's D\n")
+
+    for pop, values in tajima_d_data.items():
+        values = list(values)  # Ensure it's a list for NumPy functions
+        if values:
+            mean_tajima_d = np.mean(values)
+            std_tajima_d = np.std(values)
+        else:
+            mean_tajima_d, std_tajima_d = "N/A", "N/A"
+
+        file_content.append(f"{pop}\t{mean_tajima_d}\t{std_tajima_d}\n")
+
+    # Convert to response
+    response = Response("\n".join(file_content), mimetype="text/plain")
+    response.headers["Content-Disposition"] = f"attachment; filename=TajimaD_chr{chromosome}_{start}_{end}.txt"
+    return response
 
 
 @app.route('/about')

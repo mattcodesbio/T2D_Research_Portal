@@ -155,47 +155,6 @@ def get_gene_ontology_terms(gene_name):
 
 
 
-
-
-# ENSG00000147883
-
-# import requests
-# headers = {'content-type': 'application/x-www-form-urlencoded'}
-# params = 'ids=ENSG00000147883,695&fields=go,symbol,refseq.rna'
-# res = requests.post('http://mygene.info/v3/gene', data=params, headers=headers)
-
-# res.json()
-
-# def load_population_frequencies(base_directory):
-#     import pandas as pd
-#     from main import app
-#     import os
-
-#     populations = ['BEB', 'GIH', 'ITU', 'PJL', 'STU']
-
-#     with app.app_context():
-#         for population in populations:
-#             population_dir = os.path.join(base_directory, population, f"{population}_t2dfreqs")
-#             if os.path.exists(population_dir):
-#                 for file_name in os.listdir(population_dir):
-#                     if file_name.endswith(".txt"):
-#                         file_path = os.path.join(population_dir, file_name)
-#                         df = pd.read_csv(file_path, sep='\t', header=None, names=['chromosome', 'position', 'snp_id', 'reference_allele', 'alternative_allele', 'frequency'])
-
-#                         for _, row in df.iterrows():
-#                             freq_entry = PopulationFrequency(
-#                                 population=population,
-#                                 chromosome=row['chromosome'],
-#                                 position=row['position'],
-#                                 snp_id=row['snp_id'],
-#                                 reference_allele=row['reference_allele'],
-#                                 alternative_allele=row['alternative_allele'],
-#                                 frequency=row['AF']
-#                             )
-#                             db.session.add(freq_entry)
-#         db.session.commit()
-
-# print("Population frequencies database model updated with foreign key relationship and MAF calculation.")
 def load_tajima_d_results(directory):
     with db.session.begin():
         db.session.query(TajimaD).delete()
@@ -217,6 +176,8 @@ def load_tajima_d_results(directory):
                             tajima_d=float(columns[3])
                         ))
     db.session.commit()
+
+
 
 def get_gene_coordinates_ensembl(gene_name):
     """
@@ -245,70 +206,77 @@ def get_gene_coordinates_ensembl(gene_name):
     return None  # Return None if gene is not found
 
 
+###### function to get mapped genes #####
 
 # import requests
 # import pandas as pd
 # import time
+# import os
 
 # # Load your SNP data
-# file_path = "~/Documents/BIO727P-GROUP_PROJECT/backup_web/converted_positions.csv"  # Update with actual file path
+# file_path = os.path.expanduser("~/Documents/BIO727P-GROUP_PROJECT/backup_web/converted_positions.csv")
 # df = pd.read_csv(file_path)
 
-# # Extract unique rsIDs
-# rsids = df["dbSNP"].dropna().unique()
+# # Extract unique rsIDs and ensure it's a list (not NumPy array)
+# rsids = df["dbSNP"].dropna().astype(str).tolist()
 
-# # Function to query NCBI API for mapped genes
-# def get_ncbi_mapped_gene(rsid):
-#     url = f"https://api.ncbi.nlm.nih.gov/variation/v0/beta/refsnp/{rsid.lstrip('rs')}"
-#     response = requests.get(url)
+# # Ensembl VEP API URL
+# ENSEMBL_VEP_URL = "https://rest.ensembl.org/vep/human/id"
 
-#     if response.status_code == 200:
-#         data = response.json()
-#         genes = set()
+# # Function to query Ensembl VEP API for mapped genes
+# def get_ensembl_mapped_genes(rsid_batch, retries=3):
+#     url = f"{ENSEMBL_VEP_URL}"
+#     headers = {"Content-Type": "application/json", "Accept": "application/json"}
+    
+#     # Ensure rsid_batch is a list (fixing TypeError issue)
+#     rsid_batch = list(rsid_batch)  
+
+#     for attempt in range(retries):
 #         try:
-#             for annotation in data.get("primary_snapshot_data", {}).get("assembly_annotation", []):
-#                 for gene in annotation.get("genes", []):
-#                     if "locus" in gene:
-#                         genes.add(gene["locus"])
-#         except KeyError:
-#             return None  # No mapped genes found
+#             response = requests.post(url, json={"ids": rsid_batch}, headers=headers, timeout=10)
+            
+#             if response.status_code == 200:
+#                 data = response.json()
+#                 mapped_genes = {}
 
-#         return list(genes) if genes else None  # Return unique gene names
-#     return None  # If API request fails
+#                 for entry in data:
+#                     rsid = entry.get("id")
+#                     gene_names = set()
+                    
+#                     # Extract genes from transcript consequences
+#                     for transcript in entry.get("transcript_consequences", []):
+#                         gene_name = transcript.get("gene_symbol")
+#                         if gene_name:
+#                             gene_names.add(gene_name)
 
-# # Function to query ClinicalTables API for mapped genes
-# def get_clinicaltables_mapped_gene(rsid):
-#     url = f"https://clinicaltables.nlm.nih.gov/api/snps/v3/search"
-#     params = {"terms": rsid}
-#     response = requests.get(url, params=params)
+#                     mapped_genes[rsid] = ", ".join(gene_names) if gene_names else "No Mapped Gene"
 
-#     if response.status_code == 200:
-#         data = response.json()
-#         try:
-#             for snp_info in data[3]:  # SNP data is in the fourth list
-#                 if snp_info[0] == rsid:  # Ensure correct SNP
-#                     return [snp_info[4]] if snp_info[4] else None  # Return gene if found
-#         except (IndexError, TypeError):
-#             return None  # No mapped gene found
-#     return None  # If API request fails
+#                 return mapped_genes
 
-# # Query both APIs in batches to avoid rate limits
+#             elif response.status_code == 429:  # Too many requests
+#                 print(f"⚠️ API Rate Limit reached. Retrying in 10 seconds...")
+#                 time.sleep(10)
+
+#         except requests.RequestException as e:
+#             print(f"Error fetching {rsid_batch}: {e}")
+
+#     return {rsid: "No Mapped Gene" for rsid in rsid_batch}  # Default if API fails
+
+# # Dictionary to store results
 # mapped_genes_dict = {}
 
-# for i, rsid in enumerate(rsids):
-#     mapped_gene = get_ncbi_mapped_gene(rsid)
+# # Process in batches of 50 to reduce API requests
+# batch_size = 50
+# for i in range(0, len(rsids), batch_size):
+#     batch = rsids[i : i + batch_size]
+#     mapped_genes_dict.update(get_ensembl_mapped_genes(batch))
 
-#     # If NCBI fails, use ClinicalTables API
-#     if not mapped_gene:
-#         mapped_gene = get_clinicaltables_mapped_gene(rsid)
-
-#     mapped_genes_dict[rsid] = mapped_gene
-
-#     if i % 10 == 0:  # Prevent hitting API rate limits
-#         time.sleep(1)
+#     # Print progress
+#     print(f"⏳ Processed {i + len(batch)} SNPs... Sleeping for 1 second")
+#     time.sleep(1)  # Pause to prevent hitting API limits
 
 # # Convert results to DataFrame
-# mapped_genes_df = pd.DataFrame(list(mapped_genes_dict.items()), columns=["rsID", "Mapped_Genes"])
+# mapped_genes_df = pd.DataFrame(mapped_genes_dict.items(), columns=["rsID", "Mapped_Genes"])
 
 # # Merge with original data
 # df = df.merge(mapped_genes_df, left_on="dbSNP", right_on="rsID", how="left")
@@ -319,3 +287,7 @@ def get_gene_coordinates_ensembl(gene_name):
 
 # print(f"Updated file saved as {output_path}")
 # print(mapped_genes_df)
+
+
+# mapped_genes_df
+
