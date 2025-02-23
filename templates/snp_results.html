@@ -95,7 +95,7 @@
                         <td>{{ snp.chromosome }}</td>
                         <td>{{ snp.grch38_start }}</td>
                         <td>
-                            {% if snp.gene_name %}
+                            {% if snp.gene_name and snp.gene_name != "No Mapped Gene" %}
                                 {% set genes = snp.gene_name.split() %}  {# Split multiple genes by space #}
                                 {% for gene in genes %}
                                     <a href="{{ url_for('gene_terms', gene_name=gene) }}">{{ gene }}</a>{% if not loop.last %}, {% endif %}
