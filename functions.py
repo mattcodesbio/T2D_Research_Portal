@@ -38,95 +38,121 @@ def get_snp_info(snp_id=None, chromosome=None, start=None, end=None, gene_name=N
 
 def load_snps_from_csv(csv_file):
     df = pd.read_csv(csv_file)
-    with db.session.begin():  # No need to import app; db is initialized correctly
+
+    with db.session.begin():
         db.session.query(SNP).delete()
+
         for _, row in df.iterrows():
+            # Handle Mapped_Genes column properly
+            mapped_genes = None
+            if pd.notna(row["Mapped_Genes"]):
+                mapped_genes = row["Mapped_Genes"].strip()  # Remove surrounding spaces
+                if mapped_genes.startswith('"') and mapped_genes.endswith('"'):  
+                    mapped_genes = mapped_genes[1:-1]  # Remove surrounding quotes
+                mapped_genes = mapped_genes.replace(", ", ",")  # Normalize spacing
+                mapped_genes = " ".join(mapped_genes.split(","))  # Ensure proper formatting
+
             db.session.add(SNP(
                 snp_id=row["dbSNP"],
                 chromosome=str(row["chromosome"]),
                 grch38_start=int(row["GRCh38_start"]),
-                gene_name=", ".join(eval(row["Mapped_Genes"])) if pd.notna(row["Mapped_Genes"]) else None,
+                gene_name=mapped_genes,  # Cleaned up gene names
                 p_value=row["pValue"],
                 reference_allele=row["reference"],
                 alternative_allele=row["alt"],
                 consequence=row["consequence"]
             ))
+
     db.session.commit()
 
 
 
 def get_gene_ontology_terms(gene_name):
     """
-    Step 1: Fetch GO term IDs from MyGene.info API
-    Step 2: Query QuickGO API to fetch details for each GO term ID
+    Retrieves GO terms for a given gene name using MyGene.info and QuickGO APIs.
     """
 
     # Step 1: Query MyGene.info to get GO term IDs
     mygene_url = f"https://mygene.info/v3/query?q={gene_name}&species=human&fields=go"
-
     response = requests.get(mygene_url)
 
     if response.status_code != 200:
-        return None  # API request failed
+        return None
 
     data = response.json()
 
     if "hits" not in data or not data["hits"]:
-        return None  # No results found
+        return None
 
-    # Extract GO term IDs from MyGene.info response
+    # Extract GO term IDs
     go_terms = {
         "biological_process": [],
         "molecular_function": [],
         "cellular_component": []
     }
+    go_ids = set()
 
-    go_categories = data["hits"][0].get("go", {})
-    go_ids = set()  # Store unique GO term IDs
-
-    for category, terms in go_categories.items():
-        for term in terms:
-            go_id = term["id"]
-            go_ids.add(go_id)  # Collect GO IDs for QuickGO lookup
+    # Loop through hits to find GO terms
+    for hit in data["hits"]:
+        if "go" in hit:
+            go_data = hit["go"]
+            for category in ["BP", "MF", "CC"]:  # Ensure we check all three
+                if category in go_data:
+                    terms = go_data[category]
+                    if isinstance(terms, dict):  # If only one GO term is present
+                        terms = [terms]
+                    for term in terms:
+                        go_id = term.get("id")
+                        go_name = term.get("term")
+                        if go_id:
+                            go_ids.add(go_id)
+                            go_entry = {
+                                "id": go_id,
+                                "name": go_name or "Unknown",
+                                "category": category
+                            }
+                            if category == "BP":
+                                go_terms["biological_process"].append(go_entry)
+                            elif category == "MF":
+                                go_terms["molecular_function"].append(go_entry)
+                            elif category == "CC":
+                                go_terms["cellular_component"].append(go_entry)
 
     if not go_ids:
-        return None  # No GO terms found
+        return None
 
     # Step 2: Query EBI QuickGO API with retrieved GO term IDs
     quickgo_url = "https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms"
-
-    # Convert GO IDs to a comma-separated string
     go_id_list = ",".join(go_ids)
+    headers = {"Accept": "application/json"}
 
-    quickgo_response = requests.get(f"{quickgo_url}/{go_id_list}", headers={"Accept": "application/json"})
+    try:
+        quickgo_response = requests.get(f"{quickgo_url}/{go_id_list}", headers=headers, timeout=10)
 
-    if quickgo_response.status_code == 200:
-        quickgo_data = quickgo_response.json().get("results", [])
+        if quickgo_response.status_code == 200:
+            quickgo_data = quickgo_response.json().get("results", [])
 
-        for result in quickgo_data:
-            go_id = result["id"]
-            go_name = result["name"]
-            go_category = result["aspect"]  # BP, MF, CC
-            go_description = result.get("definition", {}).get("text", "No description available")
+            for result in quickgo_data:
+                go_id = result.get("id")
+                go_description = result.get("definition", {}).get("text", "No description available")
+                go_category = result.get("aspect", "Unknown")
+                go_synonyms = [syn["name"] for syn in result.get("synonyms", []) if "name" in syn]
 
-            # Extract only the synonym names (ignore type)
-            go_synonyms = [syn["name"] for syn in result.get("synonyms", []) if "name" in syn]
+                # Match the GO ID with its category
+                for category, terms in go_terms.items():
+                    for term in terms:
+                        if term["id"] == go_id:
+                            term["description"] = go_description
+                            term["synonyms"] = go_synonyms
 
-            go_entry = {
-                "id": go_id,
-                "name": go_name,
-                "description": go_description,
-                "synonyms": go_synonyms  # Now a clean list of names
-            }
+            return go_terms
 
-            if go_category == "biological_process":
-                go_terms["biological_process"].append(go_entry)
-            elif go_category == "molecular_function":
-                go_terms["molecular_function"].append(go_entry)
-            elif go_category == "cellular_component":
-                go_terms["cellular_component"].append(go_entry)
+        else:
+            return None
 
-    return go_terms  # Returns structured GO terms categorized by BP, MF, and CC
+    except requests.exceptions.RequestException as e:
+        return None
+
 
 
 
@@ -220,39 +246,76 @@ def get_gene_coordinates_ensembl(gene_name):
 
 
 
-# Load SNP dataframe with currect mapped genes 
+# import requests
+# import pandas as pd
+# import time
 
 # # Load your SNP data
-# file_path = "converted_positions.csv"  # Update with the actual file path
+# file_path = "~/Documents/BIO727P-GROUP_PROJECT/backup_web/converted_positions.csv"  # Update with actual file path
 # df = pd.read_csv(file_path)
 
 # # Extract unique rsIDs
 # rsids = df["dbSNP"].dropna().unique()
 
-# # Ensembl API endpoint
-# ENSEMBL_API = "https://rest.ensembl.org/variation/homo_sapiens/"
-
-# # Function to query Ensembl API
-# def get_mapped_genes(rsid):
-#     url = f"{ENSEMBL_API}{rsid}?content-type=application/json"
+# # Function to query NCBI API for mapped genes
+# def get_ncbi_mapped_gene(rsid):
+#     url = f"https://api.ncbi.nlm.nih.gov/variation/v0/beta/refsnp/{rsid.lstrip('rs')}"
 #     response = requests.get(url)
+
 #     if response.status_code == 200:
 #         data = response.json()
-#         # Extract mapped genes if available
-#         mapped_genes = data.get("mappings", [])
-#         if mapped_genes:
-#             return [gene["gene_name"] for gene in mapped_genes if "gene_name" in gene]
-#     return None  # No mapped gene found
+#         genes = set()
+#         try:
+#             for annotation in data.get("primary_snapshot_data", {}).get("assembly_annotation", []):
+#                 for gene in annotation.get("genes", []):
+#                     if "locus" in gene:
+#                         genes.add(gene["locus"])
+#         except KeyError:
+#             return None  # No mapped genes found
 
-# # Query Ensembl API for each SNP
-# mapped_genes_dict = {rsid: get_mapped_genes(rsid) for rsid in rsids}
+#         return list(genes) if genes else None  # Return unique gene names
+#     return None  # If API request fails
 
-# # Convert to DataFrame
+# # Function to query ClinicalTables API for mapped genes
+# def get_clinicaltables_mapped_gene(rsid):
+#     url = f"https://clinicaltables.nlm.nih.gov/api/snps/v3/search"
+#     params = {"terms": rsid}
+#     response = requests.get(url, params=params)
+
+#     if response.status_code == 200:
+#         data = response.json()
+#         try:
+#             for snp_info in data[3]:  # SNP data is in the fourth list
+#                 if snp_info[0] == rsid:  # Ensure correct SNP
+#                     return [snp_info[4]] if snp_info[4] else None  # Return gene if found
+#         except (IndexError, TypeError):
+#             return None  # No mapped gene found
+#     return None  # If API request fails
+
+# # Query both APIs in batches to avoid rate limits
+# mapped_genes_dict = {}
+
+# for i, rsid in enumerate(rsids):
+#     mapped_gene = get_ncbi_mapped_gene(rsid)
+
+#     # If NCBI fails, use ClinicalTables API
+#     if not mapped_gene:
+#         mapped_gene = get_clinicaltables_mapped_gene(rsid)
+
+#     mapped_genes_dict[rsid] = mapped_gene
+
+#     if i % 10 == 0:  # Prevent hitting API rate limits
+#         time.sleep(1)
+
+# # Convert results to DataFrame
 # mapped_genes_df = pd.DataFrame(list(mapped_genes_dict.items()), columns=["rsID", "Mapped_Genes"])
 
 # # Merge with original data
 # df = df.merge(mapped_genes_df, left_on="dbSNP", right_on="rsID", how="left")
 
 # # Save updated file
-# df.to_csv("updated_snp_data.csv", index=False)
-# print("Updated file saved as updated_snp_data.csv")
+# output_path = "updated_snp_data_with_mapped_genes.csv"
+# df.to_csv(output_path, index=False)
+
+# print(f"Updated file saved as {output_path}")
+# print(mapped_genes_df)
