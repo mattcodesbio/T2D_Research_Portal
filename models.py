@@ -32,16 +32,3 @@ class TajimaD(db.Model):
     def __repr__(self):
         return f"<TajimaD {self.population} Chromosome {self.chromosome} Bin {self.bin_start}-{self.bin_end}>"
 
-# Fst Table
-class Fst(db.Model):
-    __tablename__ = 'fst_results'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    population = db.Column(db.String(50), nullable=False)  # Population name
-    chromosome = db.Column(db.String(5), nullable=False)  # Chromosome
-    bin_start = db.Column(db.Integer, nullable=False)  # Start position of the bin
-    bin_end = db.Column(db.Integer, nullable=False)  # End position of the bin
-    fst_value = db.Column(db.Float, nullable=False)  # Fst value
-
-    def __repr__(self):
-        return f"<Fst {self.population} Chromosome {self.chromosome} Bin {self.bin_start}-{self.bin_end}>"

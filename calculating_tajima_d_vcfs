@@ -1,0 +1,32 @@
+#!/bin/bash
+#$ -cwd
+#$ -pe smp 1
+#$ -l h_rt=2:0:0
+#$ -l h_vmem=2G
+#$ -N vcf_download
+
+# Directory to save files
+VCF_DIR="/data/home/bt24004/t2d_group_project"
+mkdir -p "$VCF_DIR"
+
+# Chromosomes to download
+CHROMOSOMES=(3 6 8 9 10 11 12 20)
+
+# FTP Base URL (Updated for the latest dataset)
+BASE_URL="ftp://ftp.ensembl.org/pub/data_files/homo_sapiens/GRCh38/variation_genotype"
+
+# Loop through each chromosome
+for CHR in "${CHROMOSOMES[@]}"; do
+    FILE="ALL.chr${CHR}_GRCh38.genotypes.20170504.vcf.gz"
+    INDEX="${FILE}.tbi"
+
+    # Download VCF file
+    echo "Downloading ${FILE}..."
+    curl -o "${VCF_DIR}/${FILE}" "${BASE_URL}/${FILE}" || echo "Download failed for ${FILE}"
+    
+    # Download index file
+    echo "Downloading ${INDEX}..."
+    curl -o "${VCF_DIR}/${INDEX}" "${BASE_URL}/${INDEX}" || echo "Download failed for ${INDEX}"
+done
+
+echo "Download complete!"

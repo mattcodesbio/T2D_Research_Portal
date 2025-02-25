@@ -11,7 +11,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize the database with Flask
-from models import db, SNP, TajimaD, Fst  # Import db after initializing app
+from models import db, SNP, TajimaD  # Import db after initializing app
 
 db.init_app(app)  # This ensures the SQLAlchemy instance is tied to the app
 
