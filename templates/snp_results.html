@@ -84,7 +84,7 @@
                         <th>Reference Allele</th>
                         <th>Alternative Allele</th>
                         <th>p-value</th>
-                        <th>View Tajima's D Statistics</th>
+                        <th>View Positive Selection Summary Statistics</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -111,19 +111,23 @@
                     </tr>
                     <tr id="dropdown-{{ snp.snp_id }}" class="dropdown-content">
                         <td colspan="9">
-                            <strong>Tajima's D Statistics for SNP {{ snp.snp_id }}</strong>
+                            <strong>Statistics for SNP {{ snp.snp_id }}</strong>
                             <table>
                                 <thead>
                                     <tr>
                                         <th>Population</th>
                                         <th>Tajima's D</th>
+                                        <th>CLR</th>
+                                        <th>Alpha</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for pop_stat in snp.positive_selection %}
                                     <tr>
                                         <td>{{ pop_stat.population }}</td>
-                                        <td>{{ pop_stat.tajima_d }}</td>
+                                        <td>{{ pop_stat.tajima_d if pop_stat.tajima_d is not none else 'N/A' }}</td>
+                                        <td>{{ pop_stat.clr if pop_stat.clr is not none else 'N/A' }}</td>
+                                        <td>{{ pop_stat.alpha if pop_stat.alpha is not none else 'N/A' }}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>

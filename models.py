@@ -45,3 +45,17 @@ class Fst(db.Model):
 
     def __repr__(self):
         return f"<Fst {self.population} Chromosome {self.chromosome} Bin {self.bin_start}-{self.bin_end}>"
+
+# CLR Table 
+class CLRTest(db.Model):
+    __tablename__ = 'clr_results'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    population = db.Column(db.String(50), nullable=False)
+    chromosome = db.Column(db.String(5), nullable=False)
+    position = db.Column(db.Integer, nullable=False)
+    clr = db.Column(db.Float, nullable=False)
+    alpha = db.Column(db.Float, nullable=False)
+
+    def __repr__(self):
+        return f"<CLRTest {self.population} Chr{self.chromosome}:{self.position} CLR={self.clr}>"

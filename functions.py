@@ -1,5 +1,5 @@
 import pandas as pd
-from models import db, SNP, TajimaD, Fst
+from models import db, SNP, TajimaD, Fst, CLRTest
 import requests
 import plotly.graph_objects as go
 from urllib.parse import quote_plus
@@ -176,8 +176,6 @@ def load_tajima_d_results(directory):
                             tajima_d=float(columns[3])
                         ))
     db.session.commit()
-
-
 
 def get_gene_coordinates_ensembl(gene_name):
     """

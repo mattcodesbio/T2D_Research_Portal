@@ -1,10 +1,11 @@
 from flask import render_template, request, jsonify, Response, session
-from models import SNP, TajimaD
+from models import SNP, TajimaD, CLRTest
 from functions import get_snp_info, get_gene_ontology_terms, get_gene_coordinates_ensembl
 from main import app
 import json
 import pandas as pd
 import numpy as np  
+
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -41,12 +42,44 @@ def home():
                 .all()
             )
 
-            positive_selection = []
+            # Fetch all CLR results for the chromosome
+            clr_results = (
+                CLRTest.query
+                .filter(CLRTest.chromosome == snp.chromosome)
+                .all()
+            )
+
+            positive_selection = {}
+
+            # Store Tajima’s D values
             for tajima in tajima_d_results:
-                positive_selection.append({
-                    "population": tajima.population,
-                    "tajima_d": tajima.tajima_d
-                })
+                if tajima.population not in positive_selection:
+                    positive_selection[tajima.population] = {}
+                positive_selection[tajima.population]["tajima_d"] = tajima.tajima_d
+
+            # Find the closest CLR position to query SNP
+            closest_clr_dict = {}
+            for clr in clr_results:
+                if clr.population not in closest_clr_dict or abs(clr.position - snp.grch38_start) < abs(closest_clr_dict[clr.population].position - snp.grch38_start):
+                    closest_clr_dict[clr.population] = clr
+
+            # Store CLR and Alpha values from the closest CLR entry
+            for population, closest_clr in closest_clr_dict.items():
+                if population not in positive_selection:
+                    positive_selection[population] = {}
+                positive_selection[population]["clr"] = closest_clr.clr
+                positive_selection[population]["alpha"] = closest_clr.alpha
+
+            # Convert dictionary to list for rendering
+            positive_selection_list = [
+                {
+                    "population": pop,
+                    "tajima_d": data.get("tajima_d", "N/A"),
+                    "clr": data.get("clr", "N/A"),
+                    "alpha": data.get("alpha", "N/A"),
+                }
+                for pop, data in positive_selection.items()
+            ]
 
             snp_info.append({
                 "snp_id": snp.snp_id,
@@ -56,13 +89,13 @@ def home():
                 "p_value": snp.p_value,
                 "reference_allele": snp.reference_allele,
                 "alternative_allele": snp.alternative_allele,
-                "positive_selection": positive_selection
+                "positive_selection": positive_selection_list
             })
+
 
         return render_template('snp_results.html', snp_info=snp_info)
 
     return render_template('index.html')
-
 
 
 @app.route('/population_analysis', methods=['GET', 'POST'])
