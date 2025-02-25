@@ -81,8 +81,6 @@ def population_analysis():
     tajima_d_data, _ = get_tajima_d_data(selected_chromosome, None, selected_populations)
     t2d_snp_data = get_t2d_snps(selected_chromosome)
 
-    print("Whole Chromosome Tajima's D Data:", tajima_d_data)
-
     return render_template(
             'population_analysis.html',
             tajima_d_data=json.dumps(tajima_d_data, indent=2),  # 👈 Ensure JSON is correctly formatted
