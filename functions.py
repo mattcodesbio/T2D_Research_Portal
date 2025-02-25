@@ -1,9 +1,10 @@
 import pandas as pd
 from models import db, SNP, TajimaD, Fst, CLRTest
 import requests
-import plotly.graph_objects as go
-from urllib.parse import quote_plus
+import numpy as np
 import os
+from models import db, SNP, TajimaD
+from flask import jsonify, Response, request
 
 def get_snp_info(snp_id=None, chromosome=None, start=None, end=None, gene_name=None):
     query = SNP.query
@@ -35,6 +36,104 @@ def get_snp_info(snp_id=None, chromosome=None, start=None, end=None, gene_name=N
         })
     
     return results if results else None
+
+def get_tajima_d_data(chromosome, region=None, populations=None):
+    """Fetch Tajima's D statistics for a chromosome or a region."""
+    query = TajimaD.query.filter(TajimaD.chromosome == chromosome)
+
+    if populations:
+        query = query.filter(TajimaD.population.in_(populations))
+
+    if region:
+        start, end = region
+        query = query.filter(TajimaD.bin_start >= start, TajimaD.bin_end <= end)
+
+    tajima_d_data = {pop: [] for pop in populations} if populations else {}
+
+    for tajima in query.all():
+        tajima_d_data[tajima.population].append({
+            "bin_start": tajima.bin_start,
+            "bin_end": tajima.bin_end,
+            "tajima_d": tajima.tajima_d
+        })
+
+    summary_stats = {
+        pop: {
+            "mean": round(np.mean([d["tajima_d"] for d in data]), 4),
+            "std_dev": round(np.std([d["tajima_d"] for d in data]), 4)
+        }
+        for pop, data in tajima_d_data.items()
+    }
+
+    return tajima_d_data, summary_stats
+
+
+def get_t2d_snps(chromosome, start=None, end=None):
+    """Fetch significant T2D SNPs within a region."""
+    query = SNP.query.filter(SNP.chromosome == chromosome)
+
+    if start and end:
+        query = query.filter(SNP.grch38_start >= start, SNP.grch38_start <= end)
+
+    return [{"snp_id": snp.snp_id, "position": snp.grch38_start} for snp in query.all()]
+
+
+def download_tajima_d_data():
+    """Generate a text file containing Tajima's D statistics for a region."""
+    # Extract parameters
+    chromosome = request.args.get("chromosome")
+    gene_name = request.args.get("gene_name")  # Optional gene name
+    start = request.args.get("start", type=int)
+    end = request.args.get("end", type=int)
+    populations = request.args.getlist("selected_population")
+
+    # If gene name is provided, fetch its genomic coordinates
+    if gene_name and (start is None or end is None):
+        gene_info = get_gene_coordinates_ensembl(gene_name)
+        if gene_info:
+            chromosome = gene_info["chromosome"]
+            start = gene_info["start"]
+            end = gene_info["end"]
+        else:
+            return jsonify({"error": f"Gene '{gene_name}' not found in Ensembl"}), 400
+
+    # Ensure start and end are valid numbers
+    if start is None or end is None:
+        return jsonify({"error": "Invalid region parameters. Must provide a valid start and end position or a gene name."}), 400
+
+    # Fetch Tajima's D data safely
+    try:
+        tajima_d_data, summary_stats = get_tajima_d_data(chromosome, (start, end), populations)
+    except Exception as e:
+        return jsonify({"error": f"Error retrieving Tajima's D data: {str(e)}"}), 500
+
+    # Handle case where no data exists
+    if not tajima_d_data or all(len(entries) == 0 for entries in tajima_d_data.values()):
+        response_text = f"No Tajima's D data found for Chromosome {chromosome}, Region {start}-{end}.\n"
+        response = Response(response_text, mimetype="text/plain")
+        response.headers["Content-Disposition"] = f"attachment; filename=TajimaD_chr{chromosome}_{start}_{end}.txt"
+        return response
+
+    # Generate file content
+    file_content = ["Population\tBin Start\tBin End\tTajima's D"]
+    for pop, entries in tajima_d_data.items():
+        for entry in entries:
+            file_content.append(f"{pop}\t{entry['bin_start']}\t{entry['bin_end']}\t{entry['tajima_d']:.4f}")
+
+    # Add summary statistics
+    file_content.append("\nSummary Statistics")
+    file_content.append("Population\tMean Tajima's D\tStd Dev Tajima's D")
+    for pop, stats in summary_stats.items():
+        mean_tajima_d = stats["mean"] if stats["mean"] is not None else "N/A"
+        std_dev_tajima_d = stats["std_dev"] if stats["std_dev"] is not None else "N/A"
+        file_content.append(f"{pop}\t{mean_tajima_d}\t{std_dev_tajima_d}")
+
+    # Return the file response
+    response = Response("\n".join(file_content), mimetype="text/plain")
+    response.headers["Content-Disposition"] = f"attachment; filename=TajimaD_chr{chromosome}_{start}_{end}.txt"
+    return response
+
+
 
 def load_snps_from_csv(csv_file):
     df = pd.read_csv(csv_file)
@@ -288,4 +387,47 @@ def get_gene_coordinates_ensembl(gene_name):
 
 
 # mapped_genes_df
+
+
+
+
+##### Function to convert GRCh37 postion to GRCh38 T2dkp postions from the T2DKp CSV file #######
+
+# # Function to convert a position from GRCh37 to GRCh38 (returns only start position)
+# def convert_grch37_to_grch38(chromosome, position):
+#     url = f"https://rest.ensembl.org/map/human/GRCh37/{chromosome}:{position}..{position}/GRCh38?"
+#     headers = {"Content-Type": "application/json"}
+    
+#     response = requests.get(url, headers=headers)
+    
+#     if response.status_code == 200:
+#         data = response.json()
+#         if "mappings" in data and len(data["mappings"]) > 0:
+#             return data["mappings"][0]["mapped"]["start"]  # Only returning start position
+    
+#     return None  # Return None if mapping fails
+
+# # Load your dataset (assuming it's in a CSV file)
+# df = pd.read_csv("significant_snps.txt")
+
+# # Convert each position
+# converted_start_positions = []
+
+# for index, row in df.iterrows():
+#     chrom = row["chromosome"]
+#     pos = row["position"]
+    
+#     new_start = convert_grch37_to_grch38(chrom, pos)
+#     converted_start_positions.append(new_start)
+    
+#     # To avoid API rate limits
+#     time.sleep(0.2)
+
+# # Add new positions to the dataframe
+# df["GRCh38_start"] = converted_start_positions
+
+# # Save the updated dataset
+# df.to_csv("converted_positions.csv", index=False)
+
+# print("Conversion complete. Results saved to converted_positions.csv")
 

@@ -3,8 +3,7 @@ from models import SNP, TajimaD, CLRTest
 from functions import get_snp_info, get_gene_ontology_terms, get_gene_coordinates_ensembl
 from main import app
 import json
-import pandas as pd
-import numpy as np  
+import numpy as np
 
 
 
@@ -17,30 +16,18 @@ def home():
         end = request.form.get('end')   
         gene_name = request.form.get('gene_name')
 
-        query = SNP.query
-
-        if snp_id:
-            query = query.filter(SNP.snp_id.ilike(f"%{snp_id}%"))
-        if chromosome:
-            query = query.filter(SNP.chromosome == str(chromosome))
-        if start:
-            query = query.filter(SNP.grch38_start >= int(start))
-        if end:
-            query = query.filter(SNP.grch38_start <= int(end))
-        if gene_name:
-            query = query.filter(SNP.gene_name.ilike(f"%{gene_name}%"))
-
-        snps = query.all()
+        snps = get_snp_info(snp_id, chromosome, start, end, gene_name)
 
         snp_info = []
-        for snp in snps:
-            # Fetch the closest Tajima's D for each population where SNP falls within the bin
-            tajima_d_results = (
-                TajimaD.query
-                .filter(TajimaD.chromosome == snp.chromosome)
-                .filter(TajimaD.bin_start <= snp.grch38_start, TajimaD.bin_end >= snp.grch38_start)
-                .all()
-            )
+        if snps:
+            for snp in snps:
+                # Fetch the closest Tajima's D for each population where SNP falls within the bin
+                tajima_d_results = (
+                    TajimaD.query
+                    .filter(TajimaD.chromosome == snp['chromosome'])
+                    .filter(TajimaD.bin_start <= snp['grch38_start'], TajimaD.bin_end >= snp['grch38_start'])
+                    .all()
+                )
 
             # Fetch all CLR results for the chromosome
             clr_results = (
@@ -100,26 +87,20 @@ def home():
 
 @app.route('/population_analysis', methods=['GET', 'POST'])
 def population_analysis():
-    """
-    Handles whole chromosome Tajima's D analysis.
-    - GET: Loads the page with default values.
-    - POST: Handles user selection for specific populations and chromosome.
-    """
-    if request.method == 'GET':  
-        # Default: Load the page with no filters
+    """Handles Tajima's D analysis across whole chromosomes for selected populations."""
+    if request.method == 'GET':
         return render_template(
             'population_analysis.html',
             selected_population_info={},
             tajima_d_data=json.dumps({}),
             t2d_snp_data=json.dumps({}),
-            selected_chromosome="10"  # Default chromosome
+            selected_chromosome="10"
         )
 
-    # Handle POST request for user selection
     selected_populations = request.form.getlist('selected_population')
     selected_chromosome = request.form.get('selected_chromosome', '10')
 
-    # Population descriptions
+    # Dictionary of population descriptions
     population_descriptions = {
         "BEB": "Bengali population from Bangladesh",
         "GIH": "Gujarati Indian population from Houston, USA",
@@ -128,201 +109,57 @@ def population_analysis():
         "STU": "Sri Lankan Tamil population from the UK"
     }
 
-    # Get selected population descriptions
-    selected_population_info = {pop: population_descriptions.get(pop, "Unknown population") for pop in selected_populations}
+    # Ensure selected_population_info is a dictionary
+    selected_population_info = {
+        pop: population_descriptions.get(pop, "Unknown population") for pop in selected_populations
+    }
 
-    # Fetch Tajima’s D values for the selected chromosome and populations
-    tajima_d_results = (
-        TajimaD.query
-        .filter(TajimaD.population.in_(selected_populations), TajimaD.chromosome == selected_chromosome)
-        .all()
-    )
-
-
-    # Organize Tajima's D data per population
-    tajima_d_data = {}
-    for pop in selected_populations:
-        tajima_d_data[pop] = [
-            {"bin_start": row.bin_start, "bin_end": row.bin_end, "tajima_d": row.tajima_d}
-            for row in tajima_d_results if row.population == pop
-        ]
-
-    # Fetch T2D-associated SNPs for the chromosome
-    t2d_snps = (
-        SNP.query
-        .filter(SNP.chromosome == selected_chromosome) # Significant T2D SNPs
-        .all()
-    )
-
-    # Store SNPs in a dictionary
-    t2d_snp_data = [{"snp_id": snp.snp_id, "position": snp.grch38_start} for snp in t2d_snps]
+    # Fetch data
+    tajima_d_data, _ = get_tajima_d_data(selected_chromosome, None, selected_populations)
+    t2d_snp_data = get_t2d_snps(selected_chromosome)
 
     return render_template(
-        'population_analysis.html',
-        selected_population_info=selected_population_info,
-        tajima_d_data=json.dumps(tajima_d_data),
-        t2d_snp_data=json.dumps(t2d_snp_data),
-        selected_chromosome=selected_chromosome
-    )
+            'population_analysis.html',
+            tajima_d_data=json.dumps(tajima_d_data, indent=2),  # 👈 Ensure JSON is correctly formatted
+            t2d_snp_data=json.dumps(t2d_snp_data, indent=2),
+            selected_population_info=selected_population_info,
+            selected_chromosome=selected_chromosome
+        )
 
 
 @app.route('/population_analysis_region', methods=['GET'])
 def population_analysis_region():
-    """
-    Fetches Tajima's D for a user-defined region and T2D SNPs.
-    """
+    """Fetches Tajima's D for a user-defined genomic region and returns SNPs."""
     start = request.args.get("start", type=int)
     end = request.args.get("end", type=int)
     gene_name = request.args.get("gene_name", type=str)
     chromosome = request.args.get("chromosome", "10")
     selected_populations = request.args.getlist("selected_population")
 
-    # If a gene name is provided, get the region from Ensembl
     if gene_name:
         gene_info = get_gene_coordinates_ensembl(gene_name)
-        if gene_info:
+        if gene_info and gene_info.get("start") and gene_info.get("end"):  # ✅ Ensure values exist
             chromosome, start, end = gene_info["chromosome"], gene_info["start"], gene_info["end"]
         else:
             return jsonify({"error": f"Gene '{gene_name}' not found in Ensembl"}), 400
 
-    # Ensure valid region
     if start is None or end is None:
         return jsonify({"error": "Invalid region parameters"}), 400
-    
-    # Fetch Tajima's D values for the selected populations in the region
-    tajima_d_results = (
-        TajimaD.query
-        .filter(TajimaD.chromosome == chromosome)
-        .filter(TajimaD.bin_start >= start, TajimaD.bin_end <= end)
-        .filter(TajimaD.population.in_(selected_populations))
-        .all()
-    )
 
-    region_tajima_d = {pop: [] for pop in selected_populations}
-    summary_stats = {}  # Store mean & std deviation for each population
-
-    for tajima in tajima_d_results:
-        region_tajima_d[tajima.population].append({
-            "bin_start": tajima.bin_start,
-            "bin_end": tajima.bin_end,
-            "tajima_d": tajima.tajima_d
-        })
-
-    # Compute mean and standard deviation for each population
-    for pop in selected_populations:
-        values = [entry["tajima_d"] for entry in region_tajima_d[pop]]
-        if values:
-            summary_stats[pop] = {
-                "mean": round(np.mean(values), 4),
-                "std_dev": round(np.std(values), 4)
-            }
-        else:
-            summary_stats[pop] = {"mean": None, "std_dev": None}
-
-    # Fetch T2D SNPs in the region
-    t2d_snps = (
-        SNP.query
-        .filter(SNP.chromosome == chromosome)
-        .filter(SNP.grch38_start >= start, SNP.grch38_start <= end)
-        .filter(SNP.p_value < 5e-8)  # Ensure it's a significant T2D SNP
-        .all()
-    )
-
-    # Map SNPs to their nearest Tajima's D bin
-    t2d_snp_data = []
-    for snp in t2d_snps:
-        closest_tajima_d = (
-            TajimaD.query
-            .filter(TajimaD.chromosome == chromosome)
-            .filter(TajimaD.bin_start <= snp.grch38_start, TajimaD.bin_end >= snp.grch38_start)
-            .first()  # Get the closest match
-        )
-
-        t2d_snp_data.append({
-            "snp_id": snp.snp_id,
-            "position": snp.grch38_start,
-            "tajima_d": closest_tajima_d.tajima_d if closest_tajima_d else None
-        })
+    # Fetch data
+    tajima_d_data, summary_stats = get_tajima_d_data(chromosome, (start, end), selected_populations)
+    t2d_snp_data = get_t2d_snps(chromosome, start, end)
 
     return jsonify({
-        "tajima_d_data": region_tajima_d,
+        "tajima_d_data": tajima_d_data,
         "t2d_snp_data": t2d_snp_data,
-        "summary_stats": summary_stats  # Include mean and std dev in response
+        "summary_stats": summary_stats
     })
-
 
 @app.route('/download_tajima_d', methods=['GET'])
 def download_tajima_d():
-    """ Generates a text file with Tajima's D values for a requested genomic region. """
-
-    gene_name = request.args.get("gene_name")
-    start = request.args.get("start", type=int)
-    end = request.args.get("end", type=int)
-    chromosome = request.args.get("chromosome")
-    selected_populations = request.args.getlist("selected_population")
-
-    # If gene name is provided, fetch its genomic coordinates
-    if gene_name and (not start or not end):
-        gene_info = get_gene_coordinates_ensembl(gene_name)
-        if gene_info:
-            chromosome = gene_info["chromosome"]
-            start = gene_info["start"]
-            end = gene_info["end"]
-        else:
-            return jsonify({"error": f"Gene '{gene_name}' not found in Ensembl."}), 404
-
-    # Validate start and end
-    if not start or not end or not chromosome:
-        return jsonify({"error": "Invalid region parameters."}), 400
-
-    # Fetch Tajima's D values for selected populations and region
-    tajima_d_results = (
-        TajimaD.query
-        .filter(TajimaD.chromosome == chromosome)
-        .filter(TajimaD.bin_start >= start, TajimaD.bin_end <= end)
-        .filter(TajimaD.population.in_(selected_populations))
-        .all()
-    )
-
-    # If no data is found, return a file with a message instead of an error
-    if not tajima_d_results:
-        response_text = f"No Tajima's D data found for Chromosome {chromosome}, Region {start}-{end}.\n"
-        response = Response(response_text, mimetype="text/plain")
-        response.headers["Content-Disposition"] = f"attachment; filename=TajimaD_chr{chromosome}_{start}_{end}.txt"
-        return response
-
-    # Organize data and calculate statistics
-    tajima_d_data = {pop: [] for pop in selected_populations}
-    for tajima in tajima_d_results:
-        tajima_d_data[tajima.population].append(tajima.tajima_d)
-
-    # Generate file content
-    file_content = []
-    file_content.append(f"Tajima's D Data for Chromosome {chromosome}, Region {start}-{end}\n")
-    file_content.append("Population\tBin Start\tBin End\tTajima's D\n")
-
-    for tajima in tajima_d_results:
-        file_content.append(f"{tajima.population}\t{tajima.bin_start}\t{tajima.bin_end}\t{tajima.tajima_d:.4f}\n")
-
-    # Calculate statistics
-    file_content.append("\nSummary Statistics\n")
-    file_content.append("Population\tMean Tajima's D\tStd Dev Tajima's D\n")
-
-    for pop, values in tajima_d_data.items():
-        values = list(values)  # Ensure it's a list for NumPy functions
-        if values:
-            mean_tajima_d = np.mean(values)
-            std_tajima_d = np.std(values)
-        else:
-            mean_tajima_d, std_tajima_d = "N/A", "N/A"
-
-        file_content.append(f"{pop}\t{mean_tajima_d}\t{std_tajima_d}\n")
-
-    # Convert to response
-    response = Response("\n".join(file_content), mimetype="text/plain")
-    response.headers["Content-Disposition"] = f"attachment; filename=TajimaD_chr{chromosome}_{start}_{end}.txt"
-    return response
-
+    """Generates a text file with Tajima's D values for a requested genomic region."""
+    return download_tajima_d_data()
 
 @app.route('/about')
 def about():
@@ -330,12 +167,9 @@ def about():
 
 @app.route('/gene_terms/<gene_name>')
 def gene_terms(gene_name):
+    """Retrieves Gene Ontology terms for a given gene."""
     go_terms = get_gene_ontology_terms(gene_name)
-    
-    if not go_terms:
-        return render_template("ontology.html", gene_name=gene_name, go_terms={})
-
-    return render_template("ontology.html", gene_name=gene_name, go_terms=go_terms)
+    return render_template("ontology.html", gene_name=gene_name, go_terms=go_terms if go_terms else {})
 
 
 # @app.route('/select_population', methods=['POST'])
