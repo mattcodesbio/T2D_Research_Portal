@@ -59,14 +59,28 @@ class Fst(db.Model):
 
 # CLR Table 
 class CLRTest(db.Model):
+    """
+    Stores Composite Likelihood Ratio (CLR) test results for selective sweeps.
+    CLR is used to detect recent positive selection.
+    """
     __tablename__ = 'clr_results'
     
     id = db.Column(db.Integer, primary_key=True)
     population = db.Column(db.String(50), nullable=False)
     chromosome = db.Column(db.String(5), nullable=False)
     position = db.Column(db.Integer, nullable=False)
-    clr = db.Column(db.Float, nullable=False)
-    alpha = db.Column(db.Float, nullable=False)
+    clr = db.Column(db.Float, nullable=False) # CLR value
+    alpha = db.Column(db.Float, nullable=False) # Alpha statistic (significance measure)
 
     def __repr__(self):
         return f"<CLRTest {self.population} Chr{self.chromosome}:{self.position} CLR={self.clr}>"
+
+#### Important SQLAlchemy concepts ####
+
+# 'db.Model' : This is the base class for definning a database table
+# 'db.column' : Defines the a field in the databse table
+# Primary keys ('primary_key=True') : Uniquely identifies each record in the table 
+# Data types:
+    # 'db.string(20)' : This field takes string datatypes with a max lengh of 20
+    # 'db.Integer': This field takes integer values
+    # 'db.Float': This field takes floating point values
