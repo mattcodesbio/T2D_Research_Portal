@@ -7,6 +7,20 @@ from models import db, SNP, TajimaD
 from flask import jsonify, Response, request
 
 def get_snp_info(snp_id=None, chromosome=None, start=None, end=None, gene_name=None):
+        """
+    Retrieves SNP information from the SNP database based on users query.
+
+    Args:
+        snp_id (str): SNP ID (e.g., 'rs12345').
+        chromosome (str): Chromosome (e.g., '1').
+        start (int): Start position on the chromosome.
+        end (int): End position on the chromosome.
+        gene_name (str): Mapped Gene name.
+
+    Returns:
+        list: A list of dictionaries, each containing retrieved information from the SNP database about a SNP.
+              Returns None if no SNPs are found.
+    """
     query = SNP.query
 
     if snp_id:
@@ -38,7 +52,19 @@ def get_snp_info(snp_id=None, chromosome=None, start=None, end=None, gene_name=N
     return results if results else None
 
 def get_tajima_d_data(chromosome, region=None, populations=None):
-    """Fetch Tajima's D statistics for a chromosome or a region."""
+    """
+    Fetch Tajima's D statistics for a whole chromosome or a region.
+
+    Args:
+        chromosome (str): Chromosome to filter by.
+        region (tuple, optional argument): Start and end positions of the region. Defaults to None.
+        populations (list, optional argument): List of populations to filter by. Defaults to None.
+
+    Returns:
+        tuple: A tuple containing two dictionaries:
+            - tajima_d_data: Tajima's D values for each bin and respective population.
+            - summary_stats: Mean and standard deviation of Tajima's D across the genomic region requested for each population.
+    """
     query = TajimaD.query.filter(TajimaD.chromosome == chromosome)
 
     if populations:
@@ -107,7 +133,17 @@ def get_clr_data(chromosome, region=None, populations=None):
 
 
 def get_t2d_snps(chromosome, start=None, end=None):
-    """Fetch significant T2D SNPs within a region."""
+    """
+    Fetch significant T2D SNPs within a whole chromosome or requested region.
+
+    Args:
+        chromosome (str): Chromosome to filter by.
+        start (int, optional argument): Start position of the region. Defaults to None.
+        end (int, optional argument): End position of the region. Defaults to None.
+
+    Returns:
+        list: A list of dictionaries, each containing the SNP ID and position.
+    """
     query = SNP.query.filter(SNP.chromosome == chromosome)
 
     if start and end:
@@ -186,7 +222,7 @@ def load_snps_from_csv(csv_file):
                 mapped_genes = row["Mapped_Genes"].strip()  # Remove surrounding spaces
                 if mapped_genes.startswith('"') and mapped_genes.endswith('"'):  
                     mapped_genes = mapped_genes[1:-1]  # Remove surrounding quotes
-                mapped_genes = mapped_genes.replace(", ", ",")  # Normalize spacing
+                mapped_genes = mapped_genes.replace(", ", ",")  # fix spacing
                 mapped_genes = " ".join(mapped_genes.split(","))  # Ensure proper formatting
 
             db.session.add(SNP(
