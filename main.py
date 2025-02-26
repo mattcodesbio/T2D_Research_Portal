@@ -1,3 +1,6 @@
+# main.py - The entry point for the Flask web application
+# It initializes the Flask app, configures the database, and imports routes
+
 from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from functions import load_snps_from_csv, load_tajima_d_results
@@ -27,6 +30,7 @@ with app.app_context():
 # Import routes AFTER initializing db to avoid circular imports
 from routes import *
 
-# Start the Flask app in debug mode
+# Start the Flask app 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True) # Runs the Flask application in debug mode
+
