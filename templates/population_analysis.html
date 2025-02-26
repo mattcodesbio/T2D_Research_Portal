@@ -60,6 +60,7 @@
         <script>
             let tajimaDData = {{ tajima_d_data | safe }};
             let t2dSnps = {{ t2d_snp_data | safe }};
+            let clrData = {{ clr_data | safe }};
 
             function updatePlot() {
                 let showT2D = document.getElementById("t2d_filter").checked;
@@ -102,6 +103,24 @@
                     }
 
                     Plotly.newPlot(plotDiv.id, traces);
+
+                    // CLR plot
+                    let clrPlotDiv = document.createElement("div");
+                    clrPlotDiv.id = "clr-plot-" + pop;
+                    container.appendChild(clrPlotDiv);
+
+                    let clrPositions = clrData[pop].map(d => d.position);
+                    let clrValues = clrData[pop].map(d => d.clr);
+
+                    let clrTraces = [{
+                        x: clrPositions,
+                        y: clrValues,
+                        mode: 'markers',
+                        name: `CLR - ${pop}`,
+                        line: { color: "blue", size: 2 }
+                    }];
+
+                    Plotly.newPlot(clrPlotDiv.id, clrTraces);
                 }
             }
 

@@ -1,10 +1,11 @@
 from flask import render_template, request, jsonify, Response, session
 from models import SNP, TajimaD, CLRTest
-from functions import get_snp_info, get_gene_ontology_terms, get_gene_coordinates_ensembl
+from functions import (get_snp_info, get_gene_ontology_terms, get_t2d_snps, 
+                       get_gene_coordinates_ensembl, get_tajima_d_data,
+                       get_clr_data)
 from main import app
 import json
 import numpy as np
-
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -32,7 +33,7 @@ def home():
             # Fetch all CLR results for the chromosome
             clr_results = (
                 CLRTest.query
-                .filter(CLRTest.chromosome == snp.chromosome)
+                .filter(CLRTest.chromosome == snp['chromosome'])
                 .all()
             )
 
@@ -47,7 +48,7 @@ def home():
             # Find the closest CLR position to query SNP
             closest_clr_dict = {}
             for clr in clr_results:
-                if clr.population not in closest_clr_dict or abs(clr.position - snp.grch38_start) < abs(closest_clr_dict[clr.population].position - snp.grch38_start):
+                if clr.population not in closest_clr_dict or abs(clr.position - snp['grch38_start']) < abs(closest_clr_dict[clr.population].position - snp['grch38_start']):
                     closest_clr_dict[clr.population] = clr
 
             # Store CLR and Alpha values from the closest CLR entry
@@ -69,21 +70,19 @@ def home():
             ]
 
             snp_info.append({
-                "snp_id": snp.snp_id,
-                "chromosome": snp.chromosome,
-                "grch38_start": snp.grch38_start,
-                "gene_name": snp.gene_name,
-                "p_value": snp.p_value,
-                "reference_allele": snp.reference_allele,
-                "alternative_allele": snp.alternative_allele,
+                "snp_id": snp['snp_id'],
+                "chromosome": snp['chromosome'],
+                "grch38_start": snp['grch38_start'],
+                "gene_name": snp['gene_name'],
+                "p_value": snp['p_value'],
+                "reference_allele": snp['reference_allele'],
+                "alternative_allele": snp['alternative_allele'],
                 "positive_selection": positive_selection_list
             })
-
 
         return render_template('snp_results.html', snp_info=snp_info)
 
     return render_template('index.html')
-
 
 @app.route('/population_analysis', methods=['GET', 'POST'])
 def population_analysis():
@@ -94,6 +93,7 @@ def population_analysis():
             selected_population_info={},
             tajima_d_data=json.dumps({}),
             t2d_snp_data=json.dumps({}),
+            clr_data=json.dumps({}),
             selected_chromosome="10"
         )
 
@@ -117,15 +117,16 @@ def population_analysis():
     # Fetch data
     tajima_d_data, _ = get_tajima_d_data(selected_chromosome, None, selected_populations)
     t2d_snp_data = get_t2d_snps(selected_chromosome)
+    clr_data, _ = get_clr_data(selected_chromosome, None, selected_populations)
 
     return render_template(
             'population_analysis.html',
             tajima_d_data=json.dumps(tajima_d_data, indent=2),  # 👈 Ensure JSON is correctly formatted
             t2d_snp_data=json.dumps(t2d_snp_data, indent=2),
+            clr_data=json.dumps(clr_data, indent=2),
             selected_population_info=selected_population_info,
             selected_chromosome=selected_chromosome
         )
-
 
 @app.route('/population_analysis_region', methods=['GET'])
 def population_analysis_region():
@@ -149,11 +150,14 @@ def population_analysis_region():
     # Fetch data
     tajima_d_data, summary_stats = get_tajima_d_data(chromosome, (start, end), selected_populations)
     t2d_snp_data = get_t2d_snps(chromosome, start, end)
+    clr_data, clr_summary_stats = get_clr_data(chromosome, (start, end), selected_populations)
 
     return jsonify({
         "tajima_d_data": tajima_d_data,
         "t2d_snp_data": t2d_snp_data,
-        "summary_stats": summary_stats
+        "clr_data": clr_data,
+        "summary_stats": summary_stats,
+        "clr_summary_stats": clr_summary_stats
     })
 
 @app.route('/download_tajima_d', methods=['GET'])

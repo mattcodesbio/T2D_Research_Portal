@@ -48,9 +48,12 @@ def get_tajima_d_data(chromosome, region=None, populations=None):
         start, end = region
         query = query.filter(TajimaD.bin_start >= start, TajimaD.bin_end <= end)
 
+    # Initialize the dictionary with all selected populations
     tajima_d_data = {pop: [] for pop in populations} if populations else {}
 
     for tajima in query.all():
+        if tajima.population not in tajima_d_data:
+            tajima_d_data[tajima.population] = []
         tajima_d_data[tajima.population].append({
             "bin_start": tajima.bin_start,
             "bin_end": tajima.bin_end,
@@ -59,13 +62,48 @@ def get_tajima_d_data(chromosome, region=None, populations=None):
 
     summary_stats = {
         pop: {
-            "mean": round(np.mean([d["tajima_d"] for d in data]), 4),
-            "std_dev": round(np.std([d["tajima_d"] for d in data]), 4)
+            "mean": round(np.mean([d["tajima_d"] for d in data]), 4) if data else None,
+            "std_dev": round(np.std([d["tajima_d"] for d in data]), 4) if data else None
         }
         for pop, data in tajima_d_data.items()
     }
 
     return tajima_d_data, summary_stats
+
+def get_clr_data(chromosome, region=None, populations=None):
+    """Fetch CLR statistics for a chromosome or a region."""
+    query = CLRTest.query.filter(CLRTest.chromosome == chromosome)
+
+    if populations:
+        query = query.filter(CLRTest.population.in_(populations))
+
+    if region:
+        start, end = region
+        query = query.filter(CLRTest.position >= start, CLRTest.position <= end)
+
+    # Initialize the dictionary with all selected populations
+    clr_data = {pop: [] for pop in populations} if populations else {}
+
+    for clr in query.all():
+        if clr.population not in clr_data:
+            clr_data[clr.population] = []
+        clr_data[clr.population].append({
+            "position": clr.position,
+            "clr": clr.clr,
+            "alpha": clr.alpha
+        })
+
+    summary_stats = {
+        pop: {
+            "mean_clr": round(np.mean([d["clr"] for d in data]), 4) if data else None,
+            "std_dev_clr": round(np.std([d["clr"] for d in data]), 4) if data else None,
+            "mean_alpha": round(np.mean([d["alpha"] for d in data]), 4) if data else None,
+            "std_dev_alpha": round(np.std([d["alpha"] for d in data]), 4) if data else None
+        }
+        for pop, data in clr_data.items()
+    }
+
+    return clr_data, summary_stats
 
 
 def get_t2d_snps(chromosome, start=None, end=None):
