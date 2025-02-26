@@ -93,7 +93,7 @@ def get_clr_data(chromosome, region=None, populations=None):
             "alpha": clr.alpha
         })
 
-    summary_stats = {
+    clr_summary_stats = {
         pop: {
             "mean_clr": round(np.mean([d["clr"] for d in data]), 4) if data else None,
             "std_dev_clr": round(np.std([d["clr"] for d in data]), 4) if data else None,
@@ -103,7 +103,7 @@ def get_clr_data(chromosome, region=None, populations=None):
         for pop, data in clr_data.items()
     }
 
-    return clr_data, summary_stats
+    return clr_data, clr_summary_stats
 
 
 def get_t2d_snps(chromosome, start=None, end=None):

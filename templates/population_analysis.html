@@ -288,6 +288,74 @@
                                 console.warn("No data found for selected populations in the region. The combined graph will be empty.");
                             }
                         }
+
+                        // CLR plot for selected region 
+                        document.getElementById("region-plot-container").innerHTML += "<h2>Selected Region CLR</h2>";
+
+                        for (let pop in data.clr_data) {
+                            let clrPlotDiv = document.createElement("div");
+                            clrPlotDiv.id = `region-clr-plot-${pop}`;
+                            document.getElementById("region-plot-container").appendChild(clrPlotDiv);
+
+                            let clrPositions = data.clr_data[pop].map(d => d.position);
+                            let clrValues = data.clr_data[pop].map(d => d.clr);
+
+                            let clrTraces = [{
+                                x: clrPositions,
+                                y: clrValues,
+                                mode: 'markers',
+                                name: `CLR - ${pop}`,
+                                marker: { color: colors[colorIndex] }
+                            }];
+
+                            if (showT2D) {
+                                let snpPositions = data.t2d_snp_data.map(snp => snp.position);
+                                let snpValues = snpPositions.map(pos => {
+                                    let closestClr = data.clr_data[pop].reduce((closest, curr) => {
+                                        return Math.abs(curr.position - pos) < Math.abs(closest.position - pos) ? curr : closest;
+                                    }, data.clr_data[pop][0]);
+                                    return closestClr ? closestClr.clr : null;
+                                });
+
+                                let t2dSnpTrace = {
+                                    x: snpPositions,
+                                    y: snpValues,
+                                    mode: 'markers',
+                                    text: data.t2d_snp_data.map(snp => snp.snp_id),
+                                    textposition: "top center",
+                                    marker: { color: 'red', size: 4 },
+                                    name: 'T2D SNPs'
+                                };
+                                clrTraces.push(t2dSnpTrace);
+                            }
+
+                            let clrLayout = {
+                                title: `CLR for ${pop} (Selected Region)`,
+                                xaxis: { title: "Genomic Position (bp)" },
+                                yaxis: { title: "CLR" },
+                                showlegend: true,
+                                height: 600,
+                                width: 1000,
+                                margin: { l: 50, r: 50, t: 50, b: 50 }
+                            };
+
+                            Plotly.newPlot(clrPlotDiv.id, clrTraces, clrLayout);
+                            colorIndex = (colorIndex + 1) % colors.length;
+
+                            // ✅ Display mean and standard deviation next to each plot
+                            let clrSummaryDiv = document.createElement("div");
+                            clrSummaryDiv.innerHTML = `
+                                <p><strong>Population:</strong> ${pop}</p>
+                                <p><strong>Mean CLR:</strong> ${data.clr_summary_stats[pop].mean}</p>
+                                <p><strong>Std Dev CLR:</strong> ${data.clr_summary_stats[pop].std_dev}</p>
+                            `;
+                            clrSummaryDiv.style.marginBottom = "20px";
+                            clrSummaryDiv.style.fontSize = "16px";
+                            clrSummaryDiv.style.fontWeight = "bold";
+                            
+                            document.getElementById("region-plot-container").appendChild(clrSummaryDiv);
+                        }
+                        
                     });
                 }
 
