@@ -7,8 +7,8 @@ from models import db, SNP, TajimaD
 from flask import jsonify, Response, request
 
 def get_snp_info(snp_id=None, chromosome=None, start=None, end=None, gene_name=None):
-        """
-    Retrieves SNP information from the SNP database based on users query.
+    """
+    Retrieves SNP information from the SNP database based on the user's query.
 
     Args:
         snp_id (str): SNP ID (e.g., 'rs12345').
@@ -21,21 +21,24 @@ def get_snp_info(snp_id=None, chromosome=None, start=None, end=None, gene_name=N
         list: A list of dictionaries, each containing retrieved information from the SNP database about a SNP.
               Returns None if no SNPs are found.
     """
-    query = SNP.query
+    query = SNP.query # start a query on the SNP table
 
+        
+    # Apply filters based on the user's input    
     if snp_id:
-        query = query.filter(SNP.snp_id.ilike(f"%{snp_id}%"))
+        query = query.filter(SNP.snp_id.ilike(f"%{snp_id}%")) # Case-insensitive search for SNP ID
     if chromosome:
-        query = query.filter(SNP.chromosome == str(chromosome))
+        query = query.filter(SNP.chromosome == str(chromosome)) # query chromosome with matching SNP chromosome
     if start:
-        query = query.filter(SNP.grch38_start >= int(start))
+        query = query.filter(SNP.grch38_start >= int(start)) # Filter SNPs starting from this position
     if end:
-        query = query.filter(SNP.grch38_start <= int(end))
+        query = query.filter(SNP.grch38_start <= int(end)) # Filter SNPs up to this position
     if gene_name:
-        query = query.filter(SNP.gene_name.ilike(f"%{gene_name}%"))
+        query = query.filter(SNP.gene_name.ilike(f"%{gene_name}%")) # Search for SNPs by gene name
 
-    snps = query.all()
-    
+    snps = query.all() # carry out the query
+
+    # Convert the retrieved database objects into a dictionary format
     results = []
     for snp in snps:
         results.append({
@@ -49,7 +52,7 @@ def get_snp_info(snp_id=None, chromosome=None, start=None, end=None, gene_name=N
             'consequence': snp.consequence
         })
     
-    return results if results else None
+    return results if results else None # Return results if found, else return None
 
 def get_tajima_d_data(chromosome, region=None, populations=None):
     """
@@ -65,16 +68,16 @@ def get_tajima_d_data(chromosome, region=None, populations=None):
             - tajima_d_data: Tajima's D values for each bin and respective population.
             - summary_stats: Mean and standard deviation of Tajima's D across the genomic region requested for each population.
     """
-    query = TajimaD.query.filter(TajimaD.chromosome == chromosome)
+    query = TajimaD.query.filter(TajimaD.chromosome == chromosome) # Query Tajima's D table, filters for the chromosome specified
 
     if populations:
-        query = query.filter(TajimaD.population.in_(populations))
+        query = query.filter(TajimaD.population.in_(populations)) # Filter by selected populations
 
     if region:
         start, end = region
-        query = query.filter(TajimaD.bin_start >= start, TajimaD.bin_end <= end)
+        query = query.filter(TajimaD.bin_start >= start, TajimaD.bin_end <= end) # Filter by genomic region
 
-    # Initialize the dictionary with all selected populations
+    # Initialise a dictionary with all selected populations
     tajima_d_data = {pop: [] for pop in populations} if populations else {}
 
     for tajima in query.all():
@@ -85,7 +88,8 @@ def get_tajima_d_data(chromosome, region=None, populations=None):
             "bin_end": tajima.bin_end,
             "tajima_d": tajima.tajima_d
         })
-
+            
+    # Calculate mean and standard deviation for each population    
     summary_stats = {
         pop: {
             "mean": round(np.mean([d["tajima_d"] for d in data]), 4) if data else None,
@@ -97,17 +101,27 @@ def get_tajima_d_data(chromosome, region=None, populations=None):
     return tajima_d_data, summary_stats
 
 def get_clr_data(chromosome, region=None, populations=None):
-    """Fetch CLR statistics for a chromosome or a region."""
-    query = CLRTest.query.filter(CLRTest.chromosome == chromosome)
+    """
+    Fetch CLR statistics for a chromosome or a genomic region.
+
+    Args:
+        chromosome (str): Chromosome to filter by.
+        region (tuple, optional): Start and end positions of the region. Defaults to None.
+        populations (list, optional): List of populations to filter by. Defaults to None.
+
+    Returns:
+        tuple: A dictionary of CLR values and summary statistics.
+    """
+    query = CLRTest.query.filter(CLRTest.chromosome == chromosome) # Query CLRTest table, filters for the chromosome specified
 
     if populations:
-        query = query.filter(CLRTest.population.in_(populations))
+        query = query.filter(CLRTest.population.in_(populations)) # Filter by population
 
     if region:
         start, end = region
-        query = query.filter(CLRTest.position >= start, CLRTest.position <= end)
+        query = query.filter(CLRTest.position >= start, CLRTest.position <= end) # Filter by genomic region
 
-    # Initialize the dictionary with all selected populations
+    # Initialise the dictionary with all selected populations
     clr_data = {pop: [] for pop in populations} if populations else {}
 
     for clr in query.all():
@@ -118,7 +132,8 @@ def get_clr_data(chromosome, region=None, populations=None):
             "clr": clr.clr,
             "alpha": clr.alpha
         })
-
+            
+    # Calculate summary statistics    
     clr_summary_stats = {
         pop: {
             "mean_clr": round(np.mean([d["clr"] for d in data]), 4) if data else None,
@@ -144,22 +159,43 @@ def get_t2d_snps(chromosome, start=None, end=None):
     Returns:
         list: A list of dictionaries, each containing the SNP ID and position.
     """
-    query = SNP.query.filter(SNP.chromosome == chromosome)
+    query = SNP.query.filter(SNP.chromosome == chromosome) # Query SNP table by chromosome
 
     if start and end:
-        query = query.filter(SNP.grch38_start >= start, SNP.grch38_start <= end)
+        query = query.filter(SNP.grch38_start >= start, SNP.grch38_start <= end) # Filter by genomic range
 
-    return [{"snp_id": snp.snp_id, "position": snp.grch38_start} for snp in query.all()]
+    return [{"snp_id": snp.snp_id, "position": snp.grch38_start} for snp in query.all()] # Convert database results into a list of dictionaries
+        
 
 
 def download_tajima_d_data():
-    """Generate a text file containing Tajima's D statistics for a region."""
+    """
+    Generates a text file containing Tajima's D statistics for a region.
+
+    This function retrieves Tajima's D data for a specified chromosome and genomic region,
+    optionally filtered by population. It handles requests with either explicit start/end 
+    coordinates or a gene name (in which case it fetches gene coordinates from Ensembl). 
+    The function generates a plain text file with Tajima's D values and summary statistics 
+    (mean and standard deviation) for each selected population.
+
+    Request Parameters:
+        chromosome (str): Chromosome (e.g., "10").
+        gene_name (str, optional): Gene name to define the region.
+        start (int, optional): Start position of the genomic region.
+        end (int, optional): End position of the genomic region.
+        selected_population (list, optional): List of populations to include.
+
+    Returns:
+        flask.Response: A Flask Response object containing the text file with Tajima's D data.
+                       If no data is found, returns a response with an error message.
+    """
+        
     # Extract parameters
     chromosome = request.args.get("chromosome")
     gene_name = request.args.get("gene_name")  # Optional gene name
     start = request.args.get("start", type=int)
     end = request.args.get("end", type=int)
-    populations = request.args.getlist("selected_population")
+    populations = request.args.getlist("selected_population")  # List of selected populations
 
     # If gene name is provided, fetch its genomic coordinates
     if gene_name and (start is None or end is None):
@@ -210,21 +246,41 @@ def download_tajima_d_data():
 
 
 def load_snps_from_csv(csv_file):
-    df = pd.read_csv(csv_file)
+    """
+    Loads SNP data from a CSV file into the database.
+
+    Expected CSV Structure:
+    The function assumes that the input CSV file contains the following columns:
+    - dbSNP: SNP identifier (e.g., rs123456)
+    - chromosome: Chromosome number (e.g., 10)
+    - GRCh38_start: SNP genomic start position (GRCh38 assembly)
+    - Mapped_Genes: Gene(s) mapped to the SNP (comma-separated list)
+    - pValue: P-value from the GWAS study
+    - reference: Reference allele (e.g., A)
+    - alt: Alternative allele (e.g., T)
+    - consequence: Functional consequence of the variant
+
+    Example Usage:
+    load_snps_from_csv("path/to/snp_data.csv")
+    """
+        
+    df = pd.read_csv(csv_file) # Load CSV data into a Pandas DataFrame
 
     with db.session.begin():
-        db.session.query(SNP).delete()
-
+        db.session.query(SNP).delete() # Clear existing data in the SNP table. This needs to be removed before submission
+# If removed the databse would be able to be updated with new snps.
+            
         for _, row in df.iterrows():
-            # Handle Mapped_Genes column properly
+            # Process the "Mapped_Genes" column for consistency
             mapped_genes = None
             if pd.notna(row["Mapped_Genes"]):
                 mapped_genes = row["Mapped_Genes"].strip()  # Remove surrounding spaces
                 if mapped_genes.startswith('"') and mapped_genes.endswith('"'):  
                     mapped_genes = mapped_genes[1:-1]  # Remove surrounding quotes
                 mapped_genes = mapped_genes.replace(", ", ",")  # fix spacing
-                mapped_genes = " ".join(mapped_genes.split(","))  # Ensure proper formatting
-
+                mapped_genes = " ".join(mapped_genes.split(","))  # Convert commas to spaces
+                    
+            # Insert SNP data into the database    
             db.session.add(SNP(
                 snp_id=row["dbSNP"],
                 chromosome=str(row["chromosome"]),
@@ -236,13 +292,21 @@ def load_snps_from_csv(csv_file):
                 consequence=row["consequence"]
             ))
 
-    db.session.commit()
+    db.session.commit() # Commit changes to the database
 
 
 
 def get_gene_ontology_terms(gene_name):
-    """
+"""
     Retrieves GO terms for a given gene name using MyGene.info and QuickGO APIs.
+
+    Args:
+        gene_name (str): The name of the gene to query.
+
+    Returns:
+        dict or None: A dictionary containing GO terms categorized by namespace 
+                     (biological_process (BP), molecular_function(MF), cellular_component(CC)), 
+                     or None if no GO terms are found or if there's an error.
     """
 
     # Step 1: Query MyGene.info to get GO term IDs
@@ -272,7 +336,7 @@ def get_gene_ontology_terms(gene_name):
             for category in ["BP", "MF", "CC"]:  # Ensure we check all three
                 if category in go_data:
                     terms = go_data[category]
-                    if isinstance(terms, dict):  # If only one GO term is present
+                    if isinstance(terms, dict):  # If only one GO term category is present
                         terms = [terms]
                     for term in terms:
                         go_id = term.get("id")
@@ -329,6 +393,45 @@ def get_gene_ontology_terms(gene_name):
 
 
 def load_tajima_d_results(directory):
+    """
+    Loads Tajima's D statistics from files in a directory into the database.
+
+    The function expects the files to follow a specific naming convention and format:
+
+    File Naming Convention:
+      - `<PopulationName>_chr<ChromosomeNumber>.Tajima.D` 
+      - Example: `BEB_chr10.Tajima.D`
+
+    File Content Format:
+      - Tab-separated values (.tsv)
+      - Columns:
+          - 1st column (index 0): Window Midpoint (ignored)
+          - 2nd column (index 1): Start position of the genomic bin
+          - 3rd column (index 2): Number of SNPs in the bin (nSNPS)
+          - 4th column (index 3): Tajima's D value (TajimaD)
+
+    Example File Content (`BEB_chr10.Tajima.D`):
+    ```
+    Position    Start   nSNPS   TajimaD
+    15000       10000   25      -1.237
+    25000       20000   30      0.983
+    35000       30000   40      1.456
+    45000       40000   50      -0.678
+    ```
+
+    The function performs the following steps:
+    1. Deletes all existing Tajima's D records in the `tajima_d_results` table Need to change this in the future.
+    2. Iterates through each file in the specified directory.
+    3. Extracts population and chromosome information from the filename.
+    4. Reads the file line by line, skipping the header.
+    5. Parses each line, extracting the relevant data.
+    6. Filters out lines with missing or invalid Tajima's D values.
+    7. Inserts the valid data into the `tajima_d_results` table.
+
+    Assumptions:
+    - The bin size is expected to be 10kb (`bin_end = bin_start + 10000`).
+    - The first line in each file is a header and is skipped.
+    """
     with db.session.begin():
         db.session.query(TajimaD).delete()
         for filename in os.listdir(directory):
@@ -348,26 +451,35 @@ def load_tajima_d_results(directory):
                             n_snps=int(columns[2]),
                             tajima_d=float(columns[3])
                         ))
-    db.session.commit()
+    db.session.commit() # Save changes to the database
 
 def get_gene_coordinates_ensembl(gene_name):
     """
-    Fetch chromosome, start, and end position of a gene from Ensembl.
+    Fetches the chromosome, start, and end position of a gene from the Ensembl database.
+
+    Args:
+        gene_name (str): The name of the gene to query.
+
+    Returns:
+        dict: A dictionary containing the chromosome, start, and end position of the gene, or None if the gene is not found.
     """
+        
+    # The URL for the Ensembl REST API     
     url = f"https://rest.ensembl.org/xrefs/symbol/homo_sapiens/{gene_name}?content-type=application/json"
     response = requests.get(url)
 
-    if response.status_code == 200:
-        data = response.json()
+    if response.status_code == 200: # Check if the request was successful
+        data = response.json() # Parse the JSON response
         if data:
             ensembl_gene_id = data[0]["id"]  # Extract Ensembl Gene ID
 
-            # Fetch gene location details
+            # Fetch gene location details using the Ensembl Gene ID
             gene_url = f"https://rest.ensembl.org/lookup/id/{ensembl_gene_id}?content-type=application/json"
             gene_response = requests.get(gene_url)
 
-            if gene_response.status_code == 200:
-                gene_data = gene_response.json()
+            if gene_response.status_code == 200: # Check if the request was successful
+                gene_data = gene_response.json() # Parse the JSON response
+                # Return the chromosome, start, and end position of the gene
                 return {
                     "chromosome": gene_data["seq_region_name"],
                     "start": gene_data["start"],
@@ -378,7 +490,6 @@ def get_gene_coordinates_ensembl(gene_name):
 
 
 ###### function to get mapped genes #####
-
 # import requests
 # import pandas as pd
 # import time
@@ -465,7 +576,7 @@ def get_gene_coordinates_ensembl(gene_name):
 
 
 
-##### Function to convert GRCh37 postion to GRCh38 T2dkp postions from the T2DKp CSV file #######
+##### Function to convert GRCh37 postion to GRCh38 T2dkp postions from the T2DKP CSV file #######
 
 # # Function to convert a position from GRCh37 to GRCh38 (returns only start position)
 # def convert_grch37_to_grch38(chromosome, position):
