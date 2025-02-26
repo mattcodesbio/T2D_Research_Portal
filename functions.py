@@ -262,14 +262,16 @@ def load_snps_from_csv(csv_file):
 
     Example Usage:
     load_snps_from_csv("path/to/snp_data.csv")
+
+    The function will:
+    - Reads the CSV file using Pandas.
+    - If an SNP exists, it **updates** the existing record.
+    - If an SNP doesn’t exist, it **adds** a new record.
     """
         
     df = pd.read_csv(csv_file) # Load CSV data into a Pandas DataFrame
 
     with db.session.begin():
-        db.session.query(SNP).delete() # Clear existing data in the SNP table. This needs to be removed before submission
-# If removed the databse would be able to be updated with new snps.
-            
         for _, row in df.iterrows():
             # Process the "Mapped_Genes" column for consistency
             mapped_genes = None
@@ -279,8 +281,21 @@ def load_snps_from_csv(csv_file):
                     mapped_genes = mapped_genes[1:-1]  # Remove surrounding quotes
                 mapped_genes = mapped_genes.replace(", ", ",")  # fix spacing
                 mapped_genes = " ".join(mapped_genes.split(","))  # Convert commas to spaces
-                    
-            # Insert SNP data into the database    
+                
+            # Check if the SNP already exists in the database
+            existing_snp = SNP.query.filter_by(snp_id=row["dbSNP"]).first()
+
+            if existing_snp:
+                # Update existing SNP record
+                existing_snp.chromosome = str(row["chromosome"])
+                existing_snp.grch38_start = int(row["GRCh38_start"])
+                existing_snp.gene_name = mapped_genes
+                existing_snp.p_value = row["pValue"]
+                existing_snp.reference_allele = row["reference"]
+                existing_snp.alternative_allele = row["alt"]
+                existing_snp.consequence = row["consequence"]
+            else:
+                # Insert new SNP data into the database    
             db.session.add(SNP(
                 snp_id=row["dbSNP"],
                 chromosome=str(row["chromosome"]),
@@ -399,8 +414,8 @@ def load_tajima_d_results(directory):
     The function expects the files to follow a specific naming convention and format:
 
     File Naming Convention:
-      - `<PopulationName>_chr<ChromosomeNumber>.Tajima.D` 
-      - Example: `BEB_chr10.Tajima.D`
+      - '<PopulationName>_chr<ChromosomeNumber>.Tajima.D'
+      - Example: 'BEB_chr10.Tajima.D'
 
     File Content Format:
       - Tab-separated values (.tsv)
@@ -410,47 +425,66 @@ def load_tajima_d_results(directory):
           - 3rd column (index 2): Number of SNPs in the bin (nSNPS)
           - 4th column (index 3): Tajima's D value (TajimaD)
 
-    Example File Content (`BEB_chr10.Tajima.D`):
-    ```
+    Example File Content ('BEB_chr10.Tajima.D'):
+    '''
     Position    Start   nSNPS   TajimaD
     15000       10000   25      -1.237
     25000       20000   30      0.983
     35000       30000   40      1.456
     45000       40000   50      -0.678
-    ```
+    '''
 
     The function performs the following steps:
-    1. Deletes all existing Tajima's D records in the `tajima_d_results` table Need to change this in the future.
+    1. Deletes all existing Tajima's D records in the 'tajima_d_results' table Need to change this in the future.
     2. Iterates through each file in the specified directory.
     3. Extracts population and chromosome information from the filename.
     4. Reads the file line by line, skipping the header.
     5. Parses each line, extracting the relevant data.
     6. Filters out lines with missing or invalid Tajima's D values.
-    7. Inserts the valid data into the `tajima_d_results` table.
+    7. If a population, chromosome, and bin combination does not already exist, it inserts and update the database.
+    8. Inserts the valid data into the 'tajima_d_results' table.
 
     Assumptions:
-    - The bin size is expected to be 10kb (`bin_end = bin_start + 10000`).
+    - The bin size is expected to be 10kb ('bin_end = bin_start + 10000').
     - The first line in each file is a header and is skipped.
     """
     with db.session.begin():
-        db.session.query(TajimaD).delete()
+        # Iterate through all files in the directory
         for filename in os.listdir(directory):
-            if filename.endswith(".Tajima.D"):
+            if filename.endswith(".Tajima.D"): # Process only '.Tajima.D' files
+                # Extract population and chromosome number from filename
                 population, chromosome = filename.split("_")[0], filename.split("_")[1].split(".")[0].replace("chr", "")
+
                 with open(os.path.join(directory, filename), "r") as file:
-                    next(file)
+                    next(file)# Skip the header line
                     for line in file:
-                        columns = line.strip().split("\t")
+                        columns = line.strip().split("\t") # Split columns based on tab separation
+                        
+                        # Skip lines with invalid or missing Tajima's D values
                         if len(columns) < 4 or columns[3] in ["", "NA", ".", "nan"]:
                             continue
-                        db.session.add(TajimaD(
-                            population=population,
-                            chromosome=chromosome,
-                            bin_start=int(columns[1]),
-                            bin_end=int(columns[1]) + 10000,
-                            n_snps=int(columns[2]),
-                            tajima_d=float(columns[3])
-                        ))
+                            
+                        bin_start = int(columns[1])
+                        bin_end = bin_start + 10000  # Assuming 10kb bin size
+                        n_snps = int(columns[2])
+                        tajima_d = float(columns[3])
+
+                        # Check if this population + chromosome + bin already exists
+                        existing_tajima = db.session.query(TajimaD).filter_by(
+                            population=population, chromosome=chromosome, bin_start=bin_start
+                        ).first()
+                        
+                        if not existing_tajima:
+                            # If this combination does NOT exist, insert it
+                            db.session.add(TajimaD(
+                                population=population,
+                                chromosome=chromosome,
+                                bin_start=bin_start,
+                                bin_end=bin_end,
+                                n_snps=n_snps,
+                                tajima_d=tajima_d
+                            ))
+                            
     db.session.commit() # Save changes to the database
 
 def get_gene_coordinates_ensembl(gene_name):
