@@ -10,9 +10,7 @@
             <p><strong>{{ pop }}:</strong> {{ info }}</p>
         {% endfor %}
 
-        <h2>Whole Chromosome Tajima's D Plot (Chromosome {{ selected_chromosome }})</h2>
-
-        <label for="t2d_filter">Show only T2D-associated SNPs:</label>
+        <label for="t2d_filter">Check this to view T2D-associated SNPs:</label>
         <input type="checkbox" id="t2d_filter" onchange="updatePlot()">
 
         <div id="plots-container"></div> 
@@ -67,7 +65,13 @@
                 let container = document.getElementById("plots-container");
                 container.innerHTML = "";
 
+
                 for (let pop in tajimaDData) {
+
+                    let tajimaTitle = document.createElement("h2");
+                    tajimaTitle.innerText = `Tajima's D values over chromosome {{ selected_chromosome }} positions for ${pop}`;
+                    container.appendChild(tajimaTitle);
+
                     let plotDiv = document.createElement("div");
                     plotDiv.id = "plot-" + pop;
                     container.appendChild(plotDiv);
@@ -105,6 +109,10 @@
                     Plotly.newPlot(plotDiv.id, traces);
 
                     // CLR plot
+                    let clrTitle = document.createElement("h2");
+                    clrTitle.innerText = `CLR values over chromosome {{ selected_chromosome }} positions for ${pop}`;
+                    container.appendChild(clrTitle);
+
                     let clrPlotDiv = document.createElement("div");
                     clrPlotDiv.id = "clr-plot-" + pop;
                     container.appendChild(clrPlotDiv);
@@ -117,8 +125,29 @@
                         y: clrValues,
                         mode: 'markers',
                         name: `CLR - ${pop}`,
-                        line: { color: "blue", size: 2 }
+                        marker: { color: "blue", size: 2 }
                     }];
+
+                    if (showT2D) {
+                        let snpPositions = t2dSnps.map(snp => snp.position);
+                        let snpValues = snpPositions.map(pos => {
+                            let closestClr = clrData[pop].reduce((closest, curr) => {
+                                return Math.abs(curr.position - pos) < Math.abs(closest.position - pos) ? curr : closest;
+                            }, clrData[pop][0]);
+                            return closestClr ? closestClr.clr : null;
+                        });
+
+                        let t2dSnpTrace = {
+                            x: snpPositions,
+                            y: snpValues,
+                            mode: 'markers',
+                            text: t2dSnps.map(snp => snp.snp_id),
+                            textposition: "top center",
+                            marker: {color: 'red', size: 4},
+                            name: 'T2D SNPs'
+                        };
+                        clrTraces.push(t2dSnpTrace);
+                    }                  
 
                     Plotly.newPlot(clrPlotDiv.id, clrTraces);
                 }
