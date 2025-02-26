@@ -2,7 +2,10 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
-class SNP(db.Model):
+class SNP(db.Model):    
+    """
+    Contains T2D associated Single Nucleotide Polymorphism (SNP) obtained from genome wide assocaited study.
+    """
     __tablename__ = 'snps'
     
     snp_id = db.Column(db.String(20), primary_key=True, nullable=False)  # SNP ID (e.g., rs123456)
@@ -19,6 +22,9 @@ class SNP(db.Model):
 
 # Tajima's D Table
 class TajimaD(db.Model):
+    """
+    Contains Tajima's D statistic for a given population and genomic region.
+    """
     __tablename__ = 'tajima_d_results'
     
     id = db.Column(db.Integer, primary_key=True)
