@@ -7,9 +7,6 @@ from models import db, SNP, TajimaD
 from flask import jsonify, Response, request
 
 
-
-
-
 def get_snp_info(snp_id=None, chromosome=None, start=None, end=None, gene_name=None):
     """
     Retrieves SNP information from the SNP database based on the user's query.
