@@ -5,41 +5,31 @@ import numpy as np
 import os
 from models import db, SNP, TajimaD
 from flask import jsonify, Response, request
+import logging
+
+# Configure the logger
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 def get_snp_info(snp_id=None, chromosome=None, start=None, end=None, gene_name=None):
-    """
-    Retrieves SNP information from the SNP database based on the user's query.
+    logger.debug(f"Fetching SNP info with parameters: snp_id={snp_id}, chromosome={chromosome}, start={start}, end={end}, gene_name={gene_name}")
+    query = SNP.query
 
-    Args:
-        snp_id (str): SNP ID (e.g., 'rs12345').
-        chromosome (str): Chromosome (e.g., '1').
-        start (int): Start position on the chromosome.
-        end (int): End position on the chromosome.
-        gene_name (str): Mapped Gene name.
-
-    Returns:
-        list: A list of dictionaries, each containing retrieved information from the SNP database about a SNP.
-              Returns None if no SNPs are found.
-    """
-    query = SNP.query # start a query on the SNP table
-
-        
-    # Apply filters based on the user's input    
     if snp_id:
-        query = query.filter(SNP.snp_id.ilike(f"%{snp_id}%")) # Case-insensitive search for SNP ID
+        query = query.filter(SNP.snp_id.ilike(f"%{snp_id}%"))
     if chromosome:
-        query = query.filter(SNP.chromosome == str(chromosome)) # query chromosome with matching SNP chromosome
+        query = query.filter(SNP.chromosome == str(chromosome))
     if start:
-        query = query.filter(SNP.grch38_start >= int(start)) # Filter SNPs starting from this position
+        query = query.filter(SNP.grch38_start >= int(start))
     if end:
-        query = query.filter(SNP.grch38_start <= int(end)) # Filter SNPs up to this position
+        query = query.filter(SNP.grch38_start <= int(end))
     if gene_name:
-        query = query.filter(SNP.gene_name.ilike(f"%{gene_name}%")) # Search for SNPs by gene name
+        query = query.filter(SNP.gene_name.ilike(f"%{gene_name}%"))
 
-    snps = query.all() # carry out the query
+    snps = query.all()
+    logger.debug(f"Found {len(snps)} SNPs")
 
-    # Convert the retrieved database objects into a dictionary format
     results = []
     for snp in snps:
         results.append({
@@ -52,8 +42,57 @@ def get_snp_info(snp_id=None, chromosome=None, start=None, end=None, gene_name=N
             'alternative_allele': snp.alternative_allele,
             'consequence': snp.consequence
         })
+
+    return results if results else None
+
+
+# def get_snp_info(snp_id=None, chromosome=None, start=None, end=None, gene_name=None):
+#     """
+#     Retrieves SNP information from the SNP database based on the user's query.
+
+#     Args:
+#         snp_id (str): SNP ID (e.g., 'rs12345').
+#         chromosome (str): Chromosome (e.g., '1').
+#         start (int): Start position on the chromosome.
+#         end (int): End position on the chromosome.
+#         gene_name (str): Mapped Gene name.
+
+#     Returns:
+#         list: A list of dictionaries, each containing retrieved information from the SNP database about a SNP.
+#               Returns None if no SNPs are found.
+#     """
+#     query = SNP.query # start a query on the SNP table
+
+        
+#     # Apply filters based on the user's input    
+#     if snp_id:
+#         query = query.filter(SNP.snp_id.ilike(f"%{snp_id}%")) # Case-insensitive search for SNP ID
+#     if chromosome:
+#         query = query.filter(SNP.chromosome == str(chromosome)) # query chromosome with matching SNP chromosome
+#     if start:
+#         query = query.filter(SNP.grch38_start >= int(start)) # Filter SNPs starting from this position
+#     if end:
+#         query = query.filter(SNP.grch38_start <= int(end)) # Filter SNPs up to this position
+#     if gene_name:
+#         query = query.filter(SNP.gene_name.ilike(f"%{gene_name}%")) # Search for SNPs by gene name
+
+#     snps = query.all() # carry out the query
+
+#     # Convert the retrieved database objects into a dictionary format
+#     results = []
+#     for snp in snps:
+#         results.append({
+#             'snp_id': snp.snp_id,
+#             'chromosome': snp.chromosome,
+#             'grch38_start': snp.grch38_start,
+#             'gene_name': snp.gene_name,
+#             'p_value': snp.p_value,
+#             'reference_allele': snp.reference_allele,
+#             'alternative_allele': snp.alternative_allele,
+#             'consequence': snp.consequence
+#         })
     
-    return results if results else None # Return results if found, else return None
+#     return results if results else None # Return results if found, else return None
 
 def get_tajima_d_data(chromosome, region=None, populations=None):
     """
@@ -545,122 +584,124 @@ def load_tajima_d_results(directory):
     db.session.commit() # Save changes to the database
 
 
-def load_clr_results(directory):
-    """
-    Loads CLR results from files in a directory into the database.
+# def load_clr_results(directory):
+#     """
+#     Loads CLR results from files in a directory into the database.
 
-    The function expects the files to follow a specific naming convention and format:
+#     The function expects the files to follow a specific naming convention and format:
 
-    File Naming Convention:
-      - 'SweeD_Report.<Population>_chr<Chromosome>.txt'
-      - Example: 'SweeD_Report.BEB_chr10.txt'
+#     File Naming Convention:
+#       - 'SweeD_Report.<Population>_chr<Chromosome>.txt'
+#       - Example: 'SweeD_Report.BEB_chr10.txt'
 
-    File Content Format:
-      - Tab-separated values (.tsv)
-      - Columns:
-          - 1st column (index 0): Position
-          - 2nd column (index 1): Likelihood/ CLR value
-          - 3rd column (index 2): Alpha value
+#     File Content Format:
+#       - Tab-separated values (.tsv)
+#       - Columns:
+#           - 1st column (index 0): Position
+#           - 2nd column (index 1): Likelihood/ CLR value
+#           - 3rd column (index 2): Alpha value
 
-    Example File Content ('SweeD_Report.BEB_chr10.txt'):
-    '''
-    Position   Likelihood       Alpha
-    11501	  2.241451e-01	 3.902013e+01
-    12838	  2.254904e-01	 2.918483e-04
-    14176	  3.827930e-01	 1.359461e-04
-    '''
+#     Example File Content ('SweeD_Report.BEB_chr10.txt'):
+#     '''
+#     Position   Likelihood       Alpha
+#     11501	  2.241451e-01	 3.902013e+01
+#     12838	  2.254904e-01	 2.918483e-04
+#     14176	  3.827930e-01	 1.359461e-04
+#     '''
 
-    The function performs the following steps:
-    1. Iterates through each file in the specified directory.
-    2. Extracts population and chromosome information from the filename.
-    3. Reads the file into a DataFrame, skipping the first two rows.
-    4. Cleans up data by removing rows where 'Position' is not a number.
-    5. Renames columns to match the table schema.
-    6. Adds population and chromosome columns.
-    7. Adds a column for id, assuming we want to manually assign ids starting from 1 or max(id)+1.
-    8. Reorders columns to match the table schema.
-    9. Inserts the valid data into the 'clr_results' table.
+#     The function performs the following steps:
+#     1. Iterates through each file in the specified directory.
+#     2. Extracts population and chromosome information from the filename.
+#     3. Reads the file into a DataFrame, skipping the first two rows.
+#     4. Cleans up data by removing rows where 'Position' is not a number.
+#     5. Renames columns to match the table schema.
+#     6. Adds population and chromosome columns.
+#     7. Adds a column for id, assuming we want to manually assign ids starting from 1 or max(id)+1.
+#     8. Reorders columns to match the table schema.
+#     9. Inserts the valid data into the 'clr_results' table.
 
-    Assumptions:
-    - The first two lines in the TSV file are headers and are skipped.
-    """
-    with db.session.begin():
-        # Iterate through all files in the directory
-        for filename in os.listdir(directory):
-            if filename.startswith('SweeD_Report'): # Process only 'SweeD_Report' files
-                # Extract population and chromosome from the filename
-                parts = filename.split('.')
-                population = parts[1].split('_')[0]
-                chromosome = parts[1].split('_')[1].replace('chr', '')
+#     Assumptions:
+#     - The first two lines in the TSV file are headers and are skipped.
+#     """
+#     with db.session.begin():
+#         # Iterate through all files in the directory
+#         for filename in os.listdir(directory):
+#             if filename.startswith('SweeD_Report'): # Process only 'SweeD_Report' files
+#                 # Extract population and chromosome from the filename
+#                 parts = filename.split('.')
+#                 population = parts[1].split('_')[0]
+#                 chromosome = parts[1].split('_')[1].replace('chr', '')
 
-                # Full path to the TSV file
-                sweed_report = os.path.join(directory, filename)
+#                 # Full path to the TSV file
+#                 sweed_report = os.path.join(directory, filename)
 
-                # Read the TSV file into a DataFrame, skipping the first two rows
-                df = pd.read_csv(sweed_report, sep='\t', skiprows=2)
+#                 # Read the TSV file into a DataFrame, skipping the first two rows
+#                 df = pd.read_csv(sweed_report, sep='\t', skiprows=2)
 
-                # Clean up data by removing rows where 'Position' is not a number
-                df = df[pd.to_numeric(df['Position'], errors='coerce').notnull()]
+#                 # Clean up data by removing rows where 'Position' is not a number
+#                 df = df[pd.to_numeric(df['Position'], errors='coerce').notnull()]
 
-                # Renaming columns to match the table schema
-                df.columns = ['position', 'clr', 'alpha']
+#                 # Renaming columns to match the table schema
+#                 df.columns = ['position', 'clr', 'alpha']
 
-                # Add population and chromosome columns
-                df['population'] = population
-                df['chromosome'] = chromosome
+#                 # Add population and chromosome columns
+#                 df['population'] = population
+#                 df['chromosome'] = chromosome
 
-                # Add a column for id, assuming we want to manually assign ids starting from 1 or max(id)+1
-                max_id = db.session.query(db.func.max(CLRTest.id)).scalar()
+#                 # Add a column for id, assuming we want to manually assign ids starting from 1 or max(id)+1
+#                 max_id = db.session.query(db.func.max(CLRTest.id)).scalar()
                 
-                # If no data is in the table yet, start from 1
-                if max_id is None:
-                    max_id = 0
+#                 # If no data is in the table yet, start from 1
+#                 if max_id is None:
+#                     max_id = 0
                 
-                # Generate id for each row by incrementing max_id
-                df['id'] = range(max_id + 1, max_id + 1 + len(df))
+#                 # Generate id for each row by incrementing max_id
+#                 df['id'] = range(max_id + 1, max_id + 1 + len(df))
 
-                # Reorder columns to match the table schema
-                df = df[['id', 'population', 'chromosome', 'position', 'clr', 'alpha']]
+#                 # Reorder columns to match the table schema
+#                 df = df[['id', 'population', 'chromosome', 'position', 'clr', 'alpha']]
 
-                # Insert data into the table
-                for _, row in df.iterrows():
-                    clr_test = CLRTest(
-                        id=row['id'],
-                        population=row['population'],
-                        chromosome=row['chromosome'],
-                        position=row['position'],
-                        clr=row['clr'],
-                        alpha=row['alpha']
-                    )
-                    db.session.add(clr_test)
-    db.session.commit() # Save changes to the database
+#                 # Insert data into the table
+#                 for _, row in df.iterrows():
+#                     clr_test = CLRTest(
+#                         id=row['id'],
+#                         population=row['population'],
+#                         chromosome=row['chromosome'],
+#                         position=row['position'],
+#                         clr=row['clr'],
+#                         alpha=row['alpha']
+#                     )
+#                     db.session.add(clr_test)
+#     db.session.commit() # Save changes to the database
 
 
-def process_directories():
-    """
-    Function to process directories containing SweeD results to be loaded into the database using load_clr_results
-    """
-    from main import app  
-    directories = [
-        'SweeD_results/chr10_results',
-        'SweeD_results/chr11_results',
-        'SweeD_results/chr20_results',
-        'SweeD_results/chr2_results',
-        'SweeD_results/chr3_results',
-        'SweeD_results/chr6_results',
-        'SweeD_results/chr8_results',
-        'SweeD_results/chr9_results'
-    ]
-    with app.app_context():
-        for directory in directories:
-            if os.path.exists(directory):
-                load_clr_results(directory)
-            else:
-                print(f"Directory does not exist: {directory}")
+# def process_directories():
+#     """
+#     Function to process directories containing SweeD results to be loaded into the database using load_clr_results
+#     """
+#     from main import app  
+#     directories = [
+#         'SweeD_results/chr10_results',
+#         'SweeD_results/chr11_results',
+#         'SweeD_results/chr20_results',
+#         'SweeD_results/chr2_results',
+#         'SweeD_results/chr3_results',
+#         'SweeD_results/chr6_results',
+#         'SweeD_results/chr8_results',
+#         'SweeD_results/chr9_results'
+#     ]
+#     with app.app_context():
+#         for directory in directories:
+#             if os.path.exists(directory):
+#                 load_clr_results(directory)
+#             else:
+#                 print(f"Directory does not exist: {directory}")
 
-# Call the function to process directories
-if __name__ == "__main__":
-    process_directories()
+# # Call the function to process directories
+# if __name__ == "__main__":
+#     # uncomment the following to run the function and load the data into the database
+#     # process_directories()
+#     pass
 
 
 def get_gene_coordinates_ensembl(gene_name):
