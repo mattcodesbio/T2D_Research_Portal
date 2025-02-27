@@ -437,6 +437,19 @@
                             combinedClrPlotDiv.id = `region-clr-plot-combined`;
                             document.getElementById("region-plot-container").appendChild(combinedClrPlotDiv);
 
+                            let significanceThresholdTrace = {
+                                    x: [Math.min(...combinedClrTraces.map(trace => Math.min(...trace.x))), Math.max(...combinedClrTraces.map(trace => Math.max(...trace.x)))],
+                                    y: [4.11, 4.11],
+                                    mode: 'lines',
+                                    name: 'Significance threshold adjusted with spatial correlation',
+                                    line: {
+                                        dash: 'dash',
+                                        color: 'red',
+                                        width: 2
+                                    }
+                                };
+                                combinedClrTraces.push(significanceThresholdTrace);
+                                
                             if (combinedClrTraces.length > 0) {
                                 Plotly.newPlot(combinedClrPlotDiv.id, combinedClrTraces, combinedClrLayout);
                             } else {
