@@ -6,23 +6,28 @@
     <div class="container">
         <h1>Analysis for Positive Selection</h1>
 
+        <!-- Display selected population information -->
         {% for pop, info in selected_population_info.items() %}
             <p><strong>Population Chosen for Analysis: {{ info }} ({{ pop }})</p>
         {% endfor %}
 
+        <!-- Checkbox for filtering T2D-associated SNPs -->
         <div class="form-check form-check-inline" style="margin-top: 20px;">
             <label class="form-check-label" for="t2d_filter" style="display: inline-block;">Check to view T2D-associated SNPs</label>
             <input class="form-check-input" type="checkbox" id="t2d_filter" style="display: inline-block;" onchange="updatePlot()">
         </div>
 
+         <!-- Container for interactive plots -->
         <div id="plots-container"></div> 
 
         <!-- Region Selection Form -->
         <div class="region-selection">
             <h3>Select Region of Interest</h3>
             <form id="region-form">
+                <!-- Hidden field to store selected chromosome -->
                 <input type="hidden" id="selected_chromosome" name="selected_chromosome" value="{{ selected_chromosome }}">
 
+                <!-- User input fields for defining a genomic region -->
                 <label for="region_start">Start Position:</label>
                 <input type="number" id="region_start" name="region_start" placeholder="e.g., 100000">
 
@@ -32,6 +37,7 @@
                 <label for="gene_name">Gene Name (optional):</label>
                 <input type="text" id="gene_name" name="gene_name" placeholder="e.g., TCF7L2">
 
+                <!-- Buttons for selecting populations -->
                 <div class="col-12">
                     <label class="form-label">Select Population(s) for Region Analysis:</label>
                     <div class="btn-group d-flex flex-wrap" role="group" id="population-buttons">
@@ -45,7 +51,9 @@
                     <input type="hidden" id="selected_populations" name="selected_populations">
                 </div>
 
+                <!-- Button to fetch and display region-specific analysis -->
                 <button type="button" onclick="fetchRegionData()">Show Region Graph</button>
+                <!-- Checkbox for filtering T2D-associated SNPs in region analysis -->
                 <div class="form-check form-check-inline" style="margin-top: 20px;">
                     <label class="form-check-label" for="t2d_region_filter" style="display: inline-block;">Check to view T2D-associated SNPs</label>
                     <input class="form-check-input" type="checkbox" id="t2d_region_filter" style="display: inline-block;" checked onchange="fetchRegionData()">
@@ -53,11 +61,13 @@
             </form>
         </div>
 
+        <!-- Buttons for downloading analysis data -->
         <div class="d-flex justify-content-end mt-3">
             <button type="button" class="btn btn-success me-2" onclick="downloadTajimaD()">Download Tajima's D Data</button>
             <button type="button" class="btn btn-success" onclick="downloadCLR()">Download CLR Data</button>
         </div>
 
+         <!-- Container for selected chromosomal region plot -->
         <div id="region-plot-container"></div> 
 
         <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
@@ -66,12 +76,13 @@
             let t2dSnps = {{ t2d_snp_data | safe }};
             let clrData = {{ clr_data | safe }};
 
+            // Function to update the plot based on the selected populations and T2D filter    
             function updatePlot() {
                 let showT2D = document.getElementById("t2d_filter").checked;
                 let container = document.getElementById("plots-container");
-                container.innerHTML = "";
+                container.innerHTML = ""; // Clear previous plots
 
-
+                // Iterate over each population and create Tajima's D plot
                 for (let pop in tajimaDData) {
 
                     let tajimaTitle = document.createElement("h2");
@@ -83,6 +94,7 @@
                     plotDiv.id = "plot-" + pop;
                     container.appendChild(plotDiv);
 
+                    // Extract bin positions and Tajima's D values for the current population
                     let binPositions = tajimaDData[pop].map(d => (d.bin_start + d.bin_end) / 2);
                     let tajimaValues = tajimaDData[pop].map(d => d.tajima_d);
 
@@ -94,6 +106,7 @@
                         line: { color: "blue" }
                     }];
 
+                    // Overlay T2D-associated SNPS if checkbox is checked
                     if (showT2D) {
                         let snpPositions = t2dSnps.map(snp => snp.position);
                         let snpValues = snpPositions.map(pos => {
@@ -123,7 +136,7 @@
 
                     Plotly.newPlot(plotDiv.id, traces, layout);
 
-                    // CLR plot
+                    // Create CLR plot similar to Tajima's D plot
                     let clrTitle = document.createElement("h2");
                     clrTitle.innerText = `CLR values over chromosome {{ selected_chromosome }} positions for ${pop}`;
                     clrTitle.classList.add("plot-margin");
@@ -158,6 +171,7 @@
                     };
                     clrTraces.push(significanceThresholdTrace);
 
+                    // Overlay T2D-associated SNPS if checkbox is checked
                     if (showT2D) {
                         let snpPositions = t2dSnps.map(snp => snp.position);
                         let snpValues = snpPositions.map(pos => {
@@ -192,9 +206,10 @@
                 }
             }
 
-            let selectedPopulations = new Set(); // Store selected populations
+            // Store selected populations
+            let selectedPopulations = new Set(); 
 
-            // 🔹 Function to toggle population selection (affects regional analysis)
+            // Function to toggle population selection (affects regional analysis)
             function togglePopulation(button) {
                 let pop = button.getAttribute("data-population");
 
@@ -212,6 +227,7 @@
                 document.getElementById("selected_populations").value = Array.from(selectedPopulations).join(",");
             }
 
+            // Function to fetch and display region-specific analysis
             function fetchRegionData() {
                 let start = document.getElementById("region_start").value;
                 let end = document.getElementById("region_end").value;
@@ -235,9 +251,11 @@
                         let colors = ["blue", "green", "purple", "orange", "cyan"];
                         let colorIndex = 0;
 
-                        let combinedTraces = [];
+                        // Initialise arrays to store traces for combined plots
+                        let combinedTajimaTraces = [];
                         let combinedClrTraces = [];
 
+                        // Tajima's D plot for selected region
                         for (let pop in data.tajima_d_data) {
                             let plotDiv = document.createElement("div");
                             plotDiv.id = `region-plot-${pop}`;
@@ -257,7 +275,7 @@
                             let traces = [lineTrace];
 
                             // **Ensure only Tajima's D values are included in the combined plot**
-                            combinedTraces.push(lineTrace);
+                            combinedTajimaTraces.push(lineTrace);
                             colorIndex = (colorIndex + 1) % colors.length;
 
                             // **Map T2D SNPs to their correct Tajima's D bins**
@@ -293,7 +311,7 @@
                             Plotly.newPlot(plotDiv.id, traces, layout);
                             colorIndex = (colorIndex + 1) % colors.length;
 
-                            // ✅ Display mean and standard deviation next to each plot
+                            // Display mean and standard deviation next to each plot
                             let summaryDiv = document.createElement("div");
                             summaryDiv.innerHTML = `
                                 <p><strong>Population:</strong> ${pop}</p>
@@ -307,8 +325,8 @@
                             document.getElementById("region-plot-container").appendChild(summaryDiv);
                         }
 
-                        // **🔥 Final combined plot with all selected populations (WITHOUT T2D SNPs) 🔥**
-                        if (combinedTraces.length > 1) {
+                        // Combined plot with all selected populations
+                        if (combinedTajimaTraces.length > 1) {
                             let combinedLayout = {
                                 title: "Combined Tajima's D for All Selected Populations",
                                 xaxis: { title: "Chromosomal Position (bp)" },
@@ -323,8 +341,8 @@
                             combinedPlotDiv.id = `region-plot-combined`;
                             document.getElementById("region-plot-container").appendChild(combinedPlotDiv);
 
-                            if (combinedTraces.length > 0) {
-                                Plotly.newPlot(combinedPlotDiv.id, combinedTraces, combinedLayout);
+                            if (combinedTajimaTraces.length > 0) {
+                                Plotly.newPlot(combinedPlotDiv.id, combinedTajimaTraces, combinedLayout);
                             } else {
                                 console.warn("No data found for selected populations in the region. The combined graph will be empty.");
                             }
@@ -349,7 +367,6 @@
                                 marker: { color: colors[colorIndex], size: 6 }
                             }];
 
-                            // Add significance threshold line
                             let significanceThresholdTrace = {
                                 x: [Math.min(...clrPositions), Math.max(...clrPositions)],
                                 y: [4.11, 4.11],
@@ -363,7 +380,6 @@
                             };
                             clrTraces.push(significanceThresholdTrace);
 
-                            // **Ensure only CLR values are included in the combined plot**
                             combinedClrTraces.push({
                                 x: clrPositions,
                                 y: clrValues,
@@ -407,7 +423,7 @@
                             Plotly.newPlot(clrPlotDiv.id, clrTraces, clrLayout);
                             colorIndex = (colorIndex + 1) % colors.length;
 
-                            // ✅ Display mean and standard deviation next to each plot
+                            // Display mean and standard deviation next to each plot
                             let clrSummaryDiv = document.createElement("div");
                             clrSummaryDiv.innerHTML = `
                                 <p><strong>Population:</strong> ${pop}</p>
@@ -421,7 +437,7 @@
                             document.getElementById("region-plot-container").appendChild(clrSummaryDiv);
                         }
 
-                        // **🔥 Final combined CLR plot with all selected populations (WITHOUT T2D SNPs) 🔥**
+                        // Combined CLR plot with all selected populations
                         if (combinedClrTraces.length > 1) {                   
                             let combinedClrLayout = {
                                 title: "Combined CLR for All Selected Populations",
@@ -437,6 +453,7 @@
                             combinedClrPlotDiv.id = `region-clr-plot-combined`;
                             document.getElementById("region-plot-container").appendChild(combinedClrPlotDiv);
 
+                            // Create a significance threshold line for the combined CLR plot
                             let significanceThresholdTrace = {
                                     x: [Math.min(...combinedClrTraces.map(trace => Math.min(...trace.x))), Math.max(...combinedClrTraces.map(trace => Math.max(...trace.x)))],
                                     y: [4.11, 4.11],
@@ -459,6 +476,7 @@
                     });
             }
 
+            // Function to download Tajima's D data for the selected region as a text file
             function downloadTajimaD() {
                 let start = document.getElementById("region_start").value.trim();
                 let end = document.getElementById("region_end").value.trim();
@@ -466,6 +484,7 @@
                 let chromosome = "{{ selected_chromosome }}"; 
                 let selectedPopulationsArray = Array.from(selectedPopulations);
 
+                // Ensure at least one population is selected
                 if (selectedPopulationsArray.length === 0) {
                     alert("Please select at least one population before downloading.");
                     return;
@@ -473,7 +492,6 @@
 
                 // Construct the download URL
                 let url = `/download_tajima_d?chromosome=${chromosome}`;
-                
                 if (geneName) {
                     url += `&gene_name=${encodeURIComponent(geneName)}`;
                 } else if (start && end) {
@@ -494,6 +512,7 @@
                 document.body.removeChild(link);
             }
 
+            // Function to download CLR data for the selected region as a text file
             function downloadCLR() {
                 let start = document.getElementById("region_start").value.trim();
                 let end = document.getElementById("region_end").value.trim();
@@ -508,7 +527,6 @@
 
                 // Construct the download URL
                 let url = `/download_clr?chromosome=${chromosome}`;
-                
                 if (geneName) {
                     url += `&gene_name=${encodeURIComponent(geneName)}`;
                 } else if (start && end) {

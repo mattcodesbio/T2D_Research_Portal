@@ -635,10 +635,12 @@ def load_clr_results(directory):
                     db.session.add(clr_test)
     db.session.commit() # Save changes to the database
 
-def process_directories():
-    from main import app  # Import app inside the function to avoid circular import
 
-    # List of directories containing report files
+def process_directories():
+    """
+    Function to process directories containing SweeD results to be loaded into the database using load_clr_results
+    """
+    from main import app  
     directories = [
         'SweeD_results/chr10_results',
         'SweeD_results/chr11_results',
@@ -649,8 +651,6 @@ def process_directories():
         'SweeD_results/chr8_results',
         'SweeD_results/chr9_results'
     ]
-
-    # Process each directory and insert data from the TSV files into the existing database
     with app.app_context():
         for directory in directories:
             if os.path.exists(directory):

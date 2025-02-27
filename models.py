@@ -5,6 +5,9 @@ from flask_sqlalchemy import SQLAlchemy
 # The instance is linked to the Flask app in 'main.py'
 db = SQLAlchemy()
 
+
+
+
 # Define SNP Database table schema
 class SNP(db.Model):    
     """
@@ -25,6 +28,7 @@ class SNP(db.Model):
     def __repr__(self):
         return f"<SNP {self.snp_id}, Chromosome {self.chromosome}, Position {self.grch38_start}>"
 
+
 # Define Tajima's D database Table schema
 class TajimaD(db.Model):
     """
@@ -43,6 +47,7 @@ class TajimaD(db.Model):
     def __repr__(self):
         return f"<TajimaD {self.population} Chromosome {self.chromosome} Bin {self.bin_start}-{self.bin_end}>"
 
+
 # Fst Table
 class Fst(db.Model):
     __tablename__ = 'fst_results'
@@ -57,6 +62,7 @@ class Fst(db.Model):
     def __repr__(self):
         return f"<Fst {self.population} Chromosome {self.chromosome} Bin {self.bin_start}-{self.bin_end}>"
 
+
 # CLR Table 
 class CLRTest(db.Model):
     """
@@ -70,7 +76,7 @@ class CLRTest(db.Model):
     chromosome = db.Column(db.String(5), nullable=False)
     position = db.Column(db.Integer, nullable=False)
     clr = db.Column(db.Float, nullable=False) # CLR value
-    alpha = db.Column(db.Float, nullable=False) # Alpha statistic (significance measure)
+    alpha = db.Column(db.Float, nullable=False) # Alpha statistic (Measures the strength of the likelihood/selection signal)
 
     def __repr__(self):
         return f"<CLRTest {self.population} Chr{self.chromosome}:{self.position} CLR={self.clr}>"

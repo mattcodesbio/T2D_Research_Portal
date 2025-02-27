@@ -8,6 +8,7 @@ import json
 import numpy as np
 
 
+
 @app.route('/', methods=['GET', 'POST'])
 def home():
     """
@@ -99,6 +100,9 @@ def home():
 
     return render_template('index.html')
 
+
+
+
 @app.route('/population_analysis', methods=['GET', 'POST'])
 def population_analysis():
     """
@@ -112,12 +116,12 @@ def population_analysis():
     """
     if request.method == 'GET':
         return render_template(
-            'population_analysis.html',
-            selected_population_info={},
-            tajima_d_data=json.dumps({}),
+            'population_analysis.html', 
+            selected_population_info={}, # No population selected yet
+            tajima_d_data=json.dumps({}), # Empty JSON data for initial rendering 
             t2d_snp_data=json.dumps({}),
             clr_data=json.dumps({}),
-            selected_chromosome="10"
+            selected_chromosome="10" # Default chromosome if not selected
         )
 
     selected_populations = request.form.getlist('selected_population')
@@ -137,9 +141,13 @@ def population_analysis():
         pop: population_descriptions.get(pop, "Unknown population") for pop in selected_populations
     }
 
-    # Fetch data
-    tajima_d_data, _ = get_tajima_d_data(selected_chromosome, None, selected_populations)
+    # Fetch SNPs associated with Type 2 Diabetes (T2D) for the selected chromosome
     t2d_snp_data = get_t2d_snps(selected_chromosome)
+
+    #Fetch Tajima's D data for the selected chromosome and populations
+    tajima_d_data, _ = get_tajima_d_data(selected_chromosome, None, selected_populations)
+
+    # Fetch CLR data for the selected chromosome and populations
     clr_data, _ = get_clr_data(selected_chromosome, None, selected_populations)
 
     return render_template(
@@ -151,15 +159,29 @@ def population_analysis():
             selected_chromosome=selected_chromosome
         )
 
+
+
 @app.route('/population_analysis_region', methods=['GET'])
 def population_analysis_region():
-    """Fetches Tajima's D and CLR for a user-defined genomic region and returns SNPs."""
+    """
+    Fetches Tajima's D and CLR statistics for a user-defined genomic region and returns SNP data.
+    Query Parameters:
+        - chromosome (str): Chromosome number (default: "10").
+        - start (int): Start position of the region.
+        - end (int): End position of the region.
+        - gene_name (str): Gene name to fetch coordinates from Ensembl.
+        - selected_population (list): List of selected populations.
+    Returns:
+        - JSON containing Tajima's D, CLR, and T2D SNP data for the requested region.
+    """
+    # Retrieve query parameters
     start = request.args.get("start", type=int)
     end = request.args.get("end", type=int)
     gene_name = request.args.get("gene_name", type=str)
     chromosome = request.args.get("chromosome", "10")
     selected_populations = request.args.getlist("selected_population")
 
+     # If a gene name is provided, fetch its genomic coordinates from Ensembl
     if gene_name:
         gene_info = get_gene_coordinates_ensembl(gene_name)
         if gene_info and gene_info.get("start") and gene_info.get("end"):  # Ensure values exist
@@ -183,12 +205,14 @@ def population_analysis_region():
         "clr_summary_stats": clr_summary_stats
     })
 
+
+
 @app.route('/download_tajima_d', methods=['GET'])
 def download_tajima_d():
     """
-    Allows downloading Tajima's D data as a text file.
+    Generates a downloadable text file containing Tajima's D values.
 
-    Parameters:
+    Query Parameters:
         - chromosome: Chromosome number.
         - start: Start position (optional).
         - end: End position (optional).
@@ -199,10 +223,26 @@ def download_tajima_d():
     """
     return download_tajima_d_data()
 
+
+
 @app.route('/download_clr', methods=['GET'])
 def download_clr():
-    """Generates a text file with CLR values for a requested genomic region."""
+    """
+    Generates a downloadable text file containing CLR (Composite Likelihood Ratio) values.
+    
+    Query Parameters:
+        - chromosome (str): Chromosome number.
+        - start (int, optional): Start position of the region.
+        - end (int, optional): End position of the region.
+        - selected_population (list): List of selected populations.
+
+    Returns:
+        - A text file containing CLR values for the specified genomic region.
+    """
+
     return download_clr_data()
+
+
 
 @app.route('/about')
 def about():
@@ -213,6 +253,8 @@ def about():
         - about.html
     """
     return render_template('about.html')
+
+
 
 @app.route('/gene_terms/<gene_name>')
 def gene_terms(gene_name):

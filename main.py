@@ -24,7 +24,7 @@ with app.app_context():
             
     # Uncomment the following lines if you want to preload SNP and Tajima's D data into the database
     # load_snps_from_csv("/path/to/file/e.g/csv")
-    load_tajima_d_results("/mnt/c/Users/hleeh/Documents/BIO727P/tajima_d_10kb_chr2")
+    load_tajima_d_results("/mnt/c/Users/hleeh/Documents/BIO727P/tajima_d_10kb_chr2/tajima_d_10kb_chr2")
     
 
 # Import routes AFTER initializing db to avoid circular imports
