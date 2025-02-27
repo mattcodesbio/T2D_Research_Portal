@@ -171,6 +171,62 @@ def download_tajima_d_data():
     response.headers["Content-Disposition"] = f"attachment; filename=TajimaD_chr{chromosome}_{start}_{end}.txt"
     return response
 
+def download_clr_data():
+    """Generate a text file containing CLR statistics for a region."""
+    # Extract parameters
+    chromosome = request.args.get("chromosome")
+    gene_name = request.args.get("gene_name")  # Optional gene name
+    start = request.args.get("start", type=int)
+    end = request.args.get("end", type=int)
+    populations = request.args.getlist("selected_population")
+
+    # If gene name is provided, fetch its genomic coordinates
+    if gene_name and (start is None or end is None):
+        gene_info = get_gene_coordinates_ensembl(gene_name)
+        if gene_info:
+            chromosome = gene_info["chromosome"]
+            start = gene_info["start"]
+            end = gene_info["end"]
+        else:
+            return jsonify({"error": f"Gene '{gene_name}' not found in Ensembl"}), 400
+
+    # Ensure start and end are valid numbers
+    if start is None or end is None:
+        return jsonify({"error": "Invalid region parameters. Must provide a valid start and end position or a gene name."}), 400
+
+    # Fetch CLR data safely
+    try:
+        clr_data, clr_summary_stats = get_clr_data(chromosome, (start, end), populations)
+    except Exception as e:
+        return jsonify({"error": f"Error retrieving CLR data: {str(e)}"}), 500
+
+    # Handle case where no data exists
+    if not clr_data or all(len(entries) == 0 for entries in clr_data.values()):
+        response_text = f"No CLR data found for Chromosome {chromosome}, Region {start}-{end}.\n"
+        response = Response(response_text, mimetype="text/plain")
+        response.headers["Content-Disposition"] = f"attachment; filename=CLR_chr{chromosome}_{start}_{end}.txt"
+        return response
+
+    # Generate file content
+    file_content = ["Population\tPosition\tCLR\tAlpha"]
+    for pop, entries in clr_data.items():
+        for entry in entries:
+            file_content.append(f"{pop}\t{entry['position']}\t{entry['clr']:.4f}\t{entry['alpha']:.4f}")
+
+    # Add summary statistics
+    file_content.append("\nSummary Statistics")
+    file_content.append("Population\tMean CLR\tStd Dev CLR\tMean Alpha\tStd Dev Alpha")
+    for pop, stats in clr_summary_stats.items():
+        mean_clr = stats["mean_clr"] if stats["mean_clr"] is not None else "N/A"
+        std_dev_clr = stats["std_dev_clr"] if stats["std_dev_clr"] is not None else "N/A"
+        mean_alpha = stats["mean_alpha"] if stats["mean_alpha"] is not None else "N/A"
+        std_dev_alpha = stats["std_dev_alpha"] if stats["std_dev_alpha"] is not None else "N/A"
+        file_content.append(f"{pop}\t{mean_clr}\t{std_dev_clr}\t{mean_alpha}\t{std_dev_alpha}")
+
+    # Return the file response
+    response = Response("\n".join(file_content), mimetype="text/plain")
+    response.headers["Content-Disposition"] = f"attachment; filename=CLR_chr{chromosome}_{start}_{end}.txt"
+    return response
 
 
 def load_snps_from_csv(csv_file):

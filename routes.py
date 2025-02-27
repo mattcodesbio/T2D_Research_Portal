@@ -2,7 +2,7 @@ from flask import render_template, request, jsonify, Response, session
 from models import SNP, TajimaD, CLRTest
 from functions import (get_snp_info, get_gene_ontology_terms, get_t2d_snps, 
                        get_gene_coordinates_ensembl, get_tajima_d_data,
-                       get_clr_data)
+                       get_clr_data, download_clr_data, download_tajima_d_data)
 from main import app
 import json
 import numpy as np
@@ -130,7 +130,7 @@ def population_analysis():
 
 @app.route('/population_analysis_region', methods=['GET'])
 def population_analysis_region():
-    """Fetches Tajima's D for a user-defined genomic region and returns SNPs."""
+    """Fetches Tajima's D and CLR for a user-defined genomic region and returns SNPs."""
     start = request.args.get("start", type=int)
     end = request.args.get("end", type=int)
     gene_name = request.args.get("gene_name", type=str)
@@ -139,7 +139,7 @@ def population_analysis_region():
 
     if gene_name:
         gene_info = get_gene_coordinates_ensembl(gene_name)
-        if gene_info and gene_info.get("start") and gene_info.get("end"):  # ✅ Ensure values exist
+        if gene_info and gene_info.get("start") and gene_info.get("end"):
             chromosome, start, end = gene_info["chromosome"], gene_info["start"], gene_info["end"]
         else:
             return jsonify({"error": f"Gene '{gene_name}' not found in Ensembl"}), 400
@@ -164,6 +164,11 @@ def population_analysis_region():
 def download_tajima_d():
     """Generates a text file with Tajima's D values for a requested genomic region."""
     return download_tajima_d_data()
+
+@app.route('/download_clr', methods=['GET'])
+def download_clr():
+    """Generates a text file with CLR values for a requested genomic region."""
+    return download_clr_data()
 
 @app.route('/about')
 def about():

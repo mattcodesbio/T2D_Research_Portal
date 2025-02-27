@@ -10,8 +10,10 @@
             <p><strong>{{ pop }}:</strong> {{ info }}</p>
         {% endfor %}
 
-        <label for="t2d_filter">Check this to view T2D-associated SNPs:</label>
-        <input type="checkbox" id="t2d_filter" onchange="updatePlot()">
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="t2d_filter" onchange="updatePlot()">
+            <label class="form-check-label" for="t2d_filter">Check to view T2D-associated SNPs:</label>
+        </div>
 
         <div id="plots-container"></div> 
 
@@ -19,6 +21,8 @@
         <div class="region-selection">
             <h3>Select Region of Interest</h3>
             <form id="region-form">
+                <input type="hidden" id="selected_chromosome" name="selected_chromosome" value="{{ selected_chromosome }}">
+
                 <label for="region_start">Start Position:</label>
                 <input type="number" id="region_start" name="region_start" placeholder="e.g., 100000">
 
@@ -49,7 +53,8 @@
         </div>
 
         <div class="d-flex justify-content-end mt-3">
-            <button type="button" class="btn btn-success" onclick="downloadTajimaD()">Download Tajima's D Data</button>
+            <button type="button" class="btn btn-success me-2" onclick="downloadTajimaD()">Download Tajima's D Data</button>
+            <button type="button" class="btn btn-success" onclick="downloadCLR()">Download CLR Data</button>
         </div>
 
         <div id="region-plot-container"></div> 
@@ -104,9 +109,18 @@
                             name: 'T2D SNPs'
                         };
                         traces.push(t2dSnpTrace);
+
+                    let layout = {
+                            xaxis: { title: "Chromosomal Position (bp)" },
+                            yaxis: { title: "D" },
+                            showlegend: true,
+                            height: 600,
+                            width: 1000,
+                            margin: { l: 50, r: 50, t: 50, b: 50 }
+                        };
                     }
 
-                    Plotly.newPlot(plotDiv.id, traces);
+                    Plotly.newPlot(plotDiv.id, traces, layout);
 
                     // CLR plot
                     let clrTitle = document.createElement("h2");
@@ -149,7 +163,16 @@
                         clrTraces.push(t2dSnpTrace);
                     }                  
 
-                    Plotly.newPlot(clrPlotDiv.id, clrTraces);
+                    let clrLayout = {
+                                xaxis: { title: "Chromosomal Position (bp)" },
+                                yaxis: { title: "CLR" },
+                                showlegend: true,
+                                height: 600,
+                                width: 1000,
+                                margin: { l: 50, r: 50, t: 50, b: 50 }
+                            };
+
+                    Plotly.newPlot(clrPlotDiv.id, clrTraces, clrLayout);
                 }
             }
 
@@ -178,13 +201,14 @@
                 let end = document.getElementById("region_end").value;
                 let geneName = document.getElementById("gene_name").value;
                 let showT2D = document.getElementById("t2d_region_filter").checked; // Show T2D SNPs in the region plot
+                let chromosome = document.getElementById("selected_chromosome").value; // Get the selected chromosome
 
                 // Convert selected populations Set to an Array
                 let selectedPopulationsArray = Array.from(selectedPopulations);
                 document.getElementById("selected_populations").value = selectedPopulationsArray.join(",");
 
-                // Construct URL with selected populations
-                let url = `/population_analysis_region?start=${start}&end=${end}&gene_name=${geneName}`;
+                // Construct URL with selected populations and chromosome
+                let url = `/population_analysis_region?chromosome=${chromosome}&start=${start}&end=${end}&gene_name=${geneName}`;
                 selectedPopulationsArray.forEach(pop => url += `&selected_population=${pop}`);
 
                 fetch(url)
@@ -240,9 +264,9 @@
                             }
 
                             let layout = {
-                                title: `Tajima's D for ${pop} (Selected Region)`,
-                                xaxis: { title: "Genomic Position (bp)" },
-                                yaxis: { title: "Tajima's D" },
+                                title: `Tajima's D for ${pop}`,
+                                xaxis: { title: "Chromosomal Position (bp)" },
+                                yaxis: { title: "D" },
                                 showlegend: true,
                                 height: 600,
                                 width: 1000,
@@ -252,7 +276,7 @@
                             Plotly.newPlot(plotDiv.id, traces, layout);
                             colorIndex = (colorIndex + 1) % colors.length;
 
-                             // ✅ Display mean and standard deviation next to each plot
+                            // ✅ Display mean and standard deviation next to each plot
                             let summaryDiv = document.createElement("div");
                             summaryDiv.innerHTML = `
                                 <p><strong>Population:</strong> ${pop}</p>
@@ -270,8 +294,8 @@
                         if (selectedPopulationsArray.length > 1) {
                             let combinedLayout = {
                                 title: "Combined Tajima's D for All Selected Populations",
-                                xaxis: { title: "Genomic Position (bp)" },
-                                yaxis: { title: "Tajima's D" },
+                                xaxis: { title: "Chromosomal Position (bp)" },
+                                yaxis: { title: "D" },
                                 showlegend: true,
                                 height: 600,
                                 width: 1200,
@@ -305,7 +329,7 @@
                                 y: clrValues,
                                 mode: 'markers',
                                 name: `CLR - ${pop}`,
-                                marker: { color: colors[colorIndex] }
+                                marker: { color: colors[colorIndex], size: 4 }
                             }];
 
                             if (showT2D) {
@@ -330,8 +354,8 @@
                             }
 
                             let clrLayout = {
-                                title: `CLR for ${pop} (Selected Region)`,
-                                xaxis: { title: "Genomic Position (bp)" },
+                                title: `CLR for ${pop}`,
+                                xaxis: { title: "Chromosomal Position (bp)" },
                                 yaxis: { title: "CLR" },
                                 showlegend: true,
                                 height: 600,
@@ -346,8 +370,8 @@
                             let clrSummaryDiv = document.createElement("div");
                             clrSummaryDiv.innerHTML = `
                                 <p><strong>Population:</strong> ${pop}</p>
-                                <p><strong>Mean CLR:</strong> ${data.clr_summary_stats[pop].mean}</p>
-                                <p><strong>Std Dev CLR:</strong> ${data.clr_summary_stats[pop].std_dev}</p>
+                                <p><strong>Mean CLR:</strong> ${data.clr_summary_stats[pop].mean_clr}</p>
+                                <p><strong>Std Dev CLR:</strong> ${data.clr_summary_stats[pop].std_dev_clr}</p>
                             `;
                             clrSummaryDiv.style.marginBottom = "20px";
                             clrSummaryDiv.style.fontSize = "16px";
@@ -355,45 +379,78 @@
                             
                             document.getElementById("region-plot-container").appendChild(clrSummaryDiv);
                         }
-                        
                     });
+            }       
+
+            function downloadTajimaD() {
+                let start = document.getElementById("region_start").value.trim();
+                let end = document.getElementById("region_end").value.trim();
+                let geneName = document.getElementById("gene_name").value.trim();
+                let chromosome = "{{ selected_chromosome }}"; 
+                let selectedPopulationsArray = Array.from(selectedPopulations);
+
+                if (selectedPopulationsArray.length === 0) {
+                    alert("Please select at least one population before downloading.");
+                    return;
                 }
 
-                function downloadTajimaD() {
-                    let start = document.getElementById("region_start").value.trim();
-                    let end = document.getElementById("region_end").value.trim();
-                    let geneName = document.getElementById("gene_name").value.trim();
-                    let chromosome = "{{ selected_chromosome }}"; 
-                    let selectedPopulationsArray = Array.from(selectedPopulations);
-
-                    if (selectedPopulationsArray.length === 0) {
-                        alert("Please select at least one population before downloading.");
-                        return;
-                    }
-
-                    // Construct the download URL
-                    let url = `/download_tajima_d?chromosome=${chromosome}`;
-                    
-                    if (geneName) {
-                        url += `&gene_name=${encodeURIComponent(geneName)}`;
-                    } else if (start && end) {
-                        url += `&start=${start}&end=${end}`;
-                    } else {
-                        alert("Please enter either a start and end position OR a gene name.");
-                        return;
-                    }
-
-                    selectedPopulationsArray.forEach(pop => url += `&selected_population=${pop}`);
-
-                    // Create an invisible anchor tag to force the browser to download the file
-                    let link = document.createElement("a");
-                    link.href = url;
-                    link.setAttribute("download", `TajimaD_chr${chromosome}_${start || geneName}_${end || ""}.txt`);
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
+                // Construct the download URL
+                let url = `/download_tajima_d?chromosome=${chromosome}`;
+                
+                if (geneName) {
+                    url += `&gene_name=${encodeURIComponent(geneName)}`;
+                } else if (start && end) {
+                    url += `&start=${start}&end=${end}`;
+                } else {
+                    alert("Please enter either a start and end position OR a gene name.");
+                    return;
                 }
 
+                selectedPopulationsArray.forEach(pop => url += `&selected_population=${pop}`);
+
+                // Create an invisible anchor tag to force the browser to download the file
+                let link = document.createElement("a");
+                link.href = url;
+                link.setAttribute("download", `TajimaD_chr${chromosome}_${start || geneName}_${end || ""}.txt`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+
+            function downloadCLR() {
+                let start = document.getElementById("region_start").value.trim();
+                let end = document.getElementById("region_end").value.trim();
+                let geneName = document.getElementById("gene_name").value.trim();
+                let chromosome = document.getElementById("selected_chromosome").value; 
+                let selectedPopulationsArray = Array.from(selectedPopulations);
+
+                if (selectedPopulationsArray.length === 0) {
+                    alert("Please select at least one population before downloading.");
+                    return;
+                }
+
+                // Construct the download URL
+                let url = `/download_clr?chromosome=${chromosome}`;
+                
+                if (geneName) {
+                    url += `&gene_name=${encodeURIComponent(geneName)}`;
+                } else if (start && end) {
+                    url += `&start=${start}&end=${end}`;
+                } else {
+                    alert("Please enter either a start and end position OR a gene name.");
+                    return;
+                }
+
+                selectedPopulationsArray.forEach(pop => url += `&selected_population=${pop}`);
+
+                // Create an invisible anchor tag to force the browser to download the file
+                let link = document.createElement("a");
+                link.href = url;
+                link.setAttribute("download", `CLR_chr${chromosome}_${start || geneName}_${end || ""}.txt`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
             updatePlot();
         </script>
     </div>
