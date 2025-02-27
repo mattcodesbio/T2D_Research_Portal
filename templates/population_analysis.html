@@ -46,9 +46,10 @@
                 </div>
 
                 <button type="button" onclick="fetchRegionData()">Show Region Graph</button>
-                <label for="t2d_region_filter">Show T2D-associated SNPs:</label>
-                <input type="checkbox" id="t2d_region_filter" checked onchange="fetchRegionData()">
-
+                <div class="form-check form-check-inline" style="margin-top: 20px;">
+                    <label class="form-check-label" for="t2d_region_filter" style="display: inline-block;">Check to view T2D-associated SNPs</label>
+                    <input class="form-check-input" type="checkbox" id="t2d_region_filter" style="display: inline-block;" checked onchange="fetchRegionData()">
+                </div>
             </form>
         </div>
 
@@ -143,6 +144,20 @@
                         marker: { color: "blue", size: 2 }
                     }];
 
+                    // Add significance threshold line
+                    let significanceThresholdTrace = {
+                        x: [Math.min(...clrPositions), Math.max(...clrPositions)],
+                        y: [4.11, 4.11],
+                        mode: 'lines',
+                        name: 'Significance threshold adjusted with spatial correlation',
+                        line: {
+                            dash: 'dash',
+                            color: 'red',
+                            width: 2
+                        }
+                    };
+                    clrTraces.push(significanceThresholdTrace);
+
                     if (showT2D) {
                         let snpPositions = t2dSnps.map(snp => snp.position);
                         let snpValues = snpPositions.map(pos => {
@@ -158,7 +173,7 @@
                             mode: 'markers',
                             text: t2dSnps.map(snp => snp.snp_id),
                             textposition: "top center",
-                            marker: {color: 'red', size: 4},
+                            marker: {color: 'red', size: 10},
                             name: 'T2D SNPs'
                         };
                         clrTraces.push(t2dSnpTrace);
@@ -331,8 +346,22 @@
                                 y: clrValues,
                                 mode: 'markers',
                                 name: `CLR - ${pop}`,
-                                marker: { color: colors[colorIndex], size: 4 }
+                                marker: { color: colors[colorIndex], size: 6 }
                             }];
+
+                            // Add significance threshold line
+                            let significanceThresholdTrace = {
+                                x: [Math.min(...clrPositions), Math.max(...clrPositions)],
+                                y: [4.11, 4.11],
+                                mode: 'lines',
+                                name: 'Significance threshold adjusted with spatial correlation',
+                                line: {
+                                    dash: 'dash',
+                                    color: 'red',
+                                    width: 2
+                                }
+                            };
+                            clrTraces.push(significanceThresholdTrace);
 
                             // **Ensure only CLR values are included in the combined plot**
                             combinedClrTraces.push({
@@ -340,7 +369,7 @@
                                 y: clrValues,
                                 mode: 'markers',
                                 name: `CLR - ${pop}`,
-                                marker: { color: colors[colorIndex], size: 4 }
+                                marker: { color: colors[colorIndex], size: 6 }
                             });
                             colorIndex = (colorIndex + 1) % colors.length;
 
@@ -359,7 +388,7 @@
                                     mode: 'markers',
                                     text: data.t2d_snp_data.map(snp => snp.snp_id),
                                     textposition: "top center",
-                                    marker: { color: 'red', size: 4 },
+                                    marker: { color: 'red', size: 6 },
                                     name: 'T2D SNPs'
                                 };
                                 clrTraces.push(t2dSnpTrace);
@@ -393,7 +422,7 @@
                         }
 
                         // **🔥 Final combined CLR plot with all selected populations (WITHOUT T2D SNPs) 🔥**
-                        if (combinedClrTraces.length > 1) {
+                        if (combinedClrTraces.length > 1) {                   
                             let combinedClrLayout = {
                                 title: "Combined CLR for All Selected Populations",
                                 xaxis: { title: "Chromosomal Position (bp)" },

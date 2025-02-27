@@ -1,0 +1,33 @@
+
+
+                                      _______________
+
+                                           SweeD
+                                      _______________
+
+
+
+ SweeD version 3.1 released by Nikolaos Alachiotis and Pavlos Pavlidis in January 2013.
+
+
+ Command:
+
+	 ./SweeD-P -name ITU_chr6_100000 -input /home/bt24998/SWEED/vcf_data/subpop_chr6_vcf/ITU_chr6.vcf -grid 100000 -threads 18
+
+
+ Alignment 1
+
+		Sequences:		204
+		Sites:			4539754
+		Discarded sites:	3996978
+
+		Processing:		1220.52 seconds
+
+		Position:		7.116001e+07
+		Likelihood:		2.907836e+02
+		Alpha:			1.462900e-05
+
+
+ Total elapsed time 1220.52 seconds.
+
+
