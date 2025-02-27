@@ -10,13 +10,28 @@ import numpy as np
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
+    """
+    Creates the home page, allowing users to search for SNPs by:
+     - SNP ID
+     - Chromosome
+     - genomic position range
+     - Gene name
+
+    Handles SNP search and fetches associated Tajima's D and CLR data.
+
+    Returns:
+        - index.html for GET requests (search form).
+        - snp_results.html for POST requests (search results).
+    """
     if request.method == 'POST':
+        # Extract search parameters
         snp_id = request.form.get('snp_name')
         chromosome = request.form.get('chromosome')
         start = request.form.get('start')
         end = request.form.get('end')   
         gene_name = request.form.get('gene_name')
-
+      
+        # Fetch SNPs
         snps = get_snp_info(snp_id, chromosome, start, end, gene_name)
 
         snp_info = []
@@ -86,7 +101,15 @@ def home():
 
 @app.route('/population_analysis', methods=['GET', 'POST'])
 def population_analysis():
-    """Handles Tajima's D analysis across whole chromosomes for selected populations."""
+    """
+    Allows analysis of Tajima's D and CLR statistics for selected populations.
+
+    GET: Loads the population analysis form.
+    POST: Fetches Tajima's D, CLR, and SNP data for selected populations & chromosomes.
+
+    Returns:
+        - population_analysis.html with the requested population statistics.
+    """
     if request.method == 'GET':
         return render_template(
             'population_analysis.html',
@@ -121,7 +144,7 @@ def population_analysis():
 
     return render_template(
             'population_analysis.html',
-            tajima_d_data=json.dumps(tajima_d_data, indent=2),  # 👈 Ensure JSON is correctly formatted
+            tajima_d_data=json.dumps(tajima_d_data, indent=2),  # Ensure JSON is correctly formatted
             t2d_snp_data=json.dumps(t2d_snp_data, indent=2),
             clr_data=json.dumps(clr_data, indent=2),
             selected_population_info=selected_population_info,
@@ -139,7 +162,7 @@ def population_analysis_region():
 
     if gene_name:
         gene_info = get_gene_coordinates_ensembl(gene_name)
-        if gene_info and gene_info.get("start") and gene_info.get("end"):
+        if gene_info and gene_info.get("start") and gene_info.get("end"):  # Ensure values exist
             chromosome, start, end = gene_info["chromosome"], gene_info["start"], gene_info["end"]
         else:
             return jsonify({"error": f"Gene '{gene_name}' not found in Ensembl"}), 400
@@ -162,7 +185,18 @@ def population_analysis_region():
 
 @app.route('/download_tajima_d', methods=['GET'])
 def download_tajima_d():
-    """Generates a text file with Tajima's D values for a requested genomic region."""
+    """
+    Allows downloading Tajima's D data as a text file.
+
+    Parameters:
+        - chromosome: Chromosome number.
+        - start: Start position (optional).
+        - end: End position (optional).
+        - selected_population: Population(s) to filter by.
+
+    Returns:
+        - Generates .txt file with Tajima's D values, average mean and standard deviation for a requested genomic region.
+    """
     return download_tajima_d_data()
 
 @app.route('/download_clr', methods=['GET'])
@@ -172,11 +206,25 @@ def download_clr():
 
 @app.route('/about')
 def about():
+    """
+    Renders the "About" page.
+
+    Returns:
+        - about.html
+    """
     return render_template('about.html')
 
 @app.route('/gene_terms/<gene_name>')
 def gene_terms(gene_name):
-    """Retrieves Gene Ontology terms for a given gene."""
+  """
+    Fetches Gene Ontology (GO) terms for a given gene.
+
+    Parameters:
+        - gene_name: Gene name.
+
+    Returns:
+        - ontology.html with GO terms.
+    """
     go_terms = get_gene_ontology_terms(gene_name)
     return render_template("ontology.html", gene_name=gene_name, go_terms=go_terms if go_terms else {})
 
