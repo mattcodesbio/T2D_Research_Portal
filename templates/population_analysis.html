@@ -149,7 +149,7 @@
                         x: [Math.min(...clrPositions), Math.max(...clrPositions)],
                         y: [4.11, 4.11],
                         mode: 'lines',
-                        name: 'Significance threshold adjusted with spatial correlation',
+                        name: 'Significance threshold adjusted for <br>spatial correlation (α = 0.05)',
                         line: {
                             dash: 'dash',
                             color: 'red',
@@ -354,7 +354,7 @@
                                 x: [Math.min(...clrPositions), Math.max(...clrPositions)],
                                 y: [4.11, 4.11],
                                 mode: 'lines',
-                                name: 'Significance threshold adjusted with spatial correlation',
+                                name: 'Significance threshold adjusted for <br>spatial correlation (α = 0.05)',
                                 line: {
                                     dash: 'dash',
                                     color: 'red',
@@ -441,7 +441,7 @@
                                     x: [Math.min(...combinedClrTraces.map(trace => Math.min(...trace.x))), Math.max(...combinedClrTraces.map(trace => Math.max(...trace.x)))],
                                     y: [4.11, 4.11],
                                     mode: 'lines',
-                                    name: 'Significance threshold adjusted with spatial correlation',
+                                    name: 'Significance threshold adjusted for <br>spatial correlation (α = 0.05)',
                                     line: {
                                         dash: 'dash',
                                         color: 'red',
@@ -449,7 +449,7 @@
                                     }
                                 };
                                 combinedClrTraces.push(significanceThresholdTrace);
-                                
+
                             if (combinedClrTraces.length > 0) {
                                 Plotly.newPlot(combinedClrPlotDiv.id, combinedClrTraces, combinedClrLayout);
                             } else {
