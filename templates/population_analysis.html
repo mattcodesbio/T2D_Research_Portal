@@ -98,7 +98,7 @@
                     let binPositions = tajimaDData[pop].map(d => (d.bin_start + d.bin_end) / 2);
                     let tajimaValues = tajimaDData[pop].map(d => d.tajima_d);
 
-                    let traces = [{
+                    let tajimaTraces = [{
                         x: binPositions,
                         y: tajimaValues,
                         mode: 'lines',
@@ -123,7 +123,7 @@
                             marker: {color: 'red', size: 10},
                             name: 'T2D SNPs'
                         };
-                        traces.push(t2dSnpTrace);
+                        tajimaTraces.push(t2dSnpTrace);
                     }
                     let layout = {
                             xaxis: { title: "Chromosomal Position (bp)" },
@@ -134,7 +134,7 @@
                             margin: { l: 50, r: 50, t: 50, b: 50 }
                     };
 
-                    Plotly.newPlot(plotDiv.id, traces, layout);
+                    Plotly.newPlot(plotDiv.id, tajimaTraces, layout);
 
                     // Create CLR plot similar to Tajima's D plot
                     let clrTitle = document.createElement("h2");
@@ -272,7 +272,7 @@
                                 line: { color: colors[colorIndex] }
                             };
 
-                            let traces = [lineTrace];
+                            let tajimaTraces = [lineTrace];
 
                             // **Ensure only Tajima's D values are included in the combined plot**
                             combinedTajimaTraces.push(lineTrace);
@@ -295,7 +295,7 @@
                                     marker: { color: 'red', size: 10 },
                                     name: 'T2D SNPs'
                                 };
-                                traces.push(t2dSnpTrace);
+                                tajimaTraces.push(t2dSnpTrace);
                             }
 
                             let layout = {
@@ -308,21 +308,21 @@
                                 margin: { l: 50, r: 50, t: 50, b: 50 }
                             };
 
-                            Plotly.newPlot(plotDiv.id, traces, layout);
+                            Plotly.newPlot(plotDiv.id, tajimaTraces, layout);
                             colorIndex = (colorIndex + 1) % colors.length;
 
                             // Display mean and standard deviation next to each plot
-                            let summaryDiv = document.createElement("div");
-                            summaryDiv.innerHTML = `
+                            let tajimaSummaryDiv = document.createElement("div");
+                            tajimaSummaryDiv.innerHTML = `
                                 <p><strong>Population:</strong> ${pop}</p>
                                 <p><strong>Mean Tajima's D:</strong> ${data.summary_stats[pop].mean}</p>
                                 <p><strong>Std Dev Tajima's D:</strong> ${data.summary_stats[pop].std_dev}</p>
                             `;
-                            summaryDiv.style.marginBottom = "20px";
-                            summaryDiv.style.fontSize = "16px";
-                            summaryDiv.style.fontWeight = "bold";
+                            tajimaSummaryDiv.style.marginBottom = "20px";
+                            tajimaSummaryDiv.style.fontSize = "16px";
+                            tajimaSummaryDiv.style.fontWeight = "bold";
                             
-                            document.getElementById("region-plot-container").appendChild(summaryDiv);
+                            document.getElementById("region-plot-container").appendChild(tajimaSummaryDiv);
                         }
 
                         // Combined plot with all selected populations

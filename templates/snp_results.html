@@ -5,8 +5,10 @@
 {% block content %}
     <div class="container">
         <div class="top-buttons">
+            <!-- Back button to return to the previous search page -->
             <button class="back-button" onclick="window.history.back();">Back to Search</button>
 
+            <!-- Form to select population and chromosome for analysis -->
             <form method="POST" action="{{ url_for('population_analysis') }}">
                 <label for="selected_population">Select Population:</label>
                 <select name="selected_population" id="selected_population" required>
@@ -17,6 +19,7 @@
                     <option value="STU">STU</option>
                 </select>
 
+                <!-- Dropdown to select chromosome for analysis -->
                 <label for="selected_chromosome">Chromosome:</label>
                 <select name="selected_chromosome" id="selected_chromosome">
                     <option value="2">2</option>
@@ -74,6 +77,7 @@
         </style>
 
         {% if snp_info %}
+        <!-- Form to display SNP information and allow selection for further analysis -->
         <form method="POST" action="{{ url_for('population_analysis') }}">
             <table class="table table-striped">
                 <thead>
@@ -111,6 +115,8 @@
                         <td>{{ snp.p_value }}</td>
                         <td><button type="button" class="toggle-btn" onclick="toggleDropdown('{{ snp.snp_id }}')">Show Stats</button></td>
                     </tr>
+                    
+                    <!-- Dropdown content for SNP statistics -->
                     <tr id="dropdown-{{ snp.snp_id }}" class="dropdown-content">
                         <td colspan="9">
                             <strong>Statistics for SNP {{ snp.snp_id }}</strong>
@@ -120,7 +126,7 @@
                                         <th>Population</th>
                                         <th>Tajima's D</th>
                                         <th>CLR</th>
-                                        <th>Alpha</th>
+                                        <th>α (Strength of CLR selection)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -147,6 +153,7 @@
     </div>
 
     <script>
+        // Function to toggle the display of dropdown content for SNP statistics
         function toggleDropdown(snpId) {
             var dropdown = document.getElementById("dropdown-" + snpId);
             if (dropdown.style.display === "none" || dropdown.style.display === "") {
