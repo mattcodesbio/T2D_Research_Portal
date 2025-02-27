@@ -352,23 +352,23 @@ def load_snps_from_csv(csv_file):
                 existing_snp.consequence = row["consequence"]
             else:
                 # Insert new SNP data into the database    
-            db.session.add(SNP(
-                snp_id=row["dbSNP"],
-                chromosome=str(row["chromosome"]),
-                grch38_start=int(row["GRCh38_start"]),
-                gene_name=mapped_genes,  # Cleaned up gene names
-                p_value=row["pValue"],
-                reference_allele=row["reference"],
-                alternative_allele=row["alt"],
-                consequence=row["consequence"]
-            ))
+                db.session.add(SNP(
+                    snp_id=row["dbSNP"],
+                    chromosome=str(row["chromosome"]),
+                    grch38_start=int(row["GRCh38_start"]),
+                    gene_name=mapped_genes,  # Cleaned up gene names
+                    p_value=row["pValue"],
+                    reference_allele=row["reference"],
+                    alternative_allele=row["alt"],
+                    consequence=row["consequence"]
+                ))
 
     db.session.commit() # Commit changes to the database
 
 
 
 def get_gene_ontology_terms(gene_name):
-"""
+    """
     Retrieves GO terms for a given gene name using MyGene.info and QuickGO APIs.
 
     Args:

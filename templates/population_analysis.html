@@ -4,15 +4,15 @@
 
 {% block content %}
     <div class="container">
-        <h1>Population Analysis</h1>
+        <h1>Analysis for Positive Selection</h1>
 
         {% for pop, info in selected_population_info.items() %}
-            <p><strong>{{ pop }}:</strong> {{ info }}</p>
+            <p><strong>Population Chosen for Analysis: {{ info }} ({{ pop }})</p>
         {% endfor %}
 
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="checkbox" id="t2d_filter" onchange="updatePlot()">
-            <label class="form-check-label" for="t2d_filter">Check to view T2D-associated SNPs:</label>
+        <div class="form-check form-check-inline" style="margin-top: 20px;">
+            <label class="form-check-label" for="t2d_filter" style="display: inline-block;">Check to view T2D-associated SNPs</label>
+            <input class="form-check-input" type="checkbox" id="t2d_filter" style="display: inline-block;" onchange="updatePlot()">
         </div>
 
         <div id="plots-container"></div> 
@@ -75,6 +75,7 @@
 
                     let tajimaTitle = document.createElement("h2");
                     tajimaTitle.innerText = `Tajima's D values over chromosome {{ selected_chromosome }} positions for ${pop}`;
+                    tajimaTitle.classList.add("plot-margin");
                     container.appendChild(tajimaTitle);
 
                     let plotDiv = document.createElement("div");
@@ -109,22 +110,22 @@
                             name: 'T2D SNPs'
                         };
                         traces.push(t2dSnpTrace);
-
+                    }
                     let layout = {
                             xaxis: { title: "Chromosomal Position (bp)" },
                             yaxis: { title: "D" },
                             showlegend: true,
                             height: 600,
-                            width: 1000,
+                            width: 1600,
                             margin: { l: 50, r: 50, t: 50, b: 50 }
-                        };
-                    }
+                    };
 
                     Plotly.newPlot(plotDiv.id, traces, layout);
 
                     // CLR plot
                     let clrTitle = document.createElement("h2");
                     clrTitle.innerText = `CLR values over chromosome {{ selected_chromosome }} positions for ${pop}`;
+                    clrTitle.classList.add("plot-margin");
                     container.appendChild(clrTitle);
 
                     let clrPlotDiv = document.createElement("div");
@@ -168,9 +169,9 @@
                                 yaxis: { title: "CLR" },
                                 showlegend: true,
                                 height: 600,
-                                width: 1000,
+                                width: 1600,
                                 margin: { l: 50, r: 50, t: 50, b: 50 }
-                            };
+                    };
 
                     Plotly.newPlot(clrPlotDiv.id, clrTraces, clrLayout);
                 }
@@ -220,6 +221,7 @@
                         let colorIndex = 0;
 
                         let combinedTraces = [];
+                        let combinedClrTraces = [];
 
                         for (let pop in data.tajima_d_data) {
                             let plotDiv = document.createElement("div");
@@ -291,7 +293,7 @@
                         }
 
                         // **🔥 Final combined plot with all selected populations (WITHOUT T2D SNPs) 🔥**
-                        if (selectedPopulationsArray.length > 1) {
+                        if (combinedTraces.length > 1) {
                             let combinedLayout = {
                                 title: "Combined Tajima's D for All Selected Populations",
                                 xaxis: { title: "Chromosomal Position (bp)" },
@@ -331,6 +333,16 @@
                                 name: `CLR - ${pop}`,
                                 marker: { color: colors[colorIndex], size: 4 }
                             }];
+
+                            // **Ensure only CLR values are included in the combined plot**
+                            combinedClrTraces.push({
+                                x: clrPositions,
+                                y: clrValues,
+                                mode: 'markers',
+                                name: `CLR - ${pop}`,
+                                marker: { color: colors[colorIndex], size: 4 }
+                            });
+                            colorIndex = (colorIndex + 1) % colors.length;
 
                             if (showT2D) {
                                 let snpPositions = data.t2d_snp_data.map(snp => snp.position);
@@ -379,8 +391,31 @@
                             
                             document.getElementById("region-plot-container").appendChild(clrSummaryDiv);
                         }
+
+                        // **🔥 Final combined CLR plot with all selected populations (WITHOUT T2D SNPs) 🔥**
+                        if (combinedClrTraces.length > 1) {
+                            let combinedClrLayout = {
+                                title: "Combined CLR for All Selected Populations",
+                                xaxis: { title: "Chromosomal Position (bp)" },
+                                yaxis: { title: "CLR" },
+                                showlegend: true,
+                                height: 600,
+                                width: 1200,
+                                margin: { l: 50, r: 50, t: 50, b: 50 }
+                            };
+
+                            let combinedClrPlotDiv = document.createElement("div");
+                            combinedClrPlotDiv.id = `region-clr-plot-combined`;
+                            document.getElementById("region-plot-container").appendChild(combinedClrPlotDiv);
+
+                            if (combinedClrTraces.length > 0) {
+                                Plotly.newPlot(combinedClrPlotDiv.id, combinedClrTraces, combinedClrLayout);
+                            } else {
+                                console.warn("No data found for selected populations in the region. The combined CLR graph will be empty.");
+                            }
+                        }
                     });
-            }       
+            }
 
             function downloadTajimaD() {
                 let start = document.getElementById("region_start").value.trim();

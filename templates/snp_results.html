@@ -8,8 +8,8 @@
             <button class="back-button" onclick="window.history.back();">Back to Search</button>
 
             <form method="POST" action="{{ url_for('population_analysis') }}">
-                <label for="selected_population">Select Population(s):</label>
-                <select name="selected_population" id="selected_population" multiple>
+                <label for="selected_population">Select Population:</label>
+                <select name="selected_population" id="selected_population" required>
                     <option value="BEB">BEB</option>
                     <option value="GIH">GIH</option>
                     <option value="ITU">ITU</option>
@@ -19,8 +19,10 @@
 
                 <label for="selected_chromosome">Chromosome:</label>
                 <select name="selected_chromosome" id="selected_chromosome">
+                    <option value="2">2</option>
                     <option value="3">3</option>
                     <option value="6">6</option>
+                    <option value="8">8</option>
                     <option value="9" selected>9</option>
                     <option value="10">10</option>
                     <option value="11">11</option>
@@ -28,7 +30,7 @@
                     <option value="20">20</option>
                 </select>
 
-                <button type="submit" class="btn btn-primary">Analyze Population</button>
+                <button type="submit" class="btn btn-primary">Analyse Population</button>
             </form>
         </div>
 

@@ -225,8 +225,8 @@ def gene_terms(gene_name):
     Returns:
         - ontology.html with GO terms.
     """
-    go_terms = get_gene_ontology_terms(gene_name)
-    return render_template("ontology.html", gene_name=gene_name, go_terms=go_terms if go_terms else {})
+  go_terms = get_gene_ontology_terms(gene_name)
+  return render_template("ontology.html", gene_name=gene_name, go_terms=go_terms if go_terms else {})
 
 
 # @app.route('/select_population', methods=['POST'])
