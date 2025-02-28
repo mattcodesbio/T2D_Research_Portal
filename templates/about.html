@@ -3,17 +3,136 @@
 {% block title %}About - T2D Project{% endblock %}
 
 {% block content %}
-    <h2>About Type 2 Diabetes (T2D) and This Project</h2>
+<div class="container">
+    <div class="about-header">
+        <h1>About Type 2 Diabetes Research</h1>
+        <p class="subtitle">Collecting SNP's in South Asian Populations</p>
+    </div>
 
-    <p>
-        Type 2 diabetes (T2D) is a complex, multifactorial disease that affects millions of people worldwide.
-        While environmental factors play a significant role, genetic susceptibility also contributes to the development of T2D.
-        Recent studies have shown that certain genetic variants are more prevalent in South Asian populations, suggesting a higher risk of developing T2D in this group.
-    </p>
+    <div class="about-card">
+        <h2>🧬 About This Project</h2>
+        <div class="about-content">
+            <div class="about-section">
+                <h3>Project Overview</h3>
+                <p>This web application analyzes genetic variants associated with Type 2 Diabetes (T2D) prevalence in South Asian populations. Our platform integrates genomic data with clinical insights to identify potential genetic risk factors.</p>
+            </div>
 
-    <h3>About This Web Application</h3>
-    <p>
-        This web-based application aims to analyse and visualise genetic data related to T2D in South Asians.
-        The application will leverage existing genomic databases and tools to provide researchers and clinicians with valuable insights into the genetic factors underlying this disease.
-    </p>
+            <div class="about-section">
+                <h3>Scientific Background</h3>
+                <p>Type 2 diabetes (T2D) affects over 463 million people globally, with South Asians experiencing higher prevalence rates. Genetic studies have identified multiple susceptibility loci, available in this webpage </p>
+                
+            </div>
+
+            <div class="about-section">
+                <h3>Key Features</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🔍</div>
+                        <h4>SNP Search</h4>
+                        <p>Advanced search across SNPs, genes, and genomic regions</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h4>Data Visualization</h4>
+                        <p> Displays of genetic associations and ontology data</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🧩</div>
+                        <h4>Gene Ontology</h4>
+                        <p> Biological context for identified genes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .about-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .about-header h1 {
+        color: var(--dark);
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+        color: var(--secondary);
+        font-size: 1.2rem;
+        font-weight: 500;
+    }
+
+    .about-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .about-section {
+        margin-bottom: 2.5rem;
+    }
+
+    .about-section h3 {
+        color: var(--primary);
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--light);
+    }
+
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .feature-card {
+        background: var(--light);
+        padding: 1.5rem;
+        border-radius: 1rem;
+        text-align: center;
+        transition: transform 0.2s ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .feature-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .science-list {
+        list-style: none;
+        padding-left: 1.5rem;
+    }
+
+    .science-list li {
+        position: relative;
+        padding-left: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .science-list li::before {
+        content: "▹";
+        position: absolute;
+        left: 0;
+        color: var(--primary);
+    }
+
+    @media (max-width: 768px) {
+        .about-header h1 {
+            font-size: 2rem;
+        }
+        
+        .about-card {
+            padding: 1.5rem;
+        }
+    }
+</style>
 {% endblock %}

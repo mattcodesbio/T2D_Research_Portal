@@ -17,9 +17,9 @@ class SNP(db.Model):
     __tablename__ = 'snps'
     
     snp_id = db.Column(db.String(20), primary_key=True, nullable=False)  # SNP ID (e.g., rs123456)
-    chromosome = db.Column(db.String(5), nullable=False)  # Chromosome
-    grch38_start = db.Column(db.Integer, nullable=False)  # Genomic position based on GRCh38 reference genome
-    gene_name = db.Column(db.String(100), nullable=True)  # Mapped gene(s) for the SNP (if available)
+    chromosome = db.Column(db.String(5), nullable=False, index = True)  # Chromosome
+    grch38_start = db.Column(db.Integer, nullable=False, index = True)  # Genomic position based on GRCh38 reference genome
+    gene_name = db.Column(db.String(100), nullable=True, index = True)  # Mapped gene(s) for the SNP (if available)
     p_value = db.Column(db.Float, nullable=True)  # P-value from GWAS study
     reference_allele = db.Column(db.String(10), nullable=True)  # Reference Allele
     alternative_allele = db.Column(db.String(10), nullable=True)  # Alternative Allele
@@ -37,10 +37,10 @@ class TajimaD(db.Model):
     __tablename__ = 'tajima_d_results'
     
     id = db.Column(db.Integer, primary_key=True) # Unique ID for each record
-    population = db.Column(db.String(50), nullable=False)  # Name of the population studied
-    chromosome = db.Column(db.String(5), nullable=False)  # Chromosome
-    bin_start = db.Column(db.Integer, nullable=False)  # Start position of the genomic region/bin
-    bin_end = db.Column(db.Integer, nullable=False)  # End position of the bin (10kb window size)
+    population = db.Column(db.String(50), nullable=False, index = True)  # Name of the population studied
+    chromosome = db.Column(db.String(5), nullable=False, index = True)  # Chromosome
+    bin_start = db.Column(db.Integer, nullable=False, index = True)  # Start position of the genomic region/bin
+    bin_end = db.Column(db.Integer, nullable=False, index = True)  # End position of the bin (10kb window size)
     n_snps = db.Column(db.Integer, nullable=False) # Number of SNPs found within this genomic bin
     tajima_d = db.Column(db.Float, nullable=False)  # Tajima's D statistic value
 
@@ -48,20 +48,22 @@ class TajimaD(db.Model):
         return f"<TajimaD {self.population} Chromosome {self.chromosome} Bin {self.bin_start}-{self.bin_end}>"
 
 
-# Fst Table
-class Fst(db.Model):
-    __tablename__ = 'fst_results'
-    
+class FstSNP(db.Model):
+    __tablename__ = 'fst_snp'
     id = db.Column(db.Integer, primary_key=True)
-    population = db.Column(db.String(50), nullable=False)  # Population name
-    chromosome = db.Column(db.String(5), nullable=False)  # Chromosome
-    bin_start = db.Column(db.Integer, nullable=False)  # Start position of the bin
-    bin_end = db.Column(db.Integer, nullable=False)  # End position of the bin
-    fst_value = db.Column(db.Float, nullable=False)  # Fst value
+    snp_id = db.Column(db.String(20), nullable=False, index = True)
+    gene = db.Column(db.String(50), nullable=False, index = True)
+    chromosome = db.Column(db.String(5), nullable=True, index = True)
+    position = db.Column(db.Integer, nullable=True, index = True)  # Fixed line
+    fst_beb = db.Column(db.Float, nullable=False)
+    fst_gih = db.Column(db.Float, nullable=False)
+    fst_itu = db.Column(db.Float, nullable=False)
+    fst_pjl = db.Column(db.Float, nullable=False)
+    fst_stu = db.Column(db.Float, nullable=False)
 
     def __repr__(self):
-        return f"<Fst {self.population} Chromosome {self.chromosome} Bin {self.bin_start}-{self.bin_end}>"
-
+        return f"<FstSNP {self.snp_id} Chr{self.chromosome}:{self.position}>"
+    
 
 # CLR Table 
 class CLRTest(db.Model):
@@ -72,9 +74,9 @@ class CLRTest(db.Model):
     __tablename__ = 'clr_results'
     
     id = db.Column(db.Integer, primary_key=True)
-    population = db.Column(db.String(50), nullable=False)
-    chromosome = db.Column(db.String(5), nullable=False)
-    position = db.Column(db.Integer, nullable=False)
+    population = db.Column(db.String(50), nullable=False, index = True)
+    chromosome = db.Column(db.String(5), nullable=False, index = True)
+    position = db.Column(db.Integer, nullable=False, index = True)
     clr = db.Column(db.Float, nullable=False) # CLR value
     alpha = db.Column(db.Float, nullable=False) # Alpha statistic (Measures the strength of the likelihood/selection signal)
 
@@ -90,3 +92,6 @@ class CLRTest(db.Model):
     # 'db.string(20)' : This field takes string datatypes with a max lengh of 20
     # 'db.Integer': This field takes integer values
     # 'db.Float': This field takes floating point values
+
+
+

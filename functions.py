@@ -1,10 +1,10 @@
 import pandas as pd
-from models import db, SNP, TajimaD, Fst, CLRTest
+from models import db, SNP, TajimaD, CLRTest, FstSNP
 import requests
 import numpy as np
 import os
-from models import db, SNP, TajimaD
 from flask import jsonify, Response, request
+from sqlalchemy import func
 
 
 def get_snp_info(snp_id=None, chromosome=None, start=None, end=None, gene_name=None):
@@ -547,9 +547,9 @@ def load_tajima_d_results(directory):
 
 def load_clr_results(directory):
     """
-    Loads CLR results from files in a directory into the database.
+    Loads CLR results from a single file into the database.
 
-    The function expects the files to follow a specific naming convention and format:
+    The function expects the file to follow a specific naming convention and format:
 
     File Naming Convention:
       - 'SweeD_Report.<Population>_chr<Chromosome>.txt'
@@ -571,98 +571,78 @@ def load_clr_results(directory):
     '''
 
     The function performs the following steps:
-    1. Iterates through each file in the specified directory.
-    2. Extracts population and chromosome information from the filename.
-    3. Reads the file into a DataFrame, skipping the first two rows.
-    4. Cleans up data by removing rows where 'Position' is not a number.
-    5. Renames columns to match the table schema.
-    6. Adds population and chromosome columns.
-    7. Adds a column for id, assuming we want to manually assign ids starting from 1 or max(id)+1.
-    8. Reorders columns to match the table schema.
-    9. Inserts the valid data into the 'clr_results' table.
+    1. Extracts population and chromosome information from the filename.
+    2. Reads the file into a DataFrame, skipping the first two rows.
+    3. Cleans up data by removing rows where 'Position' is not a number.
+    4. Renames columns to match the table schema.
+    5. Adds population and chromosome columns.
+    6. Adds a column for id, assuming we want to manually assign ids starting from 1 or max(id)+1.
+    7. Reorders columns to match the table schema.
+    8. Inserts the valid data into the 'clr_results' table.
 
     Assumptions:
     - The first two lines in the TSV file are headers and are skipped.
     """
     with db.session.begin():
-        # Iterate through all files in the directory
+        max_id = db.session.query(func.max(CLRTest.id)).scalar()
+        if max_id is None:
+            max_id = 0  # Start ID numbering from 1 if table is empty
+
         for filename in os.listdir(directory):
-            if filename.startswith('SweeD_Report'): # Process only 'SweeD_Report' files
-                # Extract population and chromosome from the filename
+            if filename.startswith('SweeD_Report'):
+                # Extract population and chromosome from filename
                 parts = filename.split('.')
                 population = parts[1].split('_')[0]
                 chromosome = parts[1].split('_')[1].replace('chr', '')
 
-                # Full path to the TSV file
-                sweed_report = os.path.join(directory, filename)
+                file_path = os.path.join(directory, filename)
 
-                # Read the TSV file into a DataFrame, skipping the first two rows
-                df = pd.read_csv(sweed_report, sep='\t', skiprows=2)
+                # Read the TSV file, skipping the first two rows
+                df = pd.read_csv(file_path, sep='\t', skiprows=2)
 
                 # Clean up data by removing rows where 'Position' is not a number
                 df = df[pd.to_numeric(df['Position'], errors='coerce').notnull()]
 
-                # Renaming columns to match the table schema
+                # Rename columns
                 df.columns = ['position', 'clr', 'alpha']
 
                 # Add population and chromosome columns
                 df['population'] = population
                 df['chromosome'] = chromosome
 
-                # Add a column for id, assuming we want to manually assign ids starting from 1 or max(id)+1
-                max_id = db.session.query(db.func.max(CLRTest.id)).scalar()
-                
-                # If no data is in the table yet, start from 1
-                if max_id is None:
-                    max_id = 0
-                
-                # Generate id for each row by incrementing max_id
+                # Assign unique IDs starting from max_id + 1
                 df['id'] = range(max_id + 1, max_id + 1 + len(df))
+                max_id += len(df)  # Update max_id for the next batch
 
-                # Reorder columns to match the table schema
+                # Reorder columns
                 df = df[['id', 'population', 'chromosome', 'position', 'clr', 'alpha']]
 
-                # Insert data into the table
+                # Insert only if the entry does not already exist
                 for _, row in df.iterrows():
-                    clr_test = CLRTest(
-                        id=row['id'],
+                    existing_clr = db.session.query(CLRTest).filter_by(
                         population=row['population'],
                         chromosome=row['chromosome'],
-                        position=row['position'],
-                        clr=row['clr'],
-                        alpha=row['alpha']
-                    )
-                    db.session.add(clr_test)
-    db.session.commit() # Save changes to the database
+                        position=row['position']
+                    ).first()
 
+                    if not existing_clr:
+                        clr_test = CLRTest(
+                            id=row['id'],
+                            population=row['population'],
+                            chromosome=row['chromosome'],
+                            position=row['position'],
+                            clr=row['clr'],
+                            alpha=row['alpha']
+                        )
+                        db.session.add(clr_test)
+    try: 
+        db.session.commit()  # Save changes to the database
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error: {e}")
+    finally:
+        db.session.close()
 
-def process_directories():
-    """
-    Function to process directories containing SweeD results to be loaded into the database using load_clr_results
-    """
-    from main import app  
-    directories = [
-        'SweeD_results/chr10_results',
-        'SweeD_results/chr11_results',
-        'SweeD_results/chr20_results',
-        'SweeD_results/chr2_results',
-        'SweeD_results/chr3_results',
-        'SweeD_results/chr6_results',
-        'SweeD_results/chr8_results',
-        'SweeD_results/chr9_results'
-    ]
-    with app.app_context():
-        for directory in directories:
-            if os.path.exists(directory):
-                load_clr_results(directory)
-            else:
-                print(f"Directory does not exist: {directory}")
-
-# Call the function to process directories
-if __name__ == "__main__":
-    # uncomment the following to run the function and load the data into the database
-    # process_directories()
-    pass
 
 
 def get_gene_coordinates_ensembl(gene_name):
@@ -699,6 +679,85 @@ def get_gene_coordinates_ensembl(gene_name):
                 }
     
     return None  # Return None if gene is not found
+
+
+def load_fst_snp_results(directory):
+    """
+    Loads SNP-based FST data from CSV files, handling empty Ref/Alt alleles.
+    """
+    import os
+    from models import FstSNP
+
+    processed_files = 0
+    new_records = 0
+    updated_records = 0
+
+    try:
+        for filename in os.listdir(directory):
+            if filename.endswith(".csv"):
+                filepath = os.path.join(directory, filename)
+                df = pd.read_csv(filepath)
+                
+                with db.session.begin():
+                    for _, row in df.iterrows():
+                        # Clean allele data
+                        ref_allele = str(row['Ref']).strip() if pd.notna(row['Ref']) else None
+                        alt_allele = str(row['Alt']).strip() if pd.notna(row['Alt']) else None
+                        
+                        # Convert empty strings to None
+                        ref_allele = ref_allele if ref_allele else None
+                        alt_allele = alt_allele if alt_allele else None
+
+                        existing = FstSNP.query.filter_by(snp_id=row['SNP']).first()
+                        
+                        if existing:
+                            # Update existing record with null-safe values
+                            existing.gene = row['Gene']
+                            existing.chromosome = str(row['Chromosome'])
+                            existing.position = int(row['Position'])
+                            existing.reference_allele = ref_allele
+                            existing.alternative_allele = alt_allele
+                            existing.fst_beb = float(row['FST_BEB'])
+                            existing.fst_gih = float(row['FST_GIH'])
+                            existing.fst_itu = float(row['FST_ITU'])
+                            existing.fst_pjl = float(row['FST_PJL'])
+                            existing.fst_stu = float(row['FST_STU'])
+                            updated_records += 1
+                        else:
+                            # Add new record with null-safe values
+                            db.session.add(FstSNP(
+                                snp_id=row['SNP'],
+                                gene=row['Gene'],
+                                chromosome=str(row['Chromosome']),
+                                position=int(row['Position']),
+                                reference_allele=ref_allele,
+                                alternative_allele=alt_allele,
+                                fst_beb=float(row['FST_BEB']),
+                                fst_gih=float(row['FST_GIH']),
+                                fst_itu=float(row['FST_ITU']),
+                                fst_pjl=float(row['FST_PJL']),
+                                fst_stu=float(row['FST_STU'])
+                            ))
+                            new_records += 1
+                    processed_files += 1
+
+        db.session.commit()
+        print(f"""
+        FST Data Load Complete!
+        Processed files: {processed_files}
+        New SNPs added: {new_records}
+        Existing SNPs updated: {updated_records}
+        Null Ref alleles handled: {df['Ref'].isna().sum()}
+        Null Alt alleles handled: {df['Alt'].isna().sum()}
+        """)
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error loading FST data: {str(e)}")
+        raise
+
+
+
 
 
 ###### function to get mapped genes #####

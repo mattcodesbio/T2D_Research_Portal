@@ -1,26 +1,36 @@
 {% extends 'base.html' %}
 
-{% block title %}Gene Ontology Terms for {{ gene_name }}{% endblock %}
+{% block title %}Gene Terms for {{ gene_name }}{% endblock %}
 
 {% block content %}
-    <div class="container">
-        <button class="back-button" onclick="window.history.back();">Back</button>
-        <h1 class="main-title">Gene Ontology Terms for <span class="highlight">{{ gene_name }}</span></h1>
+<div class="ontology-container">
+    <div class="header-section">
+        <button class="back-button" onclick="window.history.back()">← Back</button>
+        <h1 class="main-title">🧬 Ontology Terms for <span class="highlight">{{ gene_name }}</span></h1>
+    </div>
 
-        {% if go_terms %}
-            <div class="ontology-sections">
-                {% for category, terms in go_terms.items() %}
-                    <div class="ontology-category">
-                        <h2>{{ category.replace('_', ' ') | title }}</h2>
+    {% if go_terms %}
+        <div class="ontology-sections">
+            {% for category, terms in go_terms.items() %}
+            <div class="ontology-category">
+                <h2>🍀 {{ category.replace('_', ' ') | title }}</h2>
                         {% if terms %}
                             <div class="go-card-container">
                                 {% for term in terms %}
                                     <div class="go-card">
                                         <h3 class="go-title">{{ term.id }}: {{ term.name }}</h3>
-                                        <p class="go-description"><strong>Description:</strong> {{ term.description }}</p>
+                                        <details class="go-description-dropdown">
+                                            <summary>Details</summary>
+                                            <p class="go-description"><strong>Description:</strong>{{ term.description }}</p>
+                                        
+                                            {% if term.synonyms %}
+                                                <p class="go-synonyms"><strong>Synonyms:</strong> {{ term.synonyms | join(', ') }}</p>
+                                            {% endif %}
+                                        </details>
+                                        <!--<p class="go-description"><strong>Description:</strong> {{ term.description }}</p>
                                         {% if term.synonyms %}
                                             <p class="go-synonyms"><strong>Synonyms:</strong> {{ term.synonyms | join(', ') }}</p>
-                                        {% endif %}
+                                        {% endif %}-->
                                     </div>
                                 {% endfor %}
                             </div>
@@ -30,102 +40,230 @@
                     </div>
                 {% endfor %}
             </div>
-        {% else %}
-            <p class="no-results">No Gene Ontology terms found for this gene.</p>
-        {% endif %}
-    </div>
+            {% else %}
+            <div class="empty-state large">
+                <div class="empty-icon">🧬</div>
+                <h3>No Gene Ontology terms found</h3>
+                <p>No available data for {{ gene_name }}</p>
+            </div>
+            {% endif %}
+        </div>
+</div>
 
-    <style>
-        /* General container styling */
-        .container {
-            max-width: 900px;
-            margin: auto;
-            padding: 20px;
+<style>
+    .ontology-container {
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .header-section {
+        margin-bottom: 2rem;
+        position: relative;
+    }
+
+    .back-button {
+        background: none;
+        border: none;
+        color: var(--primary);
+        padding: 0.5rem 1rem;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .back-button:hover {
+        background-color: #f1f5f9;
+        border-radius: 0.5rem;
+    }
+
+    .main-title {
+        color: var(--dark);
+        font-size: 2rem;
+        margin: 1rem 0;
+    }
+
+    .highlight {
+        color: var(--primary);
+        font-weight: 600;
+    }
+
+    /* Ontology category section */
+    .ontology-category {
+        background: #f8f9fa;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .ontology-category h2 {
+        color: #1b52a4;
+        font-size: 22px;
+        margin-bottom: 15px;
+    }
+
+    /* GO term cards */
+    .go-card-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .go-card {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        flex: 1 1 calc(50% - 15px);
+        min-width: 250px;
+    }
+
+    .go-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #1b52a4;
+        margin-bottom: 10px;
+    }
+
+    .go-description, .go-synonyms {
+        font-size: 14px;
+        color: #444;
+    }
+
+
+    .gene-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .section-title {
+        color: var(--dark);
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--primary);
+    }
+
+    .term-card {
+        background: var(--light);
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: transform 0.2s ease;
+    }
+
+    .term-card:hover {
+        transform: translateY(-3px);
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .full-width {
+        grid-column: 1 / -1;
+    }
+
+    .detail-label {
+        color: var(--primary);
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .detail-value {
+        color: var(--dark);
+        font-size: 1.1rem;
+    }
+
+    .definition {
+        color: var(--dark);
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .synonym-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .synonym-tag {
+        background: rgba(79, 70, 229, 0.1);
+        color: var(--primary);
+        padding: 0.25rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.9rem;
+    }
+
+    .term-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .subset-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .subset-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+
+    .subset-card:hover {
+        border-color: var(--primary);
+        box-shadow: 0 2px 4px rgba(79, 70, 229, 0.1);
+    }
+
+    .empty-state {
+        background: var(--light);
+        border-radius: 0.75rem;
+        padding: 2rem;
+        text-align: center;
+        color: #64748b;
+    }
+
+    .empty-state.large {
+        padding: 3rem;
+        margin-top: 2rem;
+    }
+
+    .empty-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .ontology-container {
+            padding: 1rem;
         }
-
-        .highlight {
-            color: #1b52a4;
-            font-weight: bold;
+        
+        .gene-card {
+            padding: 1.5rem;
         }
-
+        
         .main-title {
-            text-align: center;
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 20px;
-            color: #333;
+            font-size: 1.5rem;
         }
-
-        /* Ontology category section */
-        .ontology-category {
-            background: #f8f9fa;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .ontology-category h2 {
-            color: #1b52a4;
-            font-size: 22px;
-            margin-bottom: 15px;
-        }
-
-        /* GO term cards */
-        .go-card-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .go-card {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            flex: 1 1 calc(50% - 15px);
-            min-width: 250px;
-        }
-
-        .go-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #1b52a4;
-            margin-bottom: 10px;
-        }
-
-        .go-description, .go-synonyms {
-            font-size: 14px;
-            color: #444;
-        }
-
-        .no-terms, .no-results {
-            text-align: center;
-            color: #888;
-            font-style: italic;
-        }
-
-        /* Responsive design */
-        @media (max-width: 600px) {
-            .go-card {
-                flex: 1 1 100%;
-            }
-        }
-
-        .back-button {
-            display: inline-block;
-            background: #1b52a4;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            text-decoration: none;
-            margin-bottom: 15px;
-        }
-
-        .back-button:hover {
-            background: #164280;
-        }
-    </style>
+    }
+</style>
 {% endblock %}

@@ -1,5 +1,5 @@
 from flask import render_template, request, jsonify, Response, session
-from models import SNP, TajimaD, CLRTest
+from models import SNP, TajimaD, CLRTest, FstSNP
 from functions import (get_snp_info, get_gene_ontology_terms, get_t2d_snps, 
                        get_gene_coordinates_ensembl, get_tajima_d_data,
                        get_clr_data, download_clr_data, download_tajima_d_data)
@@ -50,17 +50,20 @@ def home():
                     .filter(TajimaD.bin_start <= snp['grch38_start'], TajimaD.bin_end >= snp['grch38_start'])
                     .all()
                 )
-
-                # Fetch all CLR results for the chromosome
+                snp_positions = [snp['grch38_start'] for snp in snps]
+                min_snp_position, max_snp_position = min(snp_positions), max(snp_positions)
+                # Fetch only CLR results within a 10kb window around the SNP
                 clr_results = (
-                    CLRTest.query
-                    .filter(CLRTest.chromosome == snp['chromosome'])
-                    .all()
+                CLRTest.query
+                .filter(CLRTest.chromosome == snp['chromosome'])
+                .filter(CLRTest.position.between(min_snp_position - 10000, max_snp_position + 10000)) 
+                .all()
                 )
 
+                # Dictionary to hold positive selection metrics (Tajima’s D, CLR, Alpha, FST)
                 positive_selection = {}
 
-                # Store Tajima’s D values
+                # Store Tajima’s D values in positive_selection
                 for tajima in tajima_d_results:
                     if tajima.population not in positive_selection:
                         positive_selection[tajima.population] = {}
@@ -79,16 +82,30 @@ def home():
                     positive_selection[population]["clr"] = closest_clr.clr
                     positive_selection[population]["alpha"] = closest_clr.alpha
 
-                # Convert dictionary to list for rendering
-                positive_selection_list = [
-                    {
+                # ---------------------------------------------------
+                # NEW: Fetch FST data for this SNP using snp_id
+                fst_data = FstSNP.query.filter_by(snp_id=snp['snp_id']).first()
+                # ---------------------------------------------------
+
+                # Convert dictionary to list for rendering, now including FST
+                positive_selection_list = []
+                for pop, data in positive_selection.items():
+                    # NEW: Get FST value for this population
+                    fst_value = None
+                    if fst_data:
+                        # e.g., if your FstSNP model columns are named fst_beb, fst_gih, etc.
+                        # pop.lower() is used here to match the population code in the column name
+                        fst_value = getattr(fst_data, f'fst_{pop.lower()}', None)
+                        # Round to 4 decimals if it exists
+                        fst_value = round(fst_value, 4) if fst_value is not None else None
+                    
+                    positive_selection_list.append({
                         "population": pop,
                         "tajima_d": data.get("tajima_d", "N/A"),
                         "clr": data.get("clr", "N/A"),
                         "alpha": data.get("alpha", "N/A"),
-                    }
-                    for pop, data in positive_selection.items()
-                ]
+                        "fst": fst_value if fst_value is not None else "N/A"
+                    })
 
                 snp_info.append({
                     "snp_id": snp['snp_id'],
@@ -103,7 +120,9 @@ def home():
 
         return render_template('snp_results.html', snp_info=snp_info)
 
+    # GET request just returns the search page
     return render_template('index.html')
+
 
 
 
@@ -273,6 +292,15 @@ def gene_terms(gene_name):
     """
   go_terms = get_gene_ontology_terms(gene_name)
   return render_template("ontology.html", gene_name=gene_name, go_terms=go_terms if go_terms else {})
+
+
+
+@app.route('/population')
+def population():
+    # Query your Population table and pass data to a template
+    
+    return render_template('population_info.html')
+
 
 
 # @app.route('/select_population', methods=['POST'])

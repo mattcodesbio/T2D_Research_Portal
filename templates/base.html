@@ -3,201 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Welcome{% endblock %}</title>
+    <title>{% block title %}T2D SNP Database{% endblock %}</title>
 
     <!-- dd Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
+    
     <style>
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            background-color: #f4f4f4;
+        :root {
+             /* --primary: #021854;*/
+            --primary: #021854;
+            --secondary: #5a5ced;
+            --accent: #ec4899;
+            --light: #f8fafc;
+            --dark: #2d4177;
+        }
+
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        /* body {
+            background: var(--light);
+            color: var(--dark);
             line-height: 1.6;
-            padding-top: 50px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        } */
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Merriweather', serif;
+            color: #030000d1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+              /* overflow: hidden;*/
         }
 
-        header {
-            background-color: #1b52a4;
-            color: white;
-            padding: 15px 0;
-            text-align: center;
+        /* Background Image with Overlay for Fading Effect */
+        .background-overlay {
             position: fixed;
-            width: 100%;
             top: 0;
-            z-index: 10;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("{{ url_for('static', filename='images/dna.jpg') }}") no-repeat center center/cover;
+            opacity: 0.7;   /*Adjust for stronger or weaker fade */
+            z-index: -1;
         }
 
+
+        /* Header with Title */
+        header {
+            background: #021854;
+            opacity: 0.8;
+            /* background: linear-gradient(135deg, var(--primary), var(--secondary));*/
+            padding: 1rem 0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            animation: slideDown 0.5s ease;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between; /* Ensures proper spacing between title and nav */
+        }
+
+        .site-title {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.010em;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: left; /* Aligns text to the left */
+            margin-left: 0;
+            position: relative;
+            left: -335px;
+        }
+
+        /* Navigation */
         nav {
-            background-color: #1b52a4;
-            padding: 10px 15px;
-            text-align: center;
-            margin-top: 50px; /* Offset for the fixed header */
+            display: flex;
+            gap: 1.5rem;
+            padding: 0.5rem 0;
+            /* border-top: 1px solid rgba(255, 255, 255, 0.1); */
+            position: relative;
+            right: -280px;
         }
 
         nav a {
             color: white;
-            padding: 10px 20px;
             text-decoration: none;
-            font-size: 1.1em;
-            margin: 0 10px;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            font-size: 1.3rem;
         }
 
         nav a:hover {
-            text-decoration: underline;
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
         }
 
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
+        /* Main Content Area */ 
         .container {
-            max-width: 100%;
-            margin: 20px auto;
-            background-color: white;
-            padding: 30px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
+            flex: 1;
+            max-width: 50%;
+            margin: 2rem auto;  /* To the right hand side */
+            padding: 2rem;
+            background: rgb(225, 225, 225);
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            animation: fadeIn 0.5s ease;
+            opacity: 0.95;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        h1 {
-            color: rgb(5, 5, 5);
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        input[type="text"], input[type="number"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #5b5151;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
-
-        input[type="text"]::placeholder, input[type="number"]::placeholder {
-            color: #666;
-            font-size: 1.1em;
-        }
-
-        button[type="submit"], .btn-primary {
-            background-color: #007bff !important; /* ✅ Ensures blue */
-            border-color: #007bff !important;
-            color: white;
-        }
-
-        button[type="submit"]:hover, .btn-primary:hover {
-            background-color: #0056b3 !important;
-            border-color: #0056b3 !important;
-        }
-
-        .btn-outline-primary {
-            border-color: #007bff !important;
-            color: #007bff !important;
-        }
-
-        .btn-outline-primary:hover {
-            background-color: #007bff !important;
-            color: white !important;
-        }
-
-        .back-button {
-            background-color: #1b52a4;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1.1em;
-            transition: background-color 0.3s ease;
-            margin-bottom: 20px;
-        }
-
-        .back-button:hover {
-            background-color: #164280;
-        }
-
+        /* Footer */
         footer {
+            background: #021854;
+            /*background: var(--dark);*/
+            color: white;
             text-align: center;
-            padding: 20px 0;
-            background-color: #333;
-            color: white;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
+            padding: 1.5rem;
+            margin-top: auto;
+            font-size: 0.9rem;
+            opacity: 0.7;
         }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            font-size: 1.1em;
-            word-wrap: break-word; /* Ensures long words wrap */
-            table-layout: auto; /* Allows the table columns to resize as needed */
-        }
-
-        th, td {
-            padding: 15px;
-            text-align: center; /* Aligns text to the left for readability */
-            border-bottom: 1px solid #ddd;
-            word-wrap: break-word; /* Prevents text from overflowing */
-        }
-
-        th {
-            background-color: #1b52a4;
-            color: white;
-            font-weight: bold;
-            position: sticky;
-            top: 105px;
-            z-index: 1;
-        }
-
-        td {
-            text-align: center; /* Keeps the content left-aligned */
-        }
-
-        td .long-text {
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            white-space: normal; /* Ensures content wraps properly in longer text */
-        }
-
-        @media screen and (max-width: 768px) {
-            table, th, td {
-                font-size: 0.9em;
-            }
-
-            td, th {
-                padding: 10px;
-            }
-        }
-
-        .plot-margin {
-            margin-top: 50px; 
-        }
+    
+        
     </style>
 </head>
+
 <body>
+    <div class="background-overlay"></div>  <!-- Faded Background -->
 
     <header>
-        <h1>{% block header %}Welcome to the T2D Web Development Project{% endblock %}</h1>
+        <div class="header-content">
+            <h1 class="site-title">
+                <span>Type 2 Diabetes (T2D)</span>
+                <br>
+                <span>Research Portal</span>
+            </h1>
+            <nav>
+                <a href="/">Home</a>
+                <a href="/about">About</a>
+            </nav>
+        </div>
     </header>
 
-    <nav>
-        <a href="/">Home</a>
-        <a href="/about">About</a>
-    </nav>
-
-    <div class="container">
-        {% block content %}
-        {% endblock %}
+    <div class="container"> 
+        {% block content %}{% endblock %}
     </div>
-
+    
     <footer>
         <p>&copy; 2025 T2D Project. All rights reserved.</p>
     </footer>
