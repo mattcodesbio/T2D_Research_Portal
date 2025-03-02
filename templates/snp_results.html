@@ -3,112 +3,142 @@
 {% block title %}Search Results - T2D Project{% endblock %}
 
 {% block content %}
+<!-- Container for search results and population/chromosome selection -->
 <div class="results-container">
+    <!-- Header section containing back button, title, and population info link -->
     <div class="results-header">
+        <!-- Back button to return to the search page -->
         <button class="back-button" onclick="window.history.back()">← Back to Search</button>
         <br><br>
+        <!-- Title and Population Info link -->
         <div class="results-title">
             <h2>📊 Search Results</h2>
             <a href="{{ url_for('population') }}" class="population-info-btn">🌍 Population Info</a>
         </div>
+        <!-- Display the count of variants found -->
         {% if snp_info %}
             <p class="result-count">{{ snp_info|length }} variant{% if snp_info|length != 1 %}s{% endif %} found</p>
         {% endif %}
     </div>
 
-    <form method="POST" action="{{ url_for('population_analysis') }}">
-        <!-- Population Selection -->
-        <label for="selected_population">Select Subpopulation(s):</label>
-        <select name="selected_population" id="selected_population">
-            <option value="None"></option>
-            <option value="BEB">BEB</option>
-            <option value="GIH">GIH</option>
-            <option value="ITU">ITU</option>
-            <option value="PJL">PJL</option>
-            <option value="STU">STU</option>
-        </select><br><br>
-
-        <!-- Chromosome Selection -->
-        <label for="selected_chromosome">Select Chromosome:</label>
-        <select name="selected_chromosome" id="selected_chromosome">
-            <option value="None"></option>
-            <option value="3">3</option>
-            <option value="6">6</option>
-            <option value="9">9</option>
-            <option value="10">10</option>
-            <option value="11">11</option>
-            <option value="20">20</option>
-        </select><br>
-
-        <button type="submit" class="analysis-btn">Analyze Population</button>
+    <!-- Form for selecting subpopulation and chromosome for further analysis -->
+    <form method="POST" action="{{ url_for('population_analysis') }}" class="selection-form">
+        <!-- Subpopulation selection -->
+        <div class="form-group">
+            <label for="selected_population">Select Subpopulation(s):</label>
+            <select name="selected_population" id="selected_population" class="form-control">
+                <option value="None"></option>
+                <option value="BEB">BEB</option>
+                <option value="GIH">GIH</option>
+                <option value="ITU">ITU</option>
+                <option value="PJL">PJL</option>
+                <option value="STU">STU</option>
+            </select>
+        </div>
+        <!-- Chromosome selection (includes options for chromosomes 2 and 8) -->
+        <div class="form-group" style="margin-top: 0.5rem;">
+            <label for="selected_chromosome">Select Chromosome:</label>
+            <select name="selected_chromosome" id="selected_chromosome" class="form-control">
+                <option value="None"></option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="6">6</option>
+                <option value="8">8</option>
+                <option value="9" selected>9</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="20">20</option>
+            </select>
+        </div>
+        <!-- Analyze Population button to submit the form -->
+        <div class="form-group text-center" style="margin-top: 1rem;">
+            <button type="submit" class="analysis-btn btn btn-primary btn-lg">Analyze Population</button>
+        </div>
     </form>
 </div>
 
 {% if snp_info %}
+<!-- Table container for displaying SNP query results -->
 <div class="table-container">
     <table class="modern-table">
         <thead>
+            <!-- Table header row defining column labels -->
             <tr>
-                <th rowspan="2">SNP ID</th>
-                <th rowspan="2">Position (CHR:POS)</th>
-                <th rowspan="2">Gene</th>
-                <th rowspan="2">Allele (REF:ALT)</th>
-                <th rowspan="2">P-Value</th>
-                <th rowspan="2">Summary Statistics</th> 
+                <th>Select</th>
+                <th>SNP ID</th>
+                <th>Chromosome</th>
+                <th>Position</th>
+                <th>Gene</th>
+                <th>Reference Allele</th>
+                <th>Alternative Allele</th>
+                <th>p-value</th>
+                <th>View Positive Selection Summary Statistics</th>
             </tr>
         </thead>
         <tbody>
+            <!-- Loop over each SNP result -->
             {% for snp in snp_info %}
             <tr>
+                <!-- Checkbox to select the SNP -->
+                <td><input type="checkbox" name="selected_snps" value="{{ snp.snp_id }}"></td>
                 <td>{{ snp.snp_id }}</td>
-                <td>{{ snp.chromosome }}:{{ snp.grch38_start }}</td>
+                <td>{{ snp.chromosome }}</td>
+                <td>{{ snp.grch38_start }}</td>
+                <!-- Gene column: if gene information exists, split it and create links -->
                 <td>
-                    <a href="{{ url_for('gene_terms', gene_name=snp.gene_name) }}" class="gene-link">
-                        {{ snp.gene_name }}
-                    </a>
+                    {% if snp.gene_name and snp.gene_name != "No Mapped Gene" %}
+                        {% set genes = snp.gene_name.split() %}
+                        {% for gene in genes %}
+                            <a href="{{ url_for('gene_terms', gene_name=gene) }}" class="gene-link">{{ gene }}</a>{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <span>Unknown</span>
+                    {% endif %}
                 </td>
-                <td>{{ snp.reference_allele }}:{{ snp.alternative_allele }}</td>
+                <td>{{ snp.reference_allele }}</td>
+                <td>{{ snp.alternative_allele }}</td>
                 <td>{{ snp.p_value }}</td>
+                <!-- Button to toggle the display of detailed statistics for this SNP -->
                 <td>
-                    <button class="stats-btn" onclick="toggleDropdown('{{ snp.dbSNP }}')">View All</button>
+                    <button type="button" class="toggle-btn" onclick="toggleDropdown('{{ snp.snp_id }}')">Show Stats</button>
                 </td>
             </tr>
-            <tr id="dropdown-{{ snp.dbSNP }}" class="dropdown-content" style="display: none;">
-                <td colspan="3">
-                    <strong>Results</strong>
+            <!-- Hidden dropdown row that shows detailed SNP statistics when toggled -->
+            <tr id="dropdown-{{ snp.snp_id }}" class="dropdown-content">
+                <td colspan="9">
+                    <strong>Statistics for SNP {{ snp.snp_id }}</strong>
                     <table>
                         <thead>
+                            <!-- Header for the detailed statistics table -->
                             <tr>
                                 <th>Population</th>
                                 <th>Tajima's D</th>
-                                <th>Fixation Index (FST (vs Europe))</th>
-                                <th colspan='2'>SweeD</th>
-                            </tr>
-                            <tr>
-                                <th></th>
-                                <th></th>
-                                <th></th>
-                                <th>Composite Likelihodd Ratio (CLR)</th>
-                                <th>Alpha</th>
+                                <th>CLR</th>
+                                <th>α (Strength of CLR selection)</th>
+                                <th>FST (vs Europe)</th>
                             </tr>
                         </thead>
                         <tbody>
+                            <!-- Loop over each statistic set for the SNP -->
                             {% for pop_stat in snp.positive_selection %}
                             <tr>
                                 <td>{{ pop_stat.population }}</td>
                                 <td>{{ pop_stat.tajima_d if pop_stat.tajima_d is not none else 'N/A' }}</td>
                                 <td>{{ pop_stat.clr if pop_stat.clr is not none else 'N/A' }}</td>
                                 <td>{{ pop_stat.alpha if pop_stat.alpha is not none else 'N/A' }}</td>
+                                <td>{{ pop_stat.fst if pop_stat.fst is not none else 'N/A' }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </td>
-            </tr>                                          
+            </tr>
             {% endfor %}
         </tbody>
     </table>
+</div>
 {% else %}
+<!-- Message displayed when no SNP results are found -->
 <div class="no-results">
     <div class="no-results-icon">🧬</div>
     <h3>No Variants Found</h3>
@@ -117,9 +147,10 @@
 {% endif %}
 </div>
 
+<!-- JavaScript function to toggle the dropdown display for SNP statistics -->
 <script>
-    function toggleDropdown(snp_id) {
-        var dropdown = document.getElementById("dropdown-" + snp_id);
+    function toggleDropdown(snpId) {
+        var dropdown = document.getElementById("dropdown-" + snpId);
         if (dropdown.style.display === "none" || dropdown.style.display === "") {
             dropdown.style.display = "table-row";
         } else {
@@ -127,12 +158,14 @@
         }
     }
 </script>
-    
+
+<!-- Inline CSS for styling the page -->
 <style>
+    /* Container for results and selection form */
     .results-container {
         padding: 2rem;
         max-width: 1200px;
-        margin: 0 auto;        
+        margin: 0 auto;
     }
     
     .results-header {
@@ -142,9 +175,9 @@
     
     .results-title {
         display: flex;
-        align-items: center;  /* Align items vertically */
-        justify-content: space-between;  /* Pushes elements to opposite sides */
-        width: 100%;  /* Ensure it spans full width */
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
     }
     
     .back-button {
@@ -155,6 +188,7 @@
         margin-bottom: 1rem;
         cursor: pointer;
         transition: all 0.2s ease;
+        font-size: 1rem;
     }
     
     .back-button:hover {
@@ -196,7 +230,6 @@
         background-color: #f8fafc;
     }
     
-    /* Ensuring SNP ID, Position and Gene don't take too much space */
     .modern-table th:nth-child(1),
     .modern-table td:nth-child(1) {
         width: 12%;
@@ -210,101 +243,116 @@
     .modern-table th:nth-child(3),
     .modern-table td:nth-child(3) {
         width: 10%;
-    } 
+    }
     
-    /* Minor allele name column */
     .modern-table th:nth-child(4),
     .modern-table td:nth-child(4) {
         width: 10%;
     }
     
-    /* Adjust specific column widths */
     .modern-table th:nth-child(5),
-    .modern-table td:nth-child(5)  /* P-Value */
-    {
-        width: 15%; /* Increase width for better visibility */
+    .modern-table td:nth-child(5) {
+        width: 15%;
     }
     
     .modern-table th:nth-child(6),
-    .modern-table td:nth-child(6)
-    {
-        width: 12%; /* Increased width for Summary Statistics columns */
+    .modern-table td:nth-child(6) {
+        width: 12%;
     }
-
+    
     .analysis-btn {
-        background-color: #1b6bff; 
-        border: 1px;
+        background-color: #1b6bff;
+        border: none;
         padding: 4px 8px;
         font-size: 10px;
         cursor: pointer;
         border-radius: 4px;
         color: white;
     }
-
+    
     .analysis-btn:hover {
-        color: #ffeb3b; /* Change text color on hover to yellow */
+        color: #ffeb3b;
     }
     
-    .stats-btn {
-        background-color: #e2f5fa; 
-        border: 1px;
-        padding: 4px 8px;
-        font-size: 10px;
+    .toggle-btn {
+        background-color: #1b52a4;
+        color: white;
+        border: none;
+        padding: 8px;
         cursor: pointer;
         border-radius: 4px;
+        font-size: 14px;
     }
     
-    .stats-btn:hover {
-        text-decoration: underline;
+    .toggle-btn:hover {
+        background-color: #164280;
+    }
+    
+    .dropdown-content {
+        display: none;
+        background-color: #f9f9f9;
+        padding: 10px;
+        border: 1px solid #ccc;
+        margin-top: 5px;
+        border-radius: 5px;
+    }
+    
+    .dropdown-content table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .dropdown-content th,
+    .dropdown-content td {
+        padding: 8px;
+        border: 1px solid #ddd;
+        text-align: center;
     }
     
     .population-info-btn {
         padding: 4px 8px;
         font-size: 16px;
-        font-weight: 600; /* For thicker font */
+        font-weight: 600;
         cursor: pointer;
-        text-decoration: none; /* Remove underline */
+        text-decoration: none;
         color: #4f46e5;
         transition: all 0.2s ease;
     }
-            
+    
     .population-info-btn:hover {
         background-color: #f1f5f9;
         border-radius: 0.5rem;
     }
     
-    .no-results {
-        text-align: center;
-        padding: 3rem;
-        background: #f8fafc;
-        border-radius: 1rem;
-        margin-top: 2rem;
+    /* Styling for the selection form */
+    .selection-form {
+        margin: 1rem 0;
+        display: flex;
+        gap: 1.5rem;
+        align-items: center;
+        flex-wrap: wrap;
     }
     
-    .no-results-icon {
-        font-size: 3rem;
-        margin-bottom: 1rem;
+    .selection-form .form-group {
+        margin-bottom: 0;
     }
     
-    .no-results h3 {
-        color: #1e293b;
-        margin-bottom: 0.5rem;
+    .selection-form label {
+        font-weight: 600;
+        margin-right: 0.5rem;
     }
     
-    .no-results p {
-        color: #64748b;
+    .selection-form select {
+        width: 150px;
+        padding: 0.25rem 0.5rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background-color: #fff;
     }
     
-    .gene-link {
-        color: #4f46e5;
-        text-decoration: none;
-        font-weight: 500;
-        transition: color 0.2s ease;
-    }
-    
-    .gene-link:hover {
-        color: #6366f1;
-        text-decoration: underline;
+    .selection-form button.analysis-btn {
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
     }
 </style>
 {% endblock %}

@@ -683,7 +683,9 @@ def get_gene_coordinates_ensembl(gene_name):
 
 def load_fst_snp_results(directory):
     """
-    Loads SNP-based FST data from CSV files, handling empty Ref/Alt alleles.
+    Loads and adds SNP-based FST data from CSV files into the database.
+    If the CSV does not have 'Ref' and 'Alt' columns, the values will be set to None.
+
     """
     import os
     from models import FstSNP
@@ -693,20 +695,23 @@ def load_fst_snp_results(directory):
     updated_records = 0
 
     try:
+        # Loop over every file in the specified directory
         for filename in os.listdir(directory):
             if filename.endswith(".csv"):
                 filepath = os.path.join(directory, filename)
                 df = pd.read_csv(filepath)
-                
+
+                # Start a transaction for the current file
                 with db.session.begin():
+                    # Iterate over each row in the DataFrame
                     for _, row in df.iterrows():
-                        # Clean allele data
-                        ref_allele = str(row['Ref']).strip() if pd.notna(row['Ref']) else None
-                        alt_allele = str(row['Alt']).strip() if pd.notna(row['Alt']) else None
+                        # Use row.get() to safely retrieve 'Ref' and 'Alt' values.
+                        # If the column is missing, row.get() returns an empty string (default value).
+                        ref_value = row.get('Ref', "")
+                        alt_value = row.get('Alt', "")
                         
-                        # Convert empty strings to None
-                        ref_allele = ref_allele if ref_allele else None
-                        alt_allele = alt_allele if alt_allele else None
+                        ref_allele = str(ref_value).strip() or None
+                        alt_allele = str(alt_value).strip() or None
 
                         existing = FstSNP.query.filter_by(snp_id=row['SNP']).first()
                         
@@ -724,7 +729,7 @@ def load_fst_snp_results(directory):
                             existing.fst_stu = float(row['FST_STU'])
                             updated_records += 1
                         else:
-                            # Add new record with null-safe values
+                            # Insert new SNP data into the database    
                             db.session.add(FstSNP(
                                 snp_id=row['SNP'],
                                 gene=row['Gene'],
@@ -747,14 +752,136 @@ def load_fst_snp_results(directory):
         Processed files: {processed_files}
         New SNPs added: {new_records}
         Existing SNPs updated: {updated_records}
-        Null Ref alleles handled: {df['Ref'].isna().sum()}
-        Null Alt alleles handled: {df['Alt'].isna().sum()}
+        Null Ref alleles handled: {df['Ref'].isna().sum() if 'Ref' in df.columns else 'Column Missing'}
+        Null Alt alleles handled: {df['Alt'].isna().sum() if 'Alt' in df.columns else 'Column Missing'}
         """)
 
     except Exception as e:
         db.session.rollback()
         print(f"Error loading FST data: {str(e)}")
         raise
+
+
+
+
+
+
+def get_fst_data(chromosome, region=None, populations=None):
+    """
+    Fetch FST statistics for a given chromosome (or region) and selected populations.
+    
+    Args:
+        chromosome (str): Chromosome to filter by.
+        region (tuple, optional): (start, end) positions defining the genomic region.
+        populations (list, optional): List of populations (e.g., ["BEB", "GIH"]) to filter by.
+        
+    Returns:
+        tuple: A dictionary of FST values (keyed by population) and a dictionary of summary statistics 
+               (mean and standard deviation) for each population.
+    """
+    query = FstSNP.query.filter(FstSNP.chromosome == chromosome)
+    if region:
+        start, end = region
+        query = query.filter(FstSNP.position >= start, FstSNP.position <= end)
+    
+    # Initialize dictionary for each selected population
+    fst_data = {pop: [] for pop in populations} if populations else {}
+    
+    for fst in query.all():
+        for pop in populations:
+            # Map population code to corresponding FST column (e.g., "BEB" -> fst_beb)
+            col = f'fst_{pop.lower()}'
+            value = getattr(fst, col, None)
+            fst_data[pop].append({
+                "snp_id": fst.snp_id,
+                "position": fst.position,
+                "fst": value
+            })
+    
+    # Calculate summary statistics for each population
+    summary_stats = {}
+    for pop, data in fst_data.items():
+        values = [d["fst"] for d in data if d["fst"] is not None]
+        mean_val = np.mean(values) if values else None
+        std_val = np.std(values) if values else None
+        summary_stats[pop] = {
+            "mean_fst": round(mean_val, 4) if mean_val is not None else "N/A",
+            "std_dev_fst": round(std_val, 4) if std_val is not None else "N/A"
+        }
+    
+    return fst_data, summary_stats
+
+
+def download_fst_data():
+    """
+    Generates a text file containing FST statistics for a specified genomic region.
+    
+    Request Parameters:
+        - chromosome (str)
+        - start (int, optional)
+        - end (int, optional)
+        - selected_population (list): Populations to filter by.
+        - gene_name (str, optional): If provided, the gene's coordinates are used.
+        
+    Returns:
+        flask.Response: A text file with FST values for each SNP in the region and summary statistics.
+    """
+    chromosome = request.args.get("chromosome")
+    gene_name = request.args.get("gene_name")
+    start = request.args.get("start", type=int)
+    end = request.args.get("end", type=int)
+    populations = request.args.getlist("selected_population")
+    
+    # If gene name is provided and region is not defined, fetch coordinates
+    if gene_name and (start is None or end is None):
+        gene_info = get_gene_coordinates_ensembl(gene_name)
+        if gene_info:
+            chromosome = gene_info["chromosome"]
+            start = gene_info["start"]
+            end = gene_info["end"]
+        else:
+            return jsonify({"error": f"Gene '{gene_name}' not found in Ensembl"}), 400
+    
+    if start is None or end is None:
+        return jsonify({"error": "Invalid region parameters. Must provide a valid start and end position or a gene name."}), 400
+    
+    try:
+        fst_data, fst_summary_stats = get_fst_data(chromosome, (start, end), populations)
+    except Exception as e:
+        return jsonify({"error": f"Error retrieving FST data: {str(e)}"}), 500
+    
+    # Handle the case where no data exists
+    if not fst_data or all(len(entries) == 0 for entries in fst_data.values()):
+        response_text = f"No FST data found for Chromosome {chromosome}, Region {start}-{end}.\n"
+        response = Response(response_text, mimetype="text/plain")
+        response.headers["Content-Disposition"] = f"attachment; filename=FST_chr{chromosome}_{start}_{end}.txt"
+        return response
+
+    # Generate file content
+    file_content = ["Population\tSNP ID\tPosition\tFST"]
+    for pop, entries in fst_data.items():
+        for entry in entries:
+            file_content.append(f"{pop}\t{entry['snp_id']}\t{entry['position']}\t{entry['fst']:.4f}")
+    
+    # Append summary statistics
+    file_content.append("\nSummary Statistics")
+    file_content.append("Population\tMean FST\tStd Dev FST")
+    for pop, stats in fst_summary_stats.items():
+        file_content.append(f"{pop}\t{stats['mean_fst']}\t{stats['std_dev_fst']}")
+    
+    response = Response("\n".join(file_content), mimetype="text/plain")
+    response.headers["Content-Disposition"] = f"attachment; filename=FST_chr{chromosome}_{start}_{end}.txt"
+    return response
+
+
+
+
+
+
+
+
+
+
 
 
 

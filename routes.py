@@ -2,7 +2,8 @@ from flask import render_template, request, jsonify, Response, session
 from models import SNP, TajimaD, CLRTest, FstSNP
 from functions import (get_snp_info, get_gene_ontology_terms, get_t2d_snps, 
                        get_gene_coordinates_ensembl, get_tajima_d_data,
-                       get_clr_data, download_clr_data, download_tajima_d_data)
+                       get_clr_data, download_clr_data, download_tajima_d_data,
+                       download_fst_data, get_fst_data)
 from main import app
 import json
 import numpy as np
@@ -82,15 +83,15 @@ def home():
                     positive_selection[population]["clr"] = closest_clr.clr
                     positive_selection[population]["alpha"] = closest_clr.alpha
 
-                # ---------------------------------------------------
-                # NEW: Fetch FST data for this SNP using snp_id
+                
+                # Fetch FST data for this SNP using snp_id
                 fst_data = FstSNP.query.filter_by(snp_id=snp['snp_id']).first()
-                # ---------------------------------------------------
+                
 
                 # Convert dictionary to list for rendering, now including FST
                 positive_selection_list = []
                 for pop, data in positive_selection.items():
-                    # NEW: Get FST value for this population
+                    # Get FST value for this population
                     fst_value = None
                     if fst_data:
                         # e.g., if your FstSNP model columns are named fst_beb, fst_gih, etc.
@@ -219,15 +220,24 @@ def population_analysis_region():
     tajima_d_data, summary_stats = get_tajima_d_data(chromosome, (start, end), selected_populations)
     t2d_snp_data = get_t2d_snps(chromosome, start, end)
     clr_data, clr_summary_stats = get_clr_data(chromosome, (start, end), selected_populations)
+    fst_data, fst_summary_stats = get_fst_data(chromosome, (start, end), selected_populations)
 
     return jsonify({
         "tajima_d_data": tajima_d_data,
         "t2d_snp_data": t2d_snp_data,
         "clr_data": clr_data,
         "summary_stats": summary_stats,
-        "clr_summary_stats": clr_summary_stats
+        "clr_summary_stats": clr_summary_stats,
+        "fst_data": fst_data,
+        "fst_summary_stats": fst_summary_stats
     })
-
+    
+@app.route('/download_fst', methods=['GET'])
+def download_fst():
+    """
+    Endpoint to download FST data as a text file.
+    """
+    return download_fst_data()
 
 
 @app.route('/download_tajima_d', methods=['GET'])

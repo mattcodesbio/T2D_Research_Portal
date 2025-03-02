@@ -1,190 +1,159 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}T2D SNP Database{% endblock %}</title>
+  <meta charset="UTF-8">
+  <!-- Ensure proper scaling on all devices -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}T2D SNP Database{% endblock %}</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #021854;
+      --secondary: #5a5ced;
+      --accent: #ec4899;
+      --light: #f8fafc;
+      --dark: #2d4177;
+    }
 
-    <!-- dd Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <style>
-        :root {
-             /* --primary: #021854;*/
-            --primary: #021854;
-            --secondary: #5a5ced;
-            --accent: #ec4899;
-            --light: #f8fafc;
-            --dark: #2d4177;
-        }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-        }
+    /* Use Merriweather as in your original aesthetic */
+    body {
+      font-family: 'Merriweather', serif;
+      color: #030000d1;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
 
-        /* body {
-            background: var(--light);
-            color: var(--dark);
-            line-height: 1.6;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        } */
+    /* Background image with overlay (unchanged) */
+    .background-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url("{{ url_for('static', filename='images/dna.jpg') }}") no-repeat center center/cover;
+      opacity: 0.7;
+      z-index: -1;
+    }
 
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Merriweather', serif;
-            color: #030000d1;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            position: relative;
-              /* overflow: hidden;*/
-        }
+    /* Header: removed any negative offsets and use a standard responsive flex layout */
+    header {
+      background: #021854;
+      opacity: 0.8;
+      padding: 1rem;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      animation: slideDown 0.5s ease;
+    }
 
-        /* Background Image with Overlay for Fading Effect */
-        .background-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url("{{ url_for('static', filename='images/dna.jpg') }}") no-repeat center center/cover;
-            opacity: 0.7;   /*Adjust for stronger or weaker fade */
-            z-index: -1;
-        }
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
 
+    .site-title {
+      color: white;
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      /* Instead of using fixed negative left margins, we let flex handle spacing */
+    }
 
-        /* Header with Title */
-        header {
-            background: #021854;
-            opacity: 0.8;
-            /* background: linear-gradient(135deg, var(--primary), var(--secondary));*/
-            padding: 1rem 0;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            animation: slideDown 0.5s ease;
-        }
+    nav {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
 
-        .header-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between; /* Ensures proper spacing between title and nav */
-        }
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      transition: all 0.3s ease;
+      font-size: 1.3rem;
+    }
 
-        .site-title {
-            color: white;
-            font-size: 2.5rem;
-            font-weight: 800;
-            letter-spacing: -0.010em;
-            margin-bottom: 0.5rem;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            text-align: left; /* Aligns text to the left */
-            margin-left: 0;
-            position: relative;
-            left: -335px;
-        }
+    nav a:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+    }
 
-        /* Navigation */
-        nav {
-            display: flex;
-            gap: 1.5rem;
-            padding: 0.5rem 0;
-            /* border-top: 1px solid rgba(255, 255, 255, 0.1); */
-            position: relative;
-            right: -280px;
-        }
+    @keyframes slideDown {
+      from { transform: translateY(-100%); }
+      to { transform: translateY(0); }
+    }
 
-        nav a {
-            color: white;
-            text-decoration: none;
-            font-weight: 500;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            transition: all 0.3s ease;
-            font-size: 1.3rem;
-        }
+    /* Responsive container for content */
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: rgb(225, 225, 225);
+      border-radius: 1rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      animation: fadeIn 0.5s ease;
+      opacity: 0.95;
+    }
 
-        nav a:hover {
-            background: rgba(255, 255, 255, 0.15);
-            transform: translateY(-2px);
-        }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
-        @keyframes slideDown {
-            from { transform: translateY(-100%); }
-            to { transform: translateY(0); }
-        }
-
-        /* Main Content Area */ 
-        .container {
-            flex: 1;
-            max-width: 50%;
-            margin: 2rem auto;  /* To the right hand side */
-            padding: 2rem;
-            background: rgb(225, 225, 225);
-            border-radius: 1rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            animation: fadeIn 0.5s ease;
-            opacity: 0.95;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Footer */
-        footer {
-            background: #021854;
-            /*background: var(--dark);*/
-            color: white;
-            text-align: center;
-            padding: 1.5rem;
-            margin-top: auto;
-            font-size: 0.9rem;
-            opacity: 0.7;
-        }
-    
-        
-    </style>
+    footer {
+      background: #021854;
+      color: white;
+      text-align: center;
+      padding: 1.5rem;
+      margin-top: auto;
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+  </style>
 </head>
-
 <body>
-    <div class="background-overlay"></div>  <!-- Faded Background -->
+  <div class="background-overlay"></div>
 
-    <header>
-        <div class="header-content">
-            <h1 class="site-title">
-                <span>Type 2 Diabetes (T2D)</span>
-                <br>
-                <span>Research Portal</span>
-            </h1>
-            <nav>
-                <a href="/">Home</a>
-                <a href="/about">About</a>
-            </nav>
-        </div>
-    </header>
-
-    <div class="container"> 
-        {% block content %}{% endblock %}
+  <header>
+    <div class="header-content">
+      <h1 class="site-title">
+        Type 2 Diabetes (T2D)<br>
+        Research Portal
+      </h1>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+      </nav>
     </div>
-    
-    <footer>
-        <p>&copy; 2025 T2D Project. All rights reserved.</p>
-    </footer>
+  </header>
 
-    <!-- Bootstrap JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
 
+  <footer>
+    <p>&copy; 2025 T2D Project by Kinetic Kudu. All rights reserved.</p>
+  </footer>
+
+  <!-- Bootstrap JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
