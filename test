@@ -1,5 +1,0 @@
-from main import app, db  # or however you import 'app' and 'db'
-
-with app.app_context():
-    db.session.execute("DROP TABLE IF EXISTS fstest;")
-    db.session.commit()
