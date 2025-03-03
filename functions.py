@@ -4,9 +4,8 @@ import requests
 import numpy as np
 import os
 from flask import jsonify, Response, request
-from sqlalchemy import func
-
-
+from sqlalchemy import func, text
+import bisect
 def get_snp_info(snp_id=None, chromosome=None, start=None, end=None, gene_name=None):
     """
     Retrieves SNP information from the SNP database based on the user's query.
@@ -54,6 +53,171 @@ def get_snp_info(snp_id=None, chromosome=None, start=None, end=None, gene_name=N
         })
     
     return results if results else None # Return results if found, else return None
+
+
+
+def get_tajima_d_snp_results(snp_chromosomes, snp_positions):
+    """
+    Retrieve Tajima's D results based on the user's SNP query in the home route.
+
+    This function queries the database for Tajima's D statistics within the specified 
+    SNP chromosome(s) and position range.
+
+    Parameters:
+    snp_chromosomes: A list of str containing the chromosome names where the SNPs are located.
+    snp_positions : A list of str containing the SNP positions on the chromosomes.
+
+    Returns:
+        A nested dictionary where:
+        - Keys are tuples of (chromosome, bin_start, bin_end).
+        - Values are dictionaries mapping population names to Tajima's D values.
+    """
+
+    # Query the database for Tajima's D statistics based on the SNP chromosome and position range
+    results = (
+        TajimaD.query
+        .filter(TajimaD.chromosome.in_(snp_chromosomes))
+        .filter(TajimaD.bin_start <= max(snp_positions))
+        .filter(TajimaD.bin_end >= min(snp_positions))
+        .all()
+    )
+
+    tajima_d_dict = {}
+    for tajima in results:
+        key = (tajima.chromosome, tajima.bin_start, tajima.bin_end)
+        if key not in tajima_d_dict:
+                tajima_d_dict[key] = {}
+        tajima_d_dict.setdefault(key, {})[tajima.population] = tajima.tajima_d
+
+    return tajima_d_dict
+
+
+def get_clr_snp_results(snp_chromosomes):
+    """
+    Retrieve CLR results based on the user's SNP query in the home route.
+
+    This function queries the database for CLR statistics based on SNP chromosome input.
+    It efficiently retrieves results by filtering for a range of chromosome values.
+
+    Parameters:
+    snp_chromosomes: A list of chromosome names or numbers for which CLR results are needed.
+
+    SQL Query:
+    - Optimised to retrieve CLR values from the indexed 'clr_results' table 
+        (CREATE INDEX idx_clr_chrom_pop_pos ON clr_results (chromosome, population, position))
+    - Uses SQL parameter binding to prevent injections. 
+
+    Returns:
+        A nested dictionary where:
+        - Keys are tuples of (chromosome, population).
+        - Values are dictionaries mapping population names to CLR and alpha values.
+    """
+    
+    # SQL query to retrieve relevant CLR data from the database
+    query = text("""
+        SELECT chromosome, population, position, clr, alpha
+        FROM clr_results
+        WHERE chromosome BETWEEN :chrom_min AND :chrom_max
+    """)
+
+    # Query parameters to filter chromosome range dynamically
+    params = {"chrom_min": min(snp_chromosomes), "chrom_max": max(snp_chromosomes)}
+    clr_results = db.session.execute(query, params).fetchall()
+
+    clr_dict = {}
+    for row in clr_results:
+            chrom, pop, pos, clr_value, alpha = row
+            if (chrom, pop) not in clr_dict:
+                clr_dict[(chrom, pop)] = {}
+            clr_dict[(chrom, pop)][pos] = {"clr": clr_value, "alpha": alpha}
+    return clr_dict
+
+
+def get_clr_closest_position(positions, snp_position):
+    """
+    Helper function for process_snp_results to efficiently search for the closest CLR position using binary search. 
+
+    Args:
+        positions (list[int]): A sorted list of CLR positions.
+        snp_position (int): The SNP position to find the closest CLR position for.
+
+    Returns:
+        int: The closest CLR position to `snp_position`.
+    """
+    # Find the insertion point for snp_position
+    idx = bisect.bisect_left(positions, snp_position)
+
+    # If snp_position is smaller than all positions, return the first position
+    if idx == 0:
+        return positions[0]
+    # If snp_position is larger than all positions, return the last position
+    if idx == len(positions):
+        return positions[-1]
+
+    # Get positions around the insertion point
+    left, right = positions[idx - 1], positions[idx]
+    return left if snp_position - left <= right - snp_position else right #faster for chr10 search ** pick one and delete
+    # return left if abs(left - snp_position) <= abs(right - snp_position) else right #faster for tcf7l2 search ** pick one and delete
+
+
+def process_snp_results(snps, tajima_d_dict, clr_dict):
+    """
+    Process SNPs and associate them with Tajima's D and CLR results in the home route.
+    
+    Args:
+        snps: A list of SNP dictionaries containing SNP information.
+        tajima_d_dict: A dictionary containing Tajima's D results.
+        clr_dict: A dictionary containing CLR results.
+
+    Returns:
+        list: A list of dictionaries aggregating all the information for each SNP.
+    """
+    
+    populations = ['BEB', 'GIH', 'ITU', 'PJL', 'STU']
+    snp_info = []
+
+    for snp in snps:
+        snp_position, snp_chrom = snp['grch38_start'], snp['chromosome']
+
+        # Fetch Tajima's D for this SNP
+        positive_selection = {
+            pop: {"tajima_d": tajima_d}
+            for (chrom, bin_start, bin_end), pop_data in tajima_d_dict.items()
+            if chrom == snp_chrom and bin_start <= snp_position <= bin_end
+            for pop, tajima_d in pop_data.items()
+        }
+
+        # Fetch CLR for this SNP
+        for pop in populations:
+            if (snp_chrom, pop) in clr_dict:
+                positions = sorted(clr_dict[(snp_chrom, pop)].keys())
+                if positions:
+                    closest_pos = get_clr_closest_position(positions, snp_position)
+                    if closest_pos is not None:
+                        positive_selection.setdefault(pop, {}).update(clr_dict[(snp_chrom, pop)][closest_pos])
+        
+        # Convert to list format for rendering
+        positive_selection_list = [
+            {"population": pop, **{k: data.get(k, "N/A") for k in ["tajima_d", "clr", "alpha"]}}
+            for pop, data in positive_selection.items()
+        ]
+
+        # Store SNP results
+        snp_info.append({
+            "snp_id": snp['snp_id'],
+            "chromosome": snp['chromosome'],
+            "grch38_start": snp['grch38_start'],
+            "gene_name": snp['gene_name'],
+            "p_value": snp['p_value'],
+            "reference_allele": snp['reference_allele'],
+            "alternative_allele": snp['alternative_allele'],
+            "positive_selection": positive_selection_list
+        })
+
+    return snp_info
+
+
+
 
 def get_tajima_d_data(chromosome, region=None, populations=None):
     """
@@ -192,21 +356,30 @@ def download_tajima_d_data():
     """
         
     # Extract parameters
-    chromosome = request.args.get("chromosome")
+    user_selected_chromosome = request.args.get("chromosome")
     gene_name = request.args.get("gene_name")  # Optional gene name
     start = request.args.get("start", type=int)
     end = request.args.get("end", type=int)
     populations = request.args.getlist("selected_population")  # List of selected populations
 
-    # If gene name is provided, fetch its genomic coordinates
+    # If gene name is provided and start/end not provided, fetch its genomic coordinates
     if gene_name and (start is None or end is None):
         gene_info = get_gene_coordinates_ensembl(gene_name)
         if gene_info:
+            # Validate that the gene is on the user-selected chromosome
+            if gene_info["chromosome"] != user_selected_chromosome:
+                return jsonify({
+                    "error": f"Gene '{gene_name}' is not located on the selected chromosome {user_selected_chromosome}"
+                }), 400
+            # Use gene coordinates
             chromosome = gene_info["chromosome"]
             start = gene_info["start"]
             end = gene_info["end"]
         else:
             return jsonify({"error": f"Gene '{gene_name}' not found in Ensembl"}), 400
+    else:
+        # No gene provided; use the user-selected chromosome
+        chromosome = user_selected_chromosome
 
     # Ensure start and end are valid numbers
     if start is None or end is None:
@@ -247,25 +420,32 @@ def download_tajima_d_data():
 def download_clr_data():
     """Generate a text file containing CLR statistics for a region."""
     # Extract parameters
-    chromosome = request.args.get("chromosome")
+    user_selected_chromosome = request.args.get("chromosome")
     gene_name = request.args.get("gene_name")  # Optional gene name
     start = request.args.get("start", type=int)
     end = request.args.get("end", type=int)
     populations = request.args.getlist("selected_population")
 
     # If gene name is provided, fetch its genomic coordinates
+
+    # If gene name is provided and start/end not provided, fetch its genomic coordinates
     if gene_name and (start is None or end is None):
         gene_info = get_gene_coordinates_ensembl(gene_name)
         if gene_info:
+            # Validate that the gene is on the user-selected chromosome
+            if gene_info["chromosome"] != user_selected_chromosome:
+                return jsonify({
+                    "error": f"Gene '{gene_name}' is not located on the selected chromosome {user_selected_chromosome}"
+                }), 400
+            # Use gene coordinates
             chromosome = gene_info["chromosome"]
             start = gene_info["start"]
             end = gene_info["end"]
         else:
             return jsonify({"error": f"Gene '{gene_name}' not found in Ensembl"}), 400
-
-    # Ensure start and end are valid numbers
-    if start is None or end is None:
-        return jsonify({"error": "Invalid region parameters. Must provide a valid start and end position or a gene name."}), 400
+    else:
+        # No gene provided; use the user-selected chromosome
+        chromosome = user_selected_chromosome
 
     # Fetch CLR data safely
     try:
@@ -300,7 +480,6 @@ def download_clr_data():
     response = Response("\n".join(file_content), mimetype="text/plain")
     response.headers["Content-Disposition"] = f"attachment; filename=CLR_chr{chromosome}_{start}_{end}.txt"
     return response
-
 
 def load_snps_from_csv(csv_file):
     """
@@ -826,7 +1005,7 @@ def download_fst_data():
     Returns:
         flask.Response: A text file with FST values for each SNP in the region and summary statistics.
     """
-    chromosome = request.args.get("chromosome")
+    user_selected_chromosome = request.args.get("chromosome")
     gene_name = request.args.get("gene_name")
     start = request.args.get("start", type=int)
     end = request.args.get("end", type=int)
@@ -836,11 +1015,20 @@ def download_fst_data():
     if gene_name and (start is None or end is None):
         gene_info = get_gene_coordinates_ensembl(gene_name)
         if gene_info:
+            # Validate that the gene is on the user-selected chromosome
+            if gene_info["chromosome"] != user_selected_chromosome:
+                return jsonify({
+                    "error": f"Gene '{gene_name}' is not located on the selected chromosome {user_selected_chromosome}"
+                }), 400
+            # Use gene coordinates
             chromosome = gene_info["chromosome"]
             start = gene_info["start"]
             end = gene_info["end"]
         else:
             return jsonify({"error": f"Gene '{gene_name}' not found in Ensembl"}), 400
+    else:
+        # No gene provided; use the user-selected chromosome
+        chromosome = user_selected_chromosome
     
     if start is None or end is None:
         return jsonify({"error": "Invalid region parameters. Must provide a valid start and end position or a gene name."}), 400
