@@ -254,18 +254,23 @@ def about():
 
 @app.route('/gene_terms/<gene_name>')
 def gene_terms(gene_name):
-  """
-    Fetches Gene Ontology (GO) terms for a given gene.
-
-    Parameters:
-        - gene_name: Gene name.
-
-    Returns:
-        - ontology.html with GO terms.
     """
-  go_terms = get_gene_ontology_terms(gene_name)
-  return render_template("ontology.html", gene_name=gene_name, go_terms=go_terms if go_terms else {})
+    Fetches Gene Ontology (GO) terms and Ensembl gene information for a given gene.
+    """
+    ensembl_info = get_gene_coordinates_ensembl(gene_name)
 
+    if not ensembl_info or "ensembl_id" not in ensembl_info:
+        return jsonify({"error": f"Gene '{gene_name}' not found in Ensembl"}), 400
+
+    # Fetch GO Terms
+    go_terms = get_gene_ontology_terms(gene_name)
+
+    return render_template(
+        "ontology.html",
+        gene_name=gene_name,
+        ensembl_info=ensembl_info,  # Use ensembl_info directly
+        go_terms=go_terms if go_terms else {}
+    )
 
 
 @app.route('/population')

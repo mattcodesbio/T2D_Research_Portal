@@ -6,8 +6,26 @@
 <div class="ontology-container">
     <div class="header-section">
         <button class="back-button" onclick="window.history.back()">← Back</button>
-        <h1 class="main-title">🧬 Ontology Terms for <span class="highlight">{{ gene_name }}</span></h1>
+        <h1 class="main-title">🧬 Gene Information for <span class="highlight">{{ gene_name }}</span></h1>
     </div>
+
+    {% if ensembl_info %}
+    <div class="ontology-category">
+        <h2>Gene Information</h2>
+        <ul>
+            <li><strong>Ensembl ID:</strong> {{ ensembl_info.ensembl_id }}</li>
+            <li><strong>Gene Name:</strong> {{ ensembl_info.name }}</li>
+            <li><strong>Biotype:</strong> {{ ensembl_info.biotype }}</li>
+            <li><strong>Chromosome:</strong> {{ ensembl_info.chromosome }}</li>
+            <li><strong>Start Position:</strong> {{ ensembl_info.start }}</li>
+            <li><strong>End Position:</strong> {{ ensembl_info.end }}</li>
+            <li><strong>Assembly:</strong> {{ ensembl_info.assembly_name }}</li>
+            <li><strong>Description:</strong> {{ ensembl_info.description }}</li>
+        </ul>
+    </div>
+    {% else %}
+        <p class="no-results">No gene information found.</p>
+    {% endif %}
 
     {% if go_terms %}
         <div class="ontology-sections">

@@ -826,38 +826,45 @@ def load_clr_results(directory):
 
 def get_gene_coordinates_ensembl(gene_name):
     """
-    Fetches the chromosome, start, and end position of a gene from the Ensembl database.
+    Fetches gene information from Ensembl, including Ensembl ID, chromosome, start/end position, biotype, and description.
 
     Args:
         gene_name (str): The name of the gene to query.
 
     Returns:
-        dict: A dictionary containing the chromosome, start, and end position of the gene, or None if the gene is not found.
+        dict: A dictionary containing the Ensembl gene ID, biotype, chromosome, start/end position, description, and assembly name.
+              Returns None if the gene is not found.
     """
         
-    # The URL for the Ensembl REST API     
+    # Step 1: Query Ensembl to retrieve the Ensembl Gene ID
     url = f"https://rest.ensembl.org/xrefs/symbol/homo_sapiens/{gene_name}?content-type=application/json"
     response = requests.get(url)
 
-    if response.status_code == 200: # Check if the request was successful
-        data = response.json() # Parse the JSON response
+    if response.status_code == 200:
+        data = response.json()
         if data:
             ensembl_gene_id = data[0]["id"]  # Extract Ensembl Gene ID
 
-            # Fetch gene location details using the Ensembl Gene ID
+            # Step 2: Fetch gene details using Ensembl Gene ID
             gene_url = f"https://rest.ensembl.org/lookup/id/{ensembl_gene_id}?content-type=application/json"
             gene_response = requests.get(gene_url)
 
-            if gene_response.status_code == 200: # Check if the request was successful
-                gene_data = gene_response.json() # Parse the JSON response
-                # Return the chromosome, start, and end position of the gene
+            if gene_response.status_code == 200:
+                gene_data = gene_response.json()
+                
+                # Return only the required fields
                 return {
-                    "chromosome": gene_data["seq_region_name"],
-                    "start": gene_data["start"],
-                    "end": gene_data["end"]
+                    "ensembl_id": ensembl_gene_id,
+                    "name": gene_data.get("display_name", "N/A"),
+                    "biotype": gene_data.get("biotype", "N/A"),
+                    "chromosome": gene_data.get("seq_region_name", "N/A"),
+                    "start": gene_data.get("start", "N/A"),
+                    "end": gene_data.get("end", "N/A"),
+                    "assembly_name": gene_data.get("assembly_name", "N/A"),
+                    "description": gene_data.get("description", "N/A")
                 }
     
-    return None  # Return None if gene is not found
+    return None  # Return None if the gene is not found
 
 
 def load_fst_snp_results(directory):
@@ -1202,3 +1209,51 @@ def download_fst_data():
 
 # print("Conversion complete. Results saved to converted_positions.csv")
 
+
+import pandas as pd
+# import requests
+# import time
+
+# # Function to convert GRCh37 position to GRCh38 using Ensembl API for FST_results.csv
+# # Note: This function uses the Ensembl REST API to convert positions from GRCh37 to GRCh38 make sure all column names are matching
+# # The function returns the GRCh38 start position if successful, otherwise None
+# def convert_grch37_to_grch38(chromosome, position):
+#     url = f"https://rest.ensembl.org/map/human/GRCh37/{chromosome}:{position}..{position}/GRCh38?"
+#     headers = {"Content-Type": "application/json"}
+    
+#     try:
+#         response = requests.get(url, headers=headers)
+#         if response.status_code == 200:
+#             data = response.json()
+#             if data.get("mappings"):
+#                 return data["mappings"][0]["mapped"]["start"]  # Return GRCh38 start position
+#         return None  # Return None if mapping fails
+#     except Exception as e:
+#         print(f"Error converting chr{chromosome}:{position} - {str(e)}")
+#         return None
+
+# # Load the CSV file
+# df = pd.read_csv("FST_results.csv")
+
+# # Convert positions and update the DataFrame
+# grch38_positions = []
+# total_snps = len(df)
+
+# for index, row in df.iterrows():
+#     chrom = row["Chromosome"]  # Ensure column name matches (case-sensitive)
+#     pos = row["Position"]
+    
+#     new_pos = convert_grch37_to_grch38(chrom, pos)
+#     grch38_positions.append(new_pos if new_pos is not None else pos)  # Fallback to original if conversion fails
+    
+#     # Progress tracking
+#     print(f"Processed SNP {index + 1}/{total_snps}: {row['SNP']} -> {new_pos}")
+    
+#     time.sleep(0.2)  # Avoid API rate limits
+
+# # Replace the Position column with GRCh38 coordinates
+# df["Position"] = grch38_positions
+
+# # Save to new CSV
+# df.to_csv("FST_results_GRCh38.csv", index=False)
+# print("Conversion complete. Updated data saved to FST_results_GRCh38.csv")

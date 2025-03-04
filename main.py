@@ -31,7 +31,7 @@ if __name__ == '__main__':
         # Uncomment the following lines and add path if you want to add further SNP, Tajima's D, CLR or FST data into the database
         #load_snps_from_csv(r"/path/to/file/e.g/csv")
         #load_tajima_d_results(r"/path/to/file/e.g/.Tajima.D")
-        #load_fst_snp_results(r"path/to/fst_data_as_csv")
+        #load_fst_snp_results(r"C:\path\to\file\e.g\FstSNP.csv")
         #load_clr_results(r"/path/to/file/e.g/chrx_results")
        
     app.run(debug=False) # Runs the Flask application
