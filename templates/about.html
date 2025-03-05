@@ -4,50 +4,77 @@
 
 {% block content %}
 <div class="container">
+    <!-- Header -->
     <div class="about-header">
         <h1>🩸 About Type 2 Diabetes Research Portal</h1>
         <p class="subtitle">Exploring Single Nucleotide Polymorphisms (SNPs) among South Asian Populations</p>
     </div>
 
     <div class="about-card">
-        <!--<h2>🧬 About This Project</h2>-->
         <div class="about-content">
+            <!-- Overview -->
             <div class="about-section">
                 <h3>Project Overview</h3>
                 <p>This web application analyzes genetic variants associated with Type 2 Diabetes (T2D) prevalence in South Asian populations. Our platform integrates genomic data with clinical insights to identify potential genetic risk factors. Users can explore these genetic variants, their frequencies and significance across South Asian (SAS) subpopulations.</p>
-            </div>
+            </div><br>
 
+            <!-- T2D Background -->
             <div class="about-section">
                 <h3>Scientific Background</h3>
                 <p>Type 2 diabetes (T2D) affects over 463 million people globally, with South Asians facing higher prevalence rates. While environmental factors are important, genetic susceptibility also contributes.
                     Recent studies show that certain genetic variants are more prevalent in South Asian populations, suggesting a greater risk of developing the disease. </p>
-                
-            </div>
+            </div><br>
 
+            <!-- Statistics Section -->
+            <div class="about-section">
+                <h3>Summary Statistics</h3>
+                <div class="analysis-grid">
+                    <div class="analysis-card">
+                        <div class="analysis-icon">📕</div>
+                        <h4> Tajima's D</h4><br>
+                        <p> It compares two measures of genetic diversity: the number of segregating sites (mutations) and the average number of pairwise nucleotide differences (π). It assists in locating genetic areas that are subject to evolutionary pressures, such as those connected to conditions like T2D. </p>
+                    </div>
+                    <div class="analysis-card">
+                        <div class="analysis-icon">📗</div>
+                        <h4>Composite Likelihood Ration (CLR)</h4><br>
+                        <p> It compares, under various models, the likelihood of observed genetic data. CLR is useful for identifying selective genomic sweeps—regions that have undergone recent positive selection. </p>
+                    </div>
+                    <div class="analysis-card">
+                        <div class="analysis-icon">📙</div>
+                        <h4>Fixation Idex (FST)</h4><br>
+                        <p> It measures population differentiation due to genetic structure. High FST values suggest strong genetic differentiation due to evolutionary pressures like genetic drift. It is used widely used to study evolutionary history. </p>
+                    </div>
+                </div>
+            </div><br>
+
+            <!-- Feature Section -->
             <div class="about-section">
                 <h3>Key Features</h3>
                 <div class="feature-grid">
                     <div class="feature-card">
                         <div class="feature-icon">🌱</div>
-                        <h4> SNPs Search</h4>
+                        <h4> SNPs Search</h4><br>
                         <p>Advanced search across SNPs, genes, and genomic regions</p>
                     </div>
                     <div class="feature-card">
                         <div class="feature-icon">📊</div>
-                        <h4>Data Visualization</h4>
+                        <h4>Data Visualization</h4><br>
                         <p> Interpreting genetic variations by utilising plots, charts and maps to display T2D-associated SNPs </p>
                     </div>
                     <div class="feature-card">
                         <div class="feature-icon">📜</div>
-                        <h4>Gene Ontology</h4>
+                        <h4>Gene Ontology</h4><br>
                         <p> Understanding genes functions in biological processes, molecular functions, and cellular components</p>
                     </div>
                 </div>
-            </div>
+            </div><br>
 
+            <!-- Reference Section -->
             <div class="about-section">
                 <h3>Reference</h3>
-                <p>This platform provides data retrieved from the 1000 Genomes Project, Ensembl and Gene Ontology databases.</p>
+                <p>This platform provides data retrieved from the 1000 Genomes Project, Ensembl and Gene Ontology databases.
+                    For further information refer to the documentation.
+                </p>
             </div>
         </div>
     </div>
@@ -92,16 +119,19 @@
 
     .about-section p{
         text-align: justify;
+        font-size: 22px;
     }
 
-    .feature-grid {
+    .feature-grid,
+    .analysis-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         gap: 1.5rem;
         margin-top: 1.5rem;
     }
 
-    .feature-card {
+    .feature-card,
+    .analysis-card {
         background: var(--light);
         padding: 1.5rem;
         border-radius: 1rem;
@@ -109,12 +139,14 @@
         transition: transform 0.2s ease;
     }
 
-    .feature-card:hover {
+    .feature-card:hover, 
+    .analysis-card:hover {
         transform: translateY(-5px);
     }
 
-    .feature-icon {
-        font-size: 2rem;
+    .feature-icon, 
+    .analysis-icon {
+        font-size: 3rem;
         margin-bottom: 1rem;
     }
 

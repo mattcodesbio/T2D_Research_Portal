@@ -9,84 +9,85 @@
     <button class="back-button" onclick="window.history.back()">← Back to Search</button>
     <div class="header-content">
       <h2 class="results-title">📊 Search Results</h2>
-      <a href="{{ url_for('population') }}" class="population-info-btn">🌍 Population Information</a>
+      <!-- Toggle Button for Analysis Control Card -->
+      <button class="analysis-toggle-btn" onclick="toggleAnalysisControl()">Analyse Positive Stats</button>
     </div>
     {% if snp_info %}
       <p class="result-count">{{ snp_info|length }} variant{% if snp_info|length != 1 %}s{% endif %} found</p>
     {% endif %}
   </div>
 
-  <!-- Analysis Control Card -->
-  <div class="analysis-card">
-    <div class="card-header">
-      <h3>Population Analysis Parameters</h3>
-      <p class="subheader">Select parameters for detailed population analysis</p>
-    </div>
-    <form method="POST" action="{{ url_for('population_analysis') }}" class="analysis-form">
-      <div class="form-grid">
-        <!-- Population Selection (multiple select) -->
-        <div class="form-group">
-          <label for="selected_population" class="form-label">
-            <i class="bi bi-people-fill"></i> Select Population(s)
-          </label>
-          <select name="selected_population" id="selected_population" class="form-control" multiple size="3">
-            <option value="BEB">BEB (Bangladesh)</option>
-            <option value="GIH">GIH (Gujarati Indian)</option>
-            <option value="ITU">ITU (Indian Telugu)</option>
-            <option value="PJL">PJL (Punjabi Pakistani)</option>
-            <option value="STU">STU (Sri Lankan Tamil)</option>
-          </select>
-          <small class="form-text">Hold Ctrl (or Cmd on Mac) to select multiple</small>
-        </div>
+  <!-- Population Analysis Control Card (initially hidden) -->
+  <div id="analysis-card-container" style="display:none;">
+    <div class="analysis-card">
+      <div class="card-header">
+        <h3>Population Analysis Parameters</h3>
+        <p class="subheader">Select parameters for detailed population analysis</p>
+      </div>
+      <form method="POST" action="{{ url_for('population_analysis') }}" class="analysis-form">
+        <div class="form-grid">
+          <!-- Population Selection (multiple select) -->
+          <div class="form-group">
+            <label for="selected_population" class="form-label">
+              <i class="bi bi-people-fill"></i> Select Population(s)
+            </label>
+            <select name="selected_population" id="selected_population" class="form-control" multiple size="3">
+              <option value="BEB">BEB (Bangladesh)</option>
+              <option value="GIH">GIH (Gujarati Indian)</option>
+              <option value="ITU">ITU (Indian Telugu)</option>
+              <option value="PJL">PJL (Punjabi Pakistani)</option>
+              <option value="STU">STU (Sri Lankan Tamil)</option>
+            </select>
+            <small class="form-text">Hold Ctrl (or Cmd on Mac) to select multiple</small>
+          </div>
 
-        <!-- Chromosome Selection -->
-        <div class="form-group">
-          <label for="selected_chromosome" class="form-label">
-            <i class="bi bi-diagram-3-fill"></i> Select Chromosome
-          </label>
-          <select name="selected_chromosome" id="selected_chromosome" class="form-control" required>
-            <option value="" disabled selected>Choose chromosome...</option>
-            <option value="2">Chromosome 2</option>
-            <option value="3">Chromosome 3</option>
-            <option value="6">Chromosome 6</option>
-            <option value="8">Chromosome 8</option>
-            <option value="10">Chromosome 10</option>
-            <option value="11">Chromosome 11</option>
-            <option value="20">Chromosome 20</option>
-          </select>
+          <!-- Chromosome Selection -->
+          <div class="form-group">
+            <label for="selected_chromosome" class="form-label">
+              <i class="bi bi-diagram-3-fill"></i> Select Chromosome
+            </label>
+            <select name="selected_chromosome" id="selected_chromosome" class="form-control" required>
+              <option value="" disabled selected>Choose chromosome...</option>
+              <option value="2">Chromosome 2</option>
+              <option value="3">Chromosome 3</option>
+              <option value="6">Chromosome 6</option>
+              <option value="8">Chromosome 8</option>
+              <option value="10">Chromosome 10</option>
+              <option value="11">Chromosome 11</option>
+              <option value="20">Chromosome 20</option>
+            </select>
+          </div>
         </div>
-      </div>
-      <!-- Analysis Button -->
-      <div class="form-footer">
-        <button type="submit" class="analysis-btn">
-          <i class="bi bi-graph-up"></i> Run Population Analysis
-        </button>
-      </div>
-    </form>
+        <!-- Analysis Button -->
+        <div class="form-footer">
+          <button type="submit" class="analysis-btn">
+            <i class="bi bi-graph-up"></i> Run Population Analysis
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
-  <!-- SNP Results Table -->
+  <!-- SNP Results Table or Error Message -->
   {% if snp_info %}
   <div class="table-container">
     <table class="modern-table">
       <thead>
         <tr>
-          <th>Select</th>
           <th>SNP ID</th>
           <th>Chromosome</th>
           <th>Position</th>
           <th>Gene</th>
           <th>Alleles (Ref:Alt)</th>
           <th>p-value</th>
-          <th>Selection Stats</th>
+          <th>Positive Selection Stats</th>
         </tr>
       </thead>
       <tbody>
         {% for snp in snp_info %}
         <tr>
-          <td><input type="checkbox" name="selected_snps" value="{{ snp.snp_id }}"></td>
           <td>{{ snp.snp_id }}</td>
-          <td>Chr{{ snp.chromosome }}</td>
+          <td>{{ snp.chromosome }}</td>
           <td>{{ snp.grch38_start }}</td>
           <td>
             {% if snp.gene_name and snp.gene_name != "No Mapped Gene" %}
@@ -138,6 +139,10 @@
       </tbody>
     </table>
   </div>
+  {% else %}
+  <div class="alert alert-danger" role="alert">
+    No SNP results found. Please try a different query.
+  </div>
   {% endif %}
 </div>
 
@@ -180,7 +185,7 @@
     background-color: #f1f5f9;
     border-radius: 0.5rem;
   }
-  /* Analysis Card */
+  /* Analysis Card Styles */
   .analysis-card {
     background: white;
     border-radius: 12px;
@@ -270,6 +275,19 @@
   }
   .analysis-btn i {
     font-size: 1.1rem;
+  }
+  .analysis-toggle-btn {
+    background-color: #4f46e5;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  .analysis-toggle-btn:hover {
+    background-color: #373f68;
   }
   .population-info-btn {
     background-color: #f8f9fa;
@@ -361,6 +379,16 @@
       dropdown.style.display = "table-row";
     } else {
       dropdown.style.display = "none";
+    }
+  }
+
+  // JavaScript function to toggle the analysis control card display
+  function toggleAnalysisControl() {
+    var controlCard = document.getElementById("analysis-card-container");
+    if (controlCard.style.display === "none" || controlCard.style.display === "") {
+      controlCard.style.display = "block";
+    } else {
+      controlCard.style.display = "none";
     }
   }
 </script>

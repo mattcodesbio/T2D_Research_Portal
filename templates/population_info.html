@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block title %}Population Information{% endblock %}
-
+    
 {% block header %}Descriptive Information of Population Geographical Sampling Location{% endblock %}
 
 {% block content %}
@@ -23,32 +23,18 @@
             <div id="map"></div>
         </div>
 
+        <!-- Graph and descritption -->
         <div class="graph-population-container">
             <h3 class="population-title">Historical Population Dynamics of South Asian Populations</h3>
             <div class="population-card">
                 <img src="{{ url_for('static', filename='images/population_plot.png') }}" alt="Population Graph">
                 <p class="population-description">
                     The graph illustrates changes in the effective population size of South Asian populations (BEB, STU, PJL, ITU, GIH) over generations, on a logarithmic scale. Historical population bottlenecks, leads to stronger genetic drift with declines in genetic diversity in small population. However, as the population sizes recovered and expanded, the positive selection has had played a dominant role, retaining the beneficial traits related to environmental adaptations, glucose metabolism and energy storage. This might have historically supported the survival of south asian populations in environments with fluctuating availability of food. However, in present-day sedentary way of life, these historically beneficial traits may predispose to disease susceptibility; “thrifty genotype hypothesis”. 
-                    The variations in effective population size, across South Asian groups, suggest that genetic pressures, as genetic drift effect, may have influenced their genetic susceptibility to Type 2 Diabetes. Read more
+                    The variations in effective population size, across South Asian groups, suggest that genetic pressures, as genetic drift effect, may have influenced their genetic susceptibility to Type 2 Diabetes. Data info
                     <a href="https://zenodo.org/records/3234689" target="_blank">here</a>
                 </p>
             </div>
         </div>
-            <!-- Display SNPs dynamically -->
-            <!--<div class="snp-container">
-                <h3> SNP Information </h3>
-                {% for snp in snps %}
-                    <div class="snp-card">
-                        <h4>{{ snp.gene_name if snp.gene_name else "Gene Name Not Available" }}</h4>
-                        <p><strong>Chromosome:</strong> {{ snp.chromosome }}</p>
-                        <p><strong>Start Position:</strong> {{ snp.grch38_start }}</p>
-                        <p><strong>Reference Allele:</strong> {{ snp.reference_allele }}</p>
-                        <p><strong>Alternative Allele:</strong> {{ snp.alternative_allele }}</p>
-                        <p><strong>P-Value:</strong> {{ snp.p_value }}</p>
-                        <p><strong>Consequence:</strong> {{ snp.consequence }}</p>
-                    </div>
-                {% endfor %}
-            </div> -->
     </div>
 
 <!-- Leaflet JS and CSS -->
@@ -67,7 +53,7 @@
 
     .pop-container {
         width: 100%;  /* Ensures both are the same width */
-        max-width: 1000px;
+        max-width: 100%;
         margin: 20px auto;
         background: #f9f9f9;
         border-radius: 8px;
@@ -80,8 +66,8 @@
     }
 
     .main-title {
-        color: #333;
-        font-size: 1.5rem;
+        color: var(--primary);
+        font-size: 1.8rem;
         margin-bottom: 1rem;
         text-align: left;
     }
@@ -89,7 +75,7 @@
     .back-button {
         background: none;
         border: none;
-        color: #1820f8;
+        color: #4f46e5;
         padding: 0.5rem 1rem;
         margin-bottom: 1rem;
         cursor: pointer;
@@ -97,16 +83,15 @@
     }
 
     .back-button:hover {
-        background-color: #f1f5f9;
-        border-radius: 0.5rem;
+        color: #3a32dd;
+        cursor: pointer;
     }
 
     .map-container {
         width: 100%;
         padding: 20px;
-        background-color: #f9f9f9;  /* Light background for contrast */
-        border-radius: 8px;  /* Rounded corners for the container */
-        /*box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);  /* Subtle shadow */
+        background-color: #f9f9f9;  
+        border-radius: 8px;  
     }
 
     .map-title {
@@ -131,52 +116,6 @@
         box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
     }
 
-    /*.cards-container {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr); /* 3 columns 
-        gap: 20px; /* Space between cards 
-        justify-content: center;
-        margin: 20px 0;
-    }
-
-    .card {
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-        padding: 20px;
-        width: 250px;
-        text-align: left;
-    }
-
-    .top-cards {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr); /* 3 cards in a row 
-        gap: 20px;
-        justify-content: center;
-        margin: 20px 0;
-    } 
-
-    .bottom-cards {
-        display: flex;
-        justify-content: center;
-        margin-top: 20px;
-        gap: 20px;
-    }
-
-    .card h3 {
-        margin-bottom: 1rem;
-        color: black;
-        font-size: 1.2rem;
-        text-align: center;
-    }
-
-    .card p {
-        margin: 5px 0;
-        color: black;
-        font-size: 1.1rem;
-        text-align: left;
-    }*/
-
     .population-title {
         font-size: 19px;
         font-weight: bold;
@@ -184,16 +123,15 @@
         margin-bottom: 15px;
         margin-top: 15px;
         letter-spacing: 0.03em;
-        color: #022d6e; /* Darker shade for better contrast */
+        color: #022d6e; 
     }
 
     .graph-population-container {
-        max-width: 1000px; /* Controls overall width */
-        margin: auto; /* Centers the container */
+        max-width: 1000px; 
+        margin: auto; 
         padding: 20px;
-        background: #f9f9f9; /* Light gray background */
-        border-radius: 10px; /* Soft rounded edges */
-        /*box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow effect */
+        background: #f9f9f9; 
+        border-radius: 10px; 
         text-align: center;
         margin-top: 30px;
     }
@@ -206,8 +144,8 @@
     }
 
     .population-card img {
-        width: 100%; /* Makes image responsive */
-        max-width: 1000px; /* Limits image size for better readability */
+        width: 100%; 
+        max-width: 1000px; 
         display: block;
         margin: auto;
     }
@@ -215,9 +153,44 @@
     .population-description {
         font-size: 16px;
         color: #333;
-        max-width: 100%; /* Keeps text contained for better readability */
+        max-width: 100%; 
         line-height: 1.5;
         text-align: justify;
+    }
+
+    /* Responsive Design for Small Screens */
+    @media (max-width: 768px) {
+        .main-title {
+            font-size: 1.2rem; /* Smaller font size for small screens */
+        }
+
+        .map-title, .population-title {
+            font-size: 16px; /* Smaller font size for titles */
+        }
+
+        .spaced-text, .population-description {
+            font-size: 14px; /* Smaller font size for text */
+        }
+
+        #map {
+            height: 400px; /* Reduce map height for small screens */
+        }
+
+        .pop-container {
+            padding: 10px; /* Reduce padding for small screens */
+        }
+
+        .graph-population-container {
+            padding: 10px; /* Reduce padding for small screens */
+        }
+
+        .population-card img {
+            max-width: 100%; /* Ensure image fits within the screen */
+        }
+
+        .population-card {
+            gap: 10px; /* Reduce gap between image and text */
+        }
     }
 </style>
 

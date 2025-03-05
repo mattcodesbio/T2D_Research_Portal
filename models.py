@@ -25,6 +25,8 @@ class SNP(db.Model):
     alternative_allele = db.Column(db.String(10), nullable=True)  # Alternative Allele
     consequence = db.Column(db.String(50), nullable=True)  # Variant consequence
 
+    fst_results = db.relationship('FstSNP', backref='snp', lazy=True)
+
     def __repr__(self):
         return f"<SNP {self.snp_id}, Chromosome {self.chromosome}, Position {self.grch38_start}>"
 
@@ -51,7 +53,7 @@ class TajimaD(db.Model):
 class FstSNP(db.Model):
     __tablename__ = 'fst_snp'
     id = db.Column(db.Integer, primary_key=True)
-    snp_id = db.Column(db.String(20), nullable=False, index = True)
+    snp_id = db.Column(db.String(20),db.ForeignKey('snps.snp_id'), nullable=False, index = True)
     gene = db.Column(db.String(50), nullable=False, index = True)
     chromosome = db.Column(db.String(5), nullable=True, index = True)
     position = db.Column(db.Integer, nullable=True, index = True)  # Fixed line

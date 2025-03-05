@@ -126,14 +126,18 @@ def population_analysis():
     # Fetch CLR data for the selected chromosome and populations
     clr_data, _ = get_clr_data(selected_chromosome, None, selected_populations)
 
+    # Fetch FST data for the selected chromosome and populations
+    fst_data, fst_summary_stats = get_fst_data(selected_chromosome, None, selected_populations)
+
     return render_template(
-            'population_analysis.html',
-            tajima_d_data=json.dumps(tajima_d_data, indent=2),  # Ensure JSON is correctly formatted
-            t2d_snp_data=json.dumps(t2d_snp_data, indent=2),
-            clr_data=json.dumps(clr_data, indent=2),
-            selected_population_info=selected_population_info,
-            selected_chromosome=selected_chromosome
-        )
+        'population_analysis.html',
+        selected_population_info=selected_population_info,
+        tajima_d_data=json.dumps(tajima_d_data, indent=2),
+        t2d_snp_data=json.dumps(t2d_snp_data, indent=2),
+        clr_data=json.dumps(clr_data, indent=2),
+        fst_data=json.dumps(fst_data, indent=2),
+        selected_chromosome=selected_chromosome
+    )
 
 
 
