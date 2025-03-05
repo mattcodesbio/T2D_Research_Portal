@@ -51,6 +51,9 @@ class TajimaD(db.Model):
 
 
 class FstSNP(db.Model):
+    """
+    Stores FST statistics of the SNP positions for the different populations. 
+    """
     __tablename__ = 'fst_snp'
     id = db.Column(db.Integer, primary_key=True)
     snp_id = db.Column(db.String(20),db.ForeignKey('snps.snp_id'), nullable=False, index = True)
