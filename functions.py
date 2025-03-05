@@ -418,7 +418,27 @@ def download_tajima_d_data():
     return response
 
 def download_clr_data():
-    """Generate a text file containing CLR statistics for a region."""
+    """
+    Generates a text file containing CLR (Composite Likelihood Ratio) statistics for a specified genomic region.
+
+    This function retrieves CLR statistics for a given chromosome and region, optionally filtered by population. 
+    The user can specify the region using explicit start and end coordinates or by providing a gene name, 
+    in which case the function fetches the corresponding coordinates from Ensembl. The function generates 
+    a plain text file containing CLR values along with summary statistics (mean and standard deviation) for 
+    each selected population.
+
+    Request Parameters:
+        chromosome (str): Chromosome (e.g., "10").
+        gene_name (str, optional): Gene name to define the region.
+        start (int, optional): Start position of the genomic region.
+        end (int, optional): End position of the genomic region.
+        selected_population (list, optional): List of populations to include.
+
+    Returns:
+        flask.Response: A Flask Response object containing the plain text file with CLR data.
+                        If an error occurs (e.g., missing parameters, gene not found, data retrieval failure), 
+                        returns a JSON error message with an appropriate HTTP status code.
+    """
     # Extract parameters
     user_selected_chromosome = request.args.get("chromosome")
     gene_name = request.args.get("gene_name")  # Optional gene name
