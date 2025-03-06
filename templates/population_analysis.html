@@ -144,7 +144,7 @@
         y: tajimaValues,
         mode: 'lines',
         name: `Tajima's D - ${pop}`,
-        line: { color: "blue" }
+        line: { color: "blue", size: 6 }
       }];
 
       if (showT2D) {
@@ -216,7 +216,7 @@
           mode: 'markers',
           text: t2dSnps.map(snp => snp.snp_id),
           textposition: "top center",
-          marker: { color: 'red', size: 10 },
+          marker: { color: 'red', size: 6 },
           name: 'T2D SNPs'
         };
         clrTraces.push(t2dSnpTrace);

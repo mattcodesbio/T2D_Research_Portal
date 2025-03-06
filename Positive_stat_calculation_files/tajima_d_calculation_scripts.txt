@@ -1,0 +1,215 @@
+###### download_vcf.sh #####
+###### Downloading 1000 genome vcf files from ensemble ftp ######
+
+#!/bin/bash
+#$ -cwd
+#$ -pe smp 1
+#$ -l h_rt=2:0:0
+#$ -l h_vmem=2G
+#$ -N vcf_download
+
+# Directory to save files
+VCF_DIR="/path/to/vcf_dir"
+mkdir -p "$VCF_DIR"
+
+# Chromosomes to download
+CHROMOSOMES=(2, 3, 6, 8, 9, 10, 11, 20)
+
+# FTP Base URL (Updated for the latest dataset)
+BASE_URL="ftp://ftp.ensembl.org/pub/data_files/homo_sapiens/GRCh38/variation_genotype"
+
+# Loop through each chromosome
+for CHR in "${CHROMOSOMES[@]}"; do
+    FILE="ALL.chr${CHR}_GRCh38.genotypes.20170504.vcf.gz"
+    INDEX="${FILE}.tbi"
+
+    # Download VCF file
+    echo "Downloading ${FILE}..."
+    curl -o "${VCF_DIR}/${FILE}" "${BASE_URL}/${FILE}" || echo "Download failed for ${FILE}"
+    
+    # Download index file
+    echo "Downloading ${INDEX}..."
+    curl -o "${VCF_DIR}/${INDEX}" "${BASE_URL}/${INDEX}" || echo "Download failed for ${INDEX}"
+done
+
+echo "Download complete!"
+
+
+
+###### split.vcf.sh #####
+###### Split the VCFs into the populations of interest ######
+
+
+#!/bin/bash
+#$ -cwd
+#$ -pe smp 6  # Use 4 CPU cores
+#$ -l h_rt=5:0:0  # Set a runtime limit of 5 hours
+#$ -l h_vmem=8G  # Request 8GB RAM
+#$ -N split_vcfs
+
+# Load required modules (if needed on Apocrita)
+module load bcftools  # Uncomment if bcftools needs to be loaded
+
+# Set the base directory
+VCF_DIR="/path/to/vcf_dir"
+POPULATION_DIR="${VCF_DIR}/population_vcfs"
+SAMPLES_DIR="${VCF_DIR}/population_samples"
+
+# Create the output directory if it doesn't exist
+mkdir -p "$POPULATION_DIR"
+
+# List of chromosomes and populations
+CHROMOSOMES=(2, 3, 6, 8, 9, 10, 11, 20)
+POPULATIONS=("BEB" "GIH" "ITU" "PJL" "STU")
+
+# Loop through each chromosome and population
+for CHR in "${CHROMOSOMES[@]}"; do
+    VCF_FILE="${VCF_DIR}/chromosomes_vcfs/ALL.chr${CHR}_GRCh38.genotypes.20170504.vcf.gz"
+
+    if [[ -f "$VCF_FILE" ]]; then
+        for POP in "${POPULATIONS[@]}"; do
+            SAMPLE_FILE="${SAMPLES_DIR}/${POP}_samples.txt"
+            OUTPUT_FILE="${POPULATION_DIR}/${POP}_chr${CHR}.vcf.gz"
+
+            if [[ -f "$SAMPLE_FILE" ]]; then
+                echo "Processing $VCF_FILE for $POP..."
+                
+                # Use bcftools to extract the samples
+                bcftools view -S "$SAMPLE_FILE" --force-samples -Oz -o "$OUTPUT_FILE" "$VCF_FILE"
+                
+                # Index the new population-specific VCF
+                bcftools index "$OUTPUT_FILE"
+                
+                echo "Created $OUTPUT_FILE"
+            else
+                echo "Sample file for $POP not found: $SAMPLE_FILE"
+            fi
+        done
+    else
+        echo "VCF file not found: $VCF_FILE"
+    fi
+done
+
+echo "VCF splitting completed!"
+
+##### update_vcf ######
+##### Update the AF,AC,AN,NS in the new population vcfs ######
+
+#!/bin/bash
+#$ -cwd
+#$ -pe smp 6
+#$ -l h_rt=3:0:0
+#$ -l h_vmem=4G
+#$ -N pop_freq_calc
+
+# Exit immediately if any command fails
+set -e
+
+# Load bcftools module (ensure it's available)
+module load bcftools
+
+VCF_DIR="/path/to/vcf_dir/population_vcfs"
+OUT_DIR="/path/to/vcf_dir/population_frequencies"
+UPDATED_VCF_DIR="/path/to/vcf_dir/updated_vcfs"
+
+# Create output directories
+mkdir -p "$OUT_DIR"
+mkdir -p "$UPDATED_VCF_DIR"
+
+# List of populations
+POPULATIONS=("BEB" "GIH" "ITU" "PJL" "STU")
+
+# List of chromosomes
+CHROMOSOMES=(2, 3, 6, 8, 9, 10, 11, 20)
+
+# Loop through each population and chromosome
+for POP in "${POPULATIONS[@]}"; do
+    for CHR in "${CHROMOSOMES[@]}"; do
+        VCF_FILE="${VCF_DIR}/${POP}_chr${CHR}.vcf.gz"
+        OUT_FILE="${OUT_DIR}/${POP}_chr${CHR}_freq.txt"
+        UPDATED_VCF="${UPDATED_VCF_DIR}/${POP}_chr${CHR}_updated.vcf.gz"
+
+        # Check if VCF file exists
+        if [[ ! -f "$VCF_FILE" ]]; then
+            echo "VCF file not found: $VCF_FILE"
+            continue
+        fi
+
+        echo "Processing $VCF_FILE..."
+
+        # Compute allele frequencies, allele count, sample count, and update the VCF file
+        if ! bcftools +fill-tags "$VCF_FILE" -- -t AF,AC,AN,NS | \
+            bcftools annotate -Oz -o "$UPDATED_VCF"; then
+            echo "Error: Failed to process $VCF_FILE"
+            continue
+        fi
+
+        # Index the updated VCF
+        bcftools index "$UPDATED_VCF"
+
+        echo "Updated VCF saved to: $UPDATED_VCF"
+    done
+done
+
+echo "Allele frequency calculation and VCF update completed!"
+
+###### calculate_tajimad.sh ######
+###### calculate Tajima D with 10kb window using the updated popualtion vcfs ######
+
+#!/bin/bash
+#$ -cwd
+#$ -pe smp 6
+#$ -l h_rt=3:0:0
+#$ -l h_vmem=8G
+#$ -N tajima_d_calc
+
+# Load necessary modules
+module load vcftools
+module load bcftools  # Required for indexing VCF files
+
+# Define directories
+VCF_DIR="/path/to/vcf_dir/updated_vcfs"
+OUT_DIR="/path/to/vcf_dir/tajima_d_10kb_results"
+
+# Create output directory if it doesn't exist
+mkdir -p "$OUT_DIR"
+
+# List of populations
+POPULATIONS=("BEB" "GIH" "ITU" "PJL" "STU")
+
+# List of chromosomes
+CHROMOSOMES=(2, 3, 6, 8, 9, 10, 11, 20)
+
+# Define window size
+WINDOW_SIZE=10000  #10kb
+
+# Loop through each population and chromosome
+for POP in "${POPULATIONS[@]}"; do
+    for CHR in "${CHROMOSOMES[@]}"; do
+        VCF_FILE="${VCF_DIR}/${POP}_chr${CHR}_updated.vcf.gz"
+        OUT_PREFIX="${OUT_DIR}/${POP}_chr${CHR}_10kb"
+
+        # Check if VCF file exists
+        if [[ ! -f "$VCF_FILE" ]]; then
+            echo "ERROR: VCF file not found: $VCF_FILE" >&2
+            continue
+        fi
+
+        # Ensure the VCF file is indexed
+        if [[ ! -f "${VCF_FILE}.tbi" ]]; then
+            echo "Indexing VCF file: $VCF_FILE..."
+            bcftools index "$VCF_FILE"
+        fi
+
+        echo "Processing Tajima's D for ${POP} - Chromosome ${CHR}..."
+
+        # Compute Tajima's D
+        vcftools --gzvcf "$VCF_FILE" \
+                 --TajimaD $WINDOW_SIZE =-0
+                 --out "$OUT_PREFIX"
+
+        echo "Tajima's D results saved in: ${OUT_PREFIX}_Tajima.D"
+    done
+done
+
+echo " Tajima's D calculation completed!"

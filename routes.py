@@ -301,6 +301,7 @@ def gene_terms(gene_name):
     Fetches Gene Ontology (GO) terms and Ensembl gene information for a given gene.
     """
 
+    
     chromosome = request.args.get("chromosome")  # Get chromosome from URL parameters
     position = request.args.get("position", type=int)
     rsID = request.args.get("rsID")
@@ -310,7 +311,7 @@ def gene_terms(gene_name):
     if not ensembl_info or "ensembl_id" not in ensembl_info:
         return jsonify({"error": f"Gene '{gene_name}' not found in Ensembl"}), 400
 
-
+    
     # Fetch GO Terms
     go_terms = get_gene_ontology_terms(gene_name)
 

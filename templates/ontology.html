@@ -31,7 +31,7 @@
         <div class="ontology-sections">
             {% for category, terms in go_terms.items() %}
             <div class="ontology-category">
-                <h2>🍀 {{ category.replace('_', ' ') | title }}</h2>
+                <h2>🧬{{ category.replace('_', ' ') | title }}</h2>
                         {% if terms %}
                             <div class="go-card-container">
                                 {% for term in terms %}
@@ -67,6 +67,7 @@
             {% endif %}
         </div>
 </div>
+
 
 <style>
     .ontology-container {
@@ -117,10 +118,13 @@
 
     .ontology-category h2 {
         color: #1b52a4;
-        font-size: 22px;
-        margin-bottom: 15px;
+        font-size: 25px;
+        margin-bottom: 20px;
+        text-align: center;
+        font-weight: 600;
+        margin-top:20px;
     }
-
+    
     /* GO term cards */
     .go-card-container {
         display: flex;
