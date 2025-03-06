@@ -28,8 +28,8 @@ source venv/bin/activate  # On Windows use `venv\Scripts\activate`
 pip install -r application_requirements.txt
 ```
 -  Download the database.db using one of the following links:
-OneDrive for QMUL users: https://qmulprod-my.sharepoint.com/:u:/g/personal/bt24998_qmul_ac_uk/ETRaNZlY4IhOs9KKHHsj_0MBd1g0J1o5JU7s_MYJi1V4Vw?e=fZ6zm7 
-Google Drive for external users: https://drive.google.com/file/d/18Vs4v6xwc82HT8j-Ob22cYc9edrDHjbI/view?usp=sharing
+    - OneDrive for QMUL users: https://qmulprod-my.sharepoint.com/:u:/g/personal/bt24998_qmul_ac_uk/ETRaNZlY4IhOs9KKHHsj_0MBd1g0J1o5JU7s_MYJi1V4Vw?e=fZ6zm7 
+    - Google Drive for external users: https://drive.google.com/file/d/18Vs4v6xwc82HT8j-Ob22cYc9edrDHjbI/view?usp=sharing
 
 - Copy the database.db from the file path it was downloaded in, into the instance directory of the user's locally cloned repository
 ```sh
