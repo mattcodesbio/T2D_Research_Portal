@@ -91,14 +91,16 @@
           <td>{{ snp.chromosome }}</td>
           <td>{{ snp.grch38_start }}</td>
           <td>
-            {% if snp.gene_name and snp.gene_name != "No Mapped Gene" %}
-              {% set genes = snp.gene_name.split() %}
-              {% for gene in genes %}
-                <a href="{{ url_for('gene_terms', gene_name=gene) }}" class="gene-link">{{ gene }}</a>{% if not loop.last %}, {% endif %}
-              {% endfor %}
-            {% else %}
-              <span>–</span>
-            {% endif %}
+              {% if snp.gene_name and snp.gene_name != "No Mapped Gene" %}
+                  {% set genes = snp.gene_name.split() %}
+                  {% for gene in genes %}
+                  <a href="{{ url_for('gene_terms', gene_name=gene) }}?rsID={{snp.snp_id}}&chromosome={{ snp.chromosome }}&position={{ snp.grch38_start }}" class="gene-link">
+                      {{ gene }}
+                  </a>{% if not loop.last %}, {% endif %}
+                  {% endfor %}
+              {% else %}
+                  <span>Unknown</span>
+              {% endif %}
           </td>
           <td>{{ snp.reference_allele }}:{{ snp.alternative_allele }}</td>
           <td>{{ snp.p_value }}</td>

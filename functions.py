@@ -6,6 +6,10 @@ import os
 from flask import jsonify, Response, request
 from sqlalchemy import func, text
 import bisect
+import json
+from store import analysis_store
+import uuid
+
 def get_snp_info(snp_id=None, chromosome=None, start=None, end=None, gene_name=None):
     """
     Retrieves SNP information from the SNP database based on the user's query.
@@ -356,66 +360,64 @@ def download_tajima_d_data():
     """
         
     # Extract parameters
-    user_selected_chromosome = request.args.get("chromosome")
-    gene_name = request.args.get("gene_name")  # Optional gene name
-    start = request.args.get("start", type=int)
-    end = request.args.get("end", type=int)
-    populations = request.args.getlist("selected_population")  # List of selected populations
-
-    # If gene name is provided and start/end not provided, fetch its genomic coordinates
-    if gene_name and (start is None or end is None):
-        gene_info = get_gene_coordinates_ensembl(gene_name)
-        if gene_info:
-            # Validate that the gene is on the user-selected chromosome
-            if gene_info["chromosome"] != user_selected_chromosome:
-                return jsonify({
-                    "error": f"Gene '{gene_name}' is not located on the selected chromosome {user_selected_chromosome}"
-                }), 400
-            # Use gene coordinates
-            chromosome = gene_info["chromosome"]
-            start = gene_info["start"]
-            end = gene_info["end"]
-        else:
-            return jsonify({"error": f"Gene '{gene_name}' not found in Ensembl"}), 400
-    else:
-        # No gene provided; use the user-selected chromosome
-        chromosome = user_selected_chromosome
-
-    # Ensure start and end are valid numbers
-    if start is None or end is None:
-        return jsonify({"error": "Invalid region parameters. Must provide a valid start and end position or a gene name."}), 400
-
-    # Fetch Tajima's D data safely
     try:
-        tajima_d_data, summary_stats = get_tajima_d_data(chromosome, (start, end), populations)
-    except Exception as e:
-        return jsonify({"error": f"Error retrieving Tajima's D data: {str(e)}"}), 500
+        # Retrieve stored data from session
+        analysis_id = request.args.get("analysis_id")  # Retrieve analysis ID from request
+        if not analysis_id or analysis_id not in analysis_store:
+            return jsonify({"error": "Invalid or expired analysis request. Please perform an analysis first."}), 400
 
-    # Handle case where no data exists
-    if not tajima_d_data or all(len(entries) == 0 for entries in tajima_d_data.values()):
-        response_text = f"No Tajima's D data found for Chromosome {chromosome}, Region {start}-{end}.\n"
-        response = Response(response_text, mimetype="text/plain")
-        response.headers["Content-Disposition"] = f"attachment; filename=TajimaD_chr{chromosome}_{start}_{end}.txt"
+        # Retrieve data from the cache
+        data = analysis_store[analysis_id]
+        tajima_d_data = data["tajima_d_data"]
+        summary_stats = data["summary_stats"]
+        selected_chromosome = data["selected_chromosome"]
+        start = data["start"]
+        end = data["end"]
+        selected_populations = data["selected_populations"]
+
+
+        print(f"DEBUG - Retrieved Analysis ID: {analysis_id} for download")
+
+        # Ensure data exists
+        if not tajima_d_data or not selected_chromosome or not start or not end:
+            return jsonify({"error": "No valid region data found. Please perform an analysis first."}), 400
+
+        # Handle case where no data exists
+        if not tajima_d_data or all(len(entries) == 0 for entries in tajima_d_data.values()):
+            response_text = f"No Tajima's D data found for Chromosome {selected_chromosome}, Region {start}-{end}.\n"
+            response = Response(response_text, mimetype="text/plain")
+            response.headers["Content-Disposition"] = f"attachment; filename=TajimaD_chr{selected_chromosome}_{start}_{end}.txt"
+            return response
+
+        # Generate file content
+        file_content = ["Population\tBin Start\tBin End\tTajima's D"]
+        for pop in selected_populations:
+            if pop in tajima_d_data:  # Ensure the population exists in the data
+                for entry in tajima_d_data[pop]:
+                    file_content.append(f"{pop}\t{entry['bin_start']}\t{entry['bin_end']}\t{entry['tajima_d']:.4f}")
+            else:
+                file_content.append(f"{pop}\tNo data available")
+
+        # Add summary statistics
+        file_content.append("\nSummary Statistics")
+        file_content.append("Population\tMean Tajima's D\tStd Dev Tajima's D")
+        for pop in selected_populations:
+            if pop in summary_stats:
+                mean_tajima_d = summary_stats[pop]["mean"] if summary_stats[pop]["mean"] is not None else "N/A"
+                std_dev_tajima_d = summary_stats[pop]["std_dev"] if summary_stats[pop]["std_dev"] is not None else "N/A"
+                file_content.append(f"{pop}\t{mean_tajima_d}\t{std_dev_tajima_d}")
+            else:
+                file_content.append(f"{pop}\tNo data available\tNo data available")
+
+        # Return the file response
+        response = Response("\n".join(file_content), mimetype="text/plain")
+        response.headers["Content-Disposition"] = f"attachment; filename=TajimaD_chr{selected_chromosome}_{start}_{end}.txt"
         return response
 
-    # Generate file content
-    file_content = ["Population\tBin Start\tBin End\tTajima's D"]
-    for pop, entries in tajima_d_data.items():
-        for entry in entries:
-            file_content.append(f"{pop}\t{entry['bin_start']}\t{entry['bin_end']}\t{entry['tajima_d']:.4f}")
+    except Exception as e:
+        return jsonify({"error": f"Unexpected error in Tajima's D download: {str(e)}"}), 500
 
-    # Add summary statistics
-    file_content.append("\nSummary Statistics")
-    file_content.append("Population\tMean Tajima's D\tStd Dev Tajima's D")
-    for pop, stats in summary_stats.items():
-        mean_tajima_d = stats["mean"] if stats["mean"] is not None else "N/A"
-        std_dev_tajima_d = stats["std_dev"] if stats["std_dev"] is not None else "N/A"
-        file_content.append(f"{pop}\t{mean_tajima_d}\t{std_dev_tajima_d}")
 
-    # Return the file response
-    response = Response("\n".join(file_content), mimetype="text/plain")
-    response.headers["Content-Disposition"] = f"attachment; filename=TajimaD_chr{chromosome}_{start}_{end}.txt"
-    return response
 
 def download_clr_data():
     """
@@ -439,67 +441,64 @@ def download_clr_data():
                         If an error occurs (e.g., missing parameters, gene not found, data retrieval failure), 
                         returns a JSON error message with an appropriate HTTP status code.
     """
-    # Extract parameters
-    user_selected_chromosome = request.args.get("chromosome")
-    gene_name = request.args.get("gene_name")  # Optional gene name
-    start = request.args.get("start", type=int)
-    end = request.args.get("end", type=int)
-    populations = request.args.getlist("selected_population")
-
-    # If gene name is provided, fetch its genomic coordinates
-
-    # If gene name is provided and start/end not provided, fetch its genomic coordinates
-    if gene_name and (start is None or end is None):
-        gene_info = get_gene_coordinates_ensembl(gene_name)
-        if gene_info:
-            # Validate that the gene is on the user-selected chromosome
-            if gene_info["chromosome"] != user_selected_chromosome:
-                return jsonify({
-                    "error": f"Gene '{gene_name}' is not located on the selected chromosome {user_selected_chromosome}"
-                }), 400
-            # Use gene coordinates
-            chromosome = gene_info["chromosome"]
-            start = gene_info["start"]
-            end = gene_info["end"]
-        else:
-            return jsonify({"error": f"Gene '{gene_name}' not found in Ensembl"}), 400
-    else:
-        # No gene provided; use the user-selected chromosome
-        chromosome = user_selected_chromosome
-
-    # Fetch CLR data safely
     try:
-        clr_data, clr_summary_stats = get_clr_data(chromosome, (start, end), populations)
-    except Exception as e:
-        return jsonify({"error": f"Error retrieving CLR data: {str(e)}"}), 500
+        # Retrieve stored data from session
+        analysis_id = request.args.get("analysis_id")
+        if not analysis_id or analysis_id not in analysis_store:
+            return jsonify({"error": "Invalid or expired analysis request. Please perform an analysis first."}), 400
 
-    # Handle case where no data exists
-    if not clr_data or all(len(entries) == 0 for entries in clr_data.values()):
-        response_text = f"No CLR data found for Chromosome {chromosome}, Region {start}-{end}.\n"
-        response = Response(response_text, mimetype="text/plain")
-        response.headers["Content-Disposition"] = f"attachment; filename=CLR_chr{chromosome}_{start}_{end}.txt"
+        # Retrieve data from the cache
+        data = analysis_store[analysis_id]
+        clr_data = data["clr_data"]
+        clr_summary_stats = data["clr_summary_stats"]
+        selected_chromosome = data["selected_chromosome"]
+        start = data["start"]
+        end = data["end"]
+        selected_populations = data["selected_populations"]
+
+        print(f"DEBUG - Retrieved Analysis ID: {analysis_id} for CLR download")
+
+        # Ensure data exists
+        if not clr_data or not selected_chromosome or not start or not end:
+            return jsonify({"error": "No valid region data found. Please perform an analysis first."}), 400
+
+        # Handle case where no data exists
+        if not clr_data or all(len(entries) == 0 for entries in clr_data.values()):
+            response_text = f"No CLR data found for Chromosome {selected_chromosome}, Region {start}-{end}.\n"
+            response = Response(response_text, mimetype="text/plain")
+            response.headers["Content-Disposition"] = f"attachment; filename=CLR_chr{selected_chromosome}_{start}_{end}.txt"
+            return response
+
+        # Generate file content
+        file_content = ["Population\tPosition\tCLR\tAlpha"]
+        for pop in selected_populations:
+            if pop in clr_data:
+                for entry in clr_data[pop]:
+                    file_content.append(f"{pop}\t{entry['position']}\t{entry['clr']:.4f}\t{entry['alpha']:.4f}")
+            else:
+                file_content.append(f"{pop}\tNo data available")
+
+        # Add summary statistics
+        file_content.append("\nSummary Statistics")
+        file_content.append("Population\tMean CLR\tStd Dev CLR\tMean Alpha\tStd Dev Alpha")
+        for pop in selected_populations:
+            if pop in clr_summary_stats:
+                mean_clr = clr_summary_stats[pop]["mean_clr"] if clr_summary_stats[pop]["mean_clr"] is not None else "N/A"
+                std_dev_clr = clr_summary_stats[pop]["std_dev_clr"] if clr_summary_stats[pop]["std_dev_clr"] is not None else "N/A"
+                mean_alpha = clr_summary_stats[pop]["mean_alpha"] if clr_summary_stats[pop]["mean_alpha"] is not None else "N/A"
+                std_dev_alpha = clr_summary_stats[pop]["std_dev_alpha"] if clr_summary_stats[pop]["std_dev_alpha"] is not None else "N/A"
+                file_content.append(f"{pop}\t{mean_clr}\t{std_dev_clr}\t{mean_alpha}\t{std_dev_alpha}")
+            else:
+                file_content.append(f"{pop}\tNo data available\tNo data available\tNo data available\tNo data available")
+
+        # Return the file response
+        response = Response("\n".join(file_content), mimetype="text/plain")
+        response.headers["Content-Disposition"] = f"attachment; filename=CLR_chr{selected_chromosome}_{start}_{end}.txt"
         return response
 
-    # Generate file content
-    file_content = ["Population\tPosition\tCLR\tAlpha"]
-    for pop, entries in clr_data.items():
-        for entry in entries:
-            file_content.append(f"{pop}\t{entry['position']}\t{entry['clr']:.4f}\t{entry['alpha']:.4f}")
-
-    # Add summary statistics
-    file_content.append("\nSummary Statistics")
-    file_content.append("Population\tMean CLR\tStd Dev CLR\tMean Alpha\tStd Dev Alpha")
-    for pop, stats in clr_summary_stats.items():
-        mean_clr = stats["mean_clr"] if stats["mean_clr"] is not None else "N/A"
-        std_dev_clr = stats["std_dev_clr"] if stats["std_dev_clr"] is not None else "N/A"
-        mean_alpha = stats["mean_alpha"] if stats["mean_alpha"] is not None else "N/A"
-        std_dev_alpha = stats["std_dev_alpha"] if stats["std_dev_alpha"] is not None else "N/A"
-        file_content.append(f"{pop}\t{mean_clr}\t{std_dev_clr}\t{mean_alpha}\t{std_dev_alpha}")
-
-    # Return the file response
-    response = Response("\n".join(file_content), mimetype="text/plain")
-    response.headers["Content-Disposition"] = f"attachment; filename=CLR_chr{chromosome}_{start}_{end}.txt"
-    return response
+    except Exception as e:
+        return jsonify({"error": f"Unexpected error in CLR download: {str(e)}"}), 500
+        
 
 def load_snps_from_csv(csv_file):
     """
@@ -844,49 +843,115 @@ def load_clr_results(directory):
 
 
 
-def get_gene_coordinates_ensembl(gene_name):
+def get_gene_coordinates_ensembl(gene_name, rsID=None, chromosome=None, position=None):
     """
-    Fetches gene information from Ensembl, including Ensembl ID, chromosome, start/end position, biotype, and description.
+    Fetches gene information from Ensembl using the VEP API (if rsID is provided) or 
+    the xrefs API (if gene_name is provided). Then performs a bulk BioMart query 
+    for additional gene details.
 
     Args:
         gene_name (str): The name of the gene to query.
+        rsID (str, optional): The dbSNP ID (e.g., "rs7087591"). If provided, VEP API is used.
+        chromosome (str, optional): The expected chromosome.
+        position (int, optional): The expected genomic position.
 
     Returns:
-        dict: A dictionary containing the Ensembl gene ID, biotype, chromosome, start/end position, description, and assembly name.
-              Returns None if the gene is not found.
+        dict: The best matching gene based on filters, or None if no match is found.
     """
-        
-    # Step 1: Query Ensembl to retrieve the Ensembl Gene ID
-    url = f"https://rest.ensembl.org/xrefs/symbol/homo_sapiens/{gene_name}?content-type=application/json"
-    response = requests.get(url)
-
-    if response.status_code == 200:
-        data = response.json()
-        if data:
-            ensembl_gene_id = data[0]["id"]  # Extract Ensembl Gene ID
-
-            # Step 2: Fetch gene details using Ensembl Gene ID
-            gene_url = f"https://rest.ensembl.org/lookup/id/{ensembl_gene_id}?content-type=application/json"
-            gene_response = requests.get(gene_url)
-
-            if gene_response.status_code == 200:
-                gene_data = gene_response.json()
-                
-                # Return only the required fields
-                return {
-                    "ensembl_id": ensembl_gene_id,
-                    "name": gene_data.get("display_name", "N/A"),
-                    "biotype": gene_data.get("biotype", "N/A"),
-                    "chromosome": gene_data.get("seq_region_name", "N/A"),
-                    "start": gene_data.get("start", "N/A"),
-                    "end": gene_data.get("end", "N/A"),
-                    "assembly_name": gene_data.get("assembly_name", "N/A"),
-                    "description": gene_data.get("description", "N/A")
-                }
+    gene_ids = []  # To store Ensembl Gene IDs
     
-    return None  # Return None if the gene is not found
+    if rsID:
+        # Step 1: Query Ensembl VEP API using rsID
+        vep_url = f"https://rest.ensembl.org/vep/human/id/{rsID}?content-type=application/json"
+        response = requests.get(vep_url)
 
+        if response.status_code != 200:
+            return None
+        
+        vep_data = response.json()
+        if isinstance(vep_data, list):
+            vep_data = vep_data[0]  # Extract dictionary if wrapped in a list
 
+        # Extract matching Ensembl Gene IDs
+        for transcript in vep_data.get("transcript_consequences", []):
+            if transcript.get("gene_symbol") == gene_name:
+                ensembl_gene_id = transcript.get("gene_id")
+                if ensembl_gene_id:
+                    gene_ids.append(ensembl_gene_id)
+
+        if not gene_ids:
+            return None
+
+    else:
+        # Step 1: Get all Ensembl Gene IDs for the gene name (if rsID is not provided)
+        xref_url = f"https://rest.ensembl.org/xrefs/symbol/homo_sapiens/{gene_name}?content-type=application/json"
+        response = requests.get(xref_url)
+
+        if response.status_code != 200 or not response.json():
+            return None  
+
+        xref_data = response.json()
+        gene_ids = [entry["id"] for entry in xref_data if entry.get("id")]  # Extract Ensembl Gene IDs
+
+        if not gene_ids:
+            return None
+
+        print(f"Found {len(gene_ids)} Ensembl Gene IDs for {gene_name}. Fetching coordinates...")
+
+    # Step 2: Bulk query to fetch gene coordinates
+    lookup_url = "https://rest.ensembl.org/lookup/id"
+    headers = {"Content-Type": "application/json", "Accept": "application/json"}
+    response = requests.post(lookup_url, headers=headers, data=json.dumps({"ids": gene_ids}))
+
+    if response.status_code != 200:
+        print(f"Error in Ensembl lookup: {response.status_code}, {response.text}")
+        return None
+
+    gene_info_list = response.json()
+
+    best_match = None
+    min_distance = float("inf")
+
+    # Step 3: Filter genes by chromosome and position
+    for gene_id, gene_data in gene_info_list.items():
+        gene_chr = str(gene_data.get("seq_region_name", "N/A"))
+        gene_start = gene_data.get("start")
+        gene_end = gene_data.get("end")
+
+        gene_info = {
+            "ensembl_id": gene_id,
+            "name": gene_data.get("display_name", gene_name),
+            "biotype": gene_data.get("biotype", "N/A"),
+            "chromosome": gene_chr,
+            "start": gene_start,
+            "end": gene_end,
+            "assembly_name": gene_data.get("assembly_name", "N/A"),
+            "description": gene_data.get("description", "N/A")
+        }
+
+        # Strict chromosome match
+        if chromosome is not None and gene_chr != chromosome:
+            print(f" Skipping {gene_id} (Chromosome {gene_chr} does not match expected {chromosome})")
+            continue  # Skip to the next gene
+
+        # Check if position falls within gene range (if provided)
+        # If position is given, find the closest gene
+        if position:
+            distance = min(abs(position - gene_start), abs(position - gene_end))
+            if distance < min_distance:
+                min_distance = distance
+                best_match = gene_info
+
+        else:
+            # If no position provided, just return the first valid gene
+            best_match = gene_info
+            break
+
+    if best_match:
+        return best_match  # Return the best match found
+
+    print(f"No valid match found for {gene_name} on chromosome {chromosome}.")
+    return None  # No valid gene found
 def load_fst_snp_results(directory):
     """
     Loads and adds SNP-based FST data from CSV files into the database.
@@ -1017,7 +1082,6 @@ def get_fst_data(chromosome, region=None, populations=None):
     
     return fst_data, summary_stats
 
-
 def download_fst_data():
     """
     Generates a text file containing FST statistics for a specified genomic region.
@@ -1032,62 +1096,61 @@ def download_fst_data():
     Returns:
         flask.Response: A text file with FST values for each SNP in the region and summary statistics.
     """
-    user_selected_chromosome = request.args.get("chromosome")
-    gene_name = request.args.get("gene_name")
-    start = request.args.get("start", type=int)
-    end = request.args.get("end", type=int)
-    populations = request.args.getlist("selected_population")
-    
-    # If gene name is provided and region is not defined, fetch coordinates
-    if gene_name and (start is None or end is None):
-        gene_info = get_gene_coordinates_ensembl(gene_name)
-        if gene_info:
-            # Validate that the gene is on the user-selected chromosome
-            if gene_info["chromosome"] != user_selected_chromosome:
-                return jsonify({
-                    "error": f"Gene '{gene_name}' is not located on the selected chromosome {user_selected_chromosome}"
-                }), 400
-            # Use gene coordinates
-            chromosome = gene_info["chromosome"]
-            start = gene_info["start"]
-            end = gene_info["end"]
-        else:
-            return jsonify({"error": f"Gene '{gene_name}' not found in Ensembl"}), 400
-    else:
-        # No gene provided; use the user-selected chromosome
-        chromosome = user_selected_chromosome
-    
-    if start is None or end is None:
-        return jsonify({"error": "Invalid region parameters. Must provide a valid start and end position or a gene name."}), 400
-    
     try:
-        fst_data, fst_summary_stats = get_fst_data(chromosome, (start, end), populations)
-    except Exception as e:
-        return jsonify({"error": f"Error retrieving FST data: {str(e)}"}), 500
-    
-    # Handle the case where no data exists
-    if not fst_data or all(len(entries) == 0 for entries in fst_data.values()):
-        response_text = f"No FST data found for Chromosome {chromosome}, Region {start}-{end}.\n"
-        response = Response(response_text, mimetype="text/plain")
-        response.headers["Content-Disposition"] = f"attachment; filename=FST_chr{chromosome}_{start}_{end}.txt"
+        # Retrieve stored data from session
+        analysis_id = request.args.get("analysis_id")
+        if not analysis_id or analysis_id not in analysis_store:
+            return jsonify({"error": "Invalid or expired analysis request. Please perform an analysis first."}), 400
+
+        # Retrieve data from the cache
+        data = analysis_store[analysis_id]
+        fst_data = data["fst_data"]
+        fst_summary_stats = data["fst_summary_stats"]
+        selected_chromosome = data["selected_chromosome"]
+        start = data["start"]
+        end = data["end"]
+        selected_populations = data["selected_populations"]
+
+        print(f"DEBUG - Retrieved Analysis ID: {analysis_id} for FST download")
+
+        # Ensure data exists
+        if not fst_data or not selected_chromosome or not start or not end:
+            return jsonify({"error": "No valid region data found. Please perform an analysis first."}), 400
+
+        # Handle the case where no data exists
+        if not fst_data or all(len(entries) == 0 for entries in fst_data.values()):
+            response_text = f"No FST data found for Chromosome {selected_chromosome}, Region {start}-{end}.\n"
+            response = Response(response_text, mimetype="text/plain")
+            response.headers["Content-Disposition"] = f"attachment; filename=FST_chr{selected_chromosome}_{start}_{end}.txt"
+            return response
+
+        # Generate file content
+        file_content = ["Population\tSNP ID\tPosition\tFST"]
+        for pop in selected_populations:
+            if pop in fst_data:
+                for entry in fst_data[pop]:
+                    file_content.append(f"{pop}\t{entry['snp_id']}\t{entry['position']}\t{entry['fst']:.4f}")
+            else:
+                file_content.append(f"{pop}\tNo data available")
+
+        # Append summary statistics
+        file_content.append("\nSummary Statistics")
+        file_content.append("Population\tMean FST\tStd Dev FST")
+        for pop in selected_populations:
+            if pop in fst_summary_stats:
+                mean_fst = fst_summary_stats[pop]["mean_fst"] if fst_summary_stats[pop]["mean_fst"] is not None else "N/A"
+                std_dev_fst = fst_summary_stats[pop]["std_dev_fst"] if fst_summary_stats[pop]["std_dev_fst"] is not None else "N/A"
+                file_content.append(f"{pop}\t{mean_fst}\t{std_dev_fst}")
+            else:
+                file_content.append(f"{pop}\tNo data available\tNo data available")
+
+        # Return the file response
+        response = Response("\n".join(file_content), mimetype="text/plain")
+        response.headers["Content-Disposition"] = f"attachment; filename=FST_chr{selected_chromosome}_{start}_{end}.txt"
         return response
 
-    # Generate file content
-    file_content = ["Population\tSNP ID\tPosition\tFST"]
-    for pop, entries in fst_data.items():
-        for entry in entries:
-            file_content.append(f"{pop}\t{entry['snp_id']}\t{entry['position']}\t{entry['fst']:.4f}")
-    
-    # Append summary statistics
-    file_content.append("\nSummary Statistics")
-    file_content.append("Population\tMean FST\tStd Dev FST")
-    for pop, stats in fst_summary_stats.items():
-        file_content.append(f"{pop}\t{stats['mean_fst']}\t{stats['std_dev_fst']}")
-    
-    response = Response("\n".join(file_content), mimetype="text/plain")
-    response.headers["Content-Disposition"] = f"attachment; filename=FST_chr{chromosome}_{start}_{end}.txt"
-    return response
-
+    except Exception as e:
+        return jsonify({"error": f"Unexpected error in FST download: {str(e)}"}), 500
 
 
 

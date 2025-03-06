@@ -21,7 +21,7 @@
 
 <div class="container">
   <!-- Back button -->
-  <button class="back-button" onclick="window.history.back()">← Back to Search</button>
+  <button class="back-button" onclick="window.history.back()">← Back to Results</button>
   
   <h1>Analysis for Positive Selection</h1>
 
@@ -41,7 +41,7 @@
   <!-- Container for upper interactive plots (Tajima's D, CLR) -->
   <div id="plots-container"></div>
   
-  <!-- NEW: FST heatmap container -->
+  <!-- FST heatmap container -->
   <div id="fst-heatmap-container"></div>
 
   <!-- Region Selection Form -->
@@ -118,8 +118,7 @@
   let t2dSnps = {{ t2d_snp_data | safe }};
   let clrData = {{ clr_data | safe }};
   let fstData = {{ fst_data | safe }};
-  // Optionally, if your view passes FST summary stats, uncomment below:
-  // let fstSummaryStats = {{ fst_summary_stats | safe }};
+  
 
   // Function to update upper plots (Tajima's D and CLR)
   function updatePlot() {
@@ -236,7 +235,7 @@
     generateFstHeatmap();
   }
 
-  // NEW: Function to generate FST heatmap using provided FST data
+  // Function to generate FST heatmap using provided FST data
   function generateFstHeatmap() {
     let container = document.getElementById("fst-heatmap-container");
     container.innerHTML = "<h2>FST Values Across Chromosome {{ selected_chromosome }}</h2>";
@@ -306,34 +305,66 @@
 
   // Function to fetch and display region-specific analysis graphs
   function fetchRegionData() {
-    // Check if any population has been selected; if not, alert the user.
-    let selectedPopulationsArray = Array.from(selectedPopulations);
-    if (selectedPopulationsArray.length === 0) {
-      alert("Please choose at least one population before analysing the region.");
-      return;
-    }
+    // // Check if any population has been selected; if not, alert the user.
+    // let selectedPopulationsArray = Array.from(selectedPopulations);
+    // if (selectedPopulationsArray.length === 0) {
+    //   alert("Please choose at least one population before analysing the region.");
+    //   return;
+    // }
     
-    let start = document.getElementById("region_start").value;
-    let end = document.getElementById("region_end").value;
-    let geneName = document.getElementById("gene_name").value;
-    let showT2D = document.getElementById("t2d_region_filter").checked;
-    let chromosome = document.getElementById("selected_chromosome").value;
+    // let start = document.getElementById("region_start").value;
+    // let end = document.getElementById("region_end").value;
+    // let geneName = document.getElementById("gene_name").value;
+    // let showT2D = document.getElementById("t2d_region_filter").checked;
+    // let chromosome = document.getElementById("selected_chromosome").value;
     
-    console.log("Fetching region data with:", { start, end, geneName, chromosome });
+    // console.log("Fetching region data with:", { start, end, geneName, chromosome });
     
-    document.getElementById("selected_populations").value = selectedPopulationsArray.join("");
+    // document.getElementById("selected_populations").value = selectedPopulationsArray.join("");
     
-    let url = `/population_analysis_region?chromosome=${chromosome}&start=${start}&end=${end}&gene_name=${geneName}`;
-    selectedPopulationsArray.forEach(pop => url += `&selected_population=${pop}`);
+    // let url = `/population_analysis_region?chromosome=${chromosome}&start=${start}&end=${end}&gene_name=${geneName}`;
+    // selectedPopulationsArray.forEach(pop => url += `&selected_population=${pop}`);
     
-    fetch(url)
-      .then(response => {
-        if (!response.ok) {
-          return response.json().then(errData => { throw new Error(errData.error); });
+    // fetch(url)
+    //   .then(response => {
+    //     if (!response.ok) {
+    //       return response.json().then(errData => { throw new Error(errData.error); });
+    //     }
+    //     return response.json();
+    //   })
+    //   .then(data => {
+      let start = document.getElementById("region_start").value;
+      let end = document.getElementById("region_end").value;
+      let geneName = document.getElementById("gene_name").value;
+      let showT2D = document.getElementById("t2d_region_filter").checked;
+      let chromosome = document.getElementById("selected_chromosome").value;
+      
+      console.log("Fetching region data with:", { start, end, geneName, chromosome });
+      
+      let selectedPopulationsArray = Array.from(selectedPopulations);
+      if (selectedPopulationsArray.length === 0) {
+          alert("Please choose at least one population before analysing the region.");
+          return;
         }
-        return response.json();
-      })
-      .then(data => {
+      document.getElementById("selected_populations").value = selectedPopulationsArray.join("");
+      
+      let url = `/population_analysis_region?chromosome=${chromosome}&start=${start}&end=${end}&gene_name=${geneName}`;
+      selectedPopulationsArray.forEach(pop => url += `&selected_population=${pop}`);
+      
+      fetch(url)
+        .then(response => {
+          if (!response.ok) {
+            return response.json().then(errData => {
+              throw new Error(errData.error);
+            });
+          }
+          return response.json();
+        })
+        .then(data => {
+          // Store the analysis_id for later downloads
+          if (data.analysis_id) {
+            localStorage.setItem("analysis_id", data.analysis_id);
+          }
         // Render region-specific graphs (Tajima's D, CLR, FST, etc.)
         document.getElementById("region-plot-container").innerHTML = "<h2>Selected Region Tajima's D</h2>";
         let colors = ["blue", "green", "purple", "orange", "cyan"];
@@ -555,83 +586,39 @@
         }
       })
       .catch(error => {
-        document.getElementById("region-plot-container").innerHTML = `
-        <div class="alert alert-danger" role="alert">
-            ${error.message}
-        </div>`;
-      });
-  }
+          document.getElementById("region-plot-container").innerHTML = `
+            <div class="alert alert-danger" role="alert">
+              ${error.message}
+            </div>`;
+        });
+    }
   
-  // Download functions for Tajima's D, CLR, and FST remain unchanged.
-  function downloadTajimaD() {
+    function downloadCLR() {
       let start = document.getElementById("region_start").value.trim();
       let end = document.getElementById("region_end").value.trim();
       let geneName = document.getElementById("gene_name").value.trim();
       let chromosome = document.getElementById("selected_chromosome").value;
       let selectedPopulationsArray = Array.from(selectedPopulations);
-      if (selectedPopulationsArray.length === 0) {
-        alert("Please select at least one population before downloading.");
-        return;
-      }
-      let url = `/download_tajima_d?chromosome=${chromosome}`;
-      if (geneName) {
-        url += `&gene_name=${encodeURIComponent(geneName)}`;
-      } else if (start && end) {
-        url += `&start=${start}&end=${end}`;
-      } else {
-        alert("Please enter either a start and end position OR a gene name.");
-        return;
-      }
-      selectedPopulationsArray.forEach(pop => url += `&selected_population=${pop}`);
-      fetch(url)
-        .then(response => {
-          if (!response.ok) {
-            return response.json().then(errData => { throw new Error(errData.error); });
-          }
-          return response.blob();
-        })
-        .then(blob => {
-          const fileURL = URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.href = fileURL;
-          link.setAttribute("download", `TajimaD_chr${chromosome}_${start || geneName}_${end || ""}.txt`);
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(fileURL);
-        })
-        .catch(error => {
-          document.getElementById("region-plot-container").innerHTML = `
-            <div class="alert alert-danger" role="alert">
-              ${error.message}
-            </div>`;
-        });
-  }
+      let analysisId = localStorage.getItem("analysis_id"); // Retrieve analysis ID
     
-  function downloadCLR() {
-      let start = document.getElementById("region_start").value.trim();
-      let end = document.getElementById("region_end").value.trim();
-      let geneName = document.getElementById("gene_name").value.trim();
-      let chromosome = document.getElementById("selected_chromosome").value;
-      let selectedPopulationsArray = Array.from(selectedPopulations);
+      if (!analysisId) {
+        alert("No analysis has been performed yet. Please run an analysis first.");
+        return;
+      }
+    
       if (selectedPopulationsArray.length === 0) {
         alert("Please select at least one population before downloading.");
         return;
       }
-      let url = `/download_clr?chromosome=${chromosome}`;
-      if (geneName) {
-        url += `&gene_name=${encodeURIComponent(geneName)}`;
-      } else if (start && end) {
-        url += `&start=${start}&end=${end}`;
-      } else {
-        alert("Please enter either a start and end position OR a gene name.");
-        return;
-      }
-      selectedPopulationsArray.forEach(pop => url += `&selected_population=${pop}`);
+    
+      let url = `/download_clr?analysis_id=${analysisId}`; // Include analysis ID
+    
       fetch(url)
         .then(response => {
           if (!response.ok) {
-            return response.json().then(errData => { throw new Error(errData.error); });
+            return response.json().then(errData => {
+              throw new Error(errData.error);
+            });
           }
           return response.blob();
         })
@@ -639,7 +626,10 @@
           const fileURL = URL.createObjectURL(blob);
           const link = document.createElement("a");
           link.href = fileURL;
-          link.setAttribute("download", `CLR_chr${chromosome}_${start || geneName}_${end || ""}.txt`);
+          link.setAttribute(
+            "download",
+            `CLR_chr${chromosome}_${start || geneName}_${end || ""}.txt`
+          );
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
@@ -651,7 +641,7 @@
               ${error.message}
             </div>`;
         });
-  }
+    }
     
   function downloadFST() {
       let start = document.getElementById("region_start").value.trim();
@@ -659,24 +649,26 @@
       let geneName = document.getElementById("gene_name").value.trim();
       let chromosome = document.getElementById("selected_chromosome").value;
       let selectedPopulationsArray = Array.from(selectedPopulations);
+      let analysisId = localStorage.getItem("analysis_id"); // Retrieve analysis ID
+    
+      if (!analysisId) {
+        alert("No analysis has been performed yet. Please run an analysis first.");
+        return;
+      }
+    
       if (selectedPopulationsArray.length === 0) {
         alert("Please select at least one population before downloading.");
         return;
       }
-      let url = `/download_fst?chromosome=${chromosome}`;
-      if (geneName) {
-        url += `&gene_name=${encodeURIComponent(geneName)}`;
-      } else if (start && end) {
-        url += `&start=${start}&end=${end}`;
-      } else {
-        alert("Please enter either a start and end position OR a gene name.");
-        return;
-      }
-      selectedPopulationsArray.forEach(pop => url += `&selected_population=${pop}`);
+    
+      let url = `/download_fst?analysis_id=${analysisId}`; // Include analysis ID
+    
       fetch(url)
         .then(response => {
           if (!response.ok) {
-            return response.json().then(errData => { throw new Error(errData.error); });
+            return response.json().then(errData => {
+              throw new Error(errData.error);
+            });
           }
           return response.blob();
         })
@@ -684,7 +676,10 @@
           const fileURL = URL.createObjectURL(blob);
           const link = document.createElement("a");
           link.href = fileURL;
-          link.setAttribute("download", `FST_chr${chromosome}_${start || geneName}_${end || ""}.txt`);
+          link.setAttribute(
+            "download",
+            `FST_chr${chromosome}_${start || geneName}_${end || ""}.txt`
+          );
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
@@ -696,7 +691,7 @@
               ${error.message}
             </div>`;
         });
-  }
+    }
   
   // Initialize the upper plots and region-specific plots when the page loads
   updatePlot();

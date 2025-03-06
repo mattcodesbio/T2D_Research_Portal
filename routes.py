@@ -9,7 +9,8 @@ from main import app
 import json
 import numpy as np
 import logging
-
+import uuid
+from store import analysis_store
 # Configure the logger for debugging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -155,33 +156,51 @@ def population_analysis_region():
         - JSON containing Tajima's D, CLR, and T2D SNP data for the requested region.
     """
     # Retrieve query parameters
-    start = request.args.get("start", type=int)
-    end = request.args.get("end", type=int)
+    user_start = request.args.get("start", type=int)
+    user_end = request.args.get("end", type=int)
     gene_name = request.args.get("gene_name", type=str)
     user_selected_chromosome = request.args.get("chromosome", type=str)
     selected_populations = request.args.getlist("selected_population")
 
-     # If a gene name is provided, fetch its genomic coordinates from Ensembl
+    selected_chromosome = user_selected_chromosome
+
     if gene_name:
-        gene_info = get_gene_coordinates_ensembl(gene_name)
+        gene_info = get_gene_coordinates_ensembl(gene_name, chromosome=user_selected_chromosome)
+        
         if gene_info and gene_info.get("start") and gene_info.get("end"):
-            # Validate that the gene is on the selected chromosome
+            gene_start = gene_info["start"]
+            gene_end = gene_info["end"]
+
+            # Validate chromosome match
             if gene_info["chromosome"] != user_selected_chromosome:
                 return jsonify({
-                    "error": f"Gene '{gene_name}' is not located on the selected chromosome {user_selected_chromosome}"
+                    "error": f"Gene '{gene_name}' is not located on chromosome {user_selected_chromosome}."
                 }), 400
-            # Overwrite the region parameters with the gene's coordinates
-            selected_chromosome = gene_info["chromosome"]
-            start = gene_info["start"]
-            end = gene_info["end"]
+
+            # If the user provides a valid sub-region, use it; otherwise, use full gene coordinates
+            if user_start and user_end:
+                if gene_start <= user_start <= gene_end and gene_start <= user_end <= gene_end:
+                    start = user_start
+                    end = user_end
+                else:
+                    return jsonify({
+                        "error": f"Selected region ({user_start}-{user_end}) is outside the gene boundaries ({gene_start}-{gene_end})."
+                    }), 400
+            else:
+                start = gene_start
+                end = gene_end
+
         else:
-            return jsonify({"error": f"Gene '{gene_name}' not found in Ensembl"}), 400
+            return jsonify({"error": f"Gene '{gene_name}' not found in Ensembl."}), 400
+
     else:
         # If no gene is provided, use the user-selected chromosome as the region's chromosome
-        selected_chromosome = user_selected_chromosome
+        start = user_start
+        end = user_end
+        
 
     if start is None or end is None:
-        return jsonify({"error": "Invalid region parameters"}), 400
+        return jsonify({"error": "Invalid region parameters. Provide a gene name or valid start/end coordinates."}), 400
 
     # Fetch data
     tajima_d_data, summary_stats = get_tajima_d_data(selected_chromosome, (start, end), selected_populations)
@@ -189,14 +208,35 @@ def population_analysis_region():
     clr_data, clr_summary_stats = get_clr_data(selected_chromosome, (start, end), selected_populations)
     fst_data, fst_summary_stats = get_fst_data(selected_chromosome, (start, end), selected_populations)
 
+    analysis_id = str(uuid.uuid4())
+    analysis_store[analysis_id] = {
+        "tajima_d_data": tajima_d_data,
+        "summary_stats": summary_stats,
+        "clr_data": clr_data,
+        "clr_summary_stats": clr_summary_stats,
+        "fst_data": fst_data,
+        "fst_summary_stats": fst_summary_stats,
+        "selected_chromosome": selected_chromosome,
+        "start": start,
+        "end": end,
+        "selected_populations": selected_populations
+    }
+
+    print(f"DEBUG - Stored Analysis ID: {analysis_id}")
+
     return jsonify({
+        "analysis_id": analysis_id,
         "tajima_d_data": tajima_d_data,
         "t2d_snp_data": t2d_snp_data,
         "clr_data": clr_data,
         "summary_stats": summary_stats,
         "clr_summary_stats": clr_summary_stats,
         "fst_data": fst_data,
-        "fst_summary_stats": fst_summary_stats
+        "fst_summary_stats": fst_summary_stats,
+        "selected_chromosome": selected_chromosome,
+        "start": start,
+        "end": end,
+        "selected_populations" : selected_populations
     })
     
 @app.route('/download_fst', methods=['GET'])
@@ -255,16 +295,21 @@ def about():
     return render_template('about.html')
 
 
-
 @app.route('/gene_terms/<gene_name>')
 def gene_terms(gene_name):
     """
     Fetches Gene Ontology (GO) terms and Ensembl gene information for a given gene.
     """
-    ensembl_info = get_gene_coordinates_ensembl(gene_name)
+
+    chromosome = request.args.get("chromosome")  # Get chromosome from URL parameters
+    position = request.args.get("position", type=int)
+    rsID = request.args.get("rsID")
+
+    ensembl_info = get_gene_coordinates_ensembl(gene_name, rsID=rsID, chromosome=chromosome, position=position)
 
     if not ensembl_info or "ensembl_id" not in ensembl_info:
         return jsonify({"error": f"Gene '{gene_name}' not found in Ensembl"}), 400
+
 
     # Fetch GO Terms
     go_terms = get_gene_ontology_terms(gene_name)
