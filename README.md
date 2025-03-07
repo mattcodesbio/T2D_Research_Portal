@@ -16,7 +16,7 @@ git clone https://github.com/your-repo/T2D-Research-Portal.git
 ```
 - Navigate to the project directory:
  ```sh
-cd T2D_Web_development_project
+cd T2D-Research-Portal
 ```
 Create and activate a virtual environment:
  ```sh
