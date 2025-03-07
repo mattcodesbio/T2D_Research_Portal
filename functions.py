@@ -693,54 +693,65 @@ def load_tajima_d_results(directory):
     1. Deletes all existing Tajima's D records in the 'tajima_d_results' table Need to change this in the future.
     2. Iterates through each file in the specified directory.
     3. Extracts population and chromosome information from the filename.
-    4. Reads the file line by line, skipping the header.
+    4. Reads the file into a Dataframe, skipping the header.
     5. Parses each line, extracting the relevant data.
     6. Filters out lines with missing or invalid Tajima's D values.
-    7. If a population, chromosome, and bin combination does not already exist, it inserts and update the database.
+    7. If adding additional data it appends and update the database.
     8. Inserts the valid data into the 'tajima_d_results' table.
 
     Assumptions:
     - The bin size is expected to be 10kb ('bin_end = bin_start + 10000').
     - The first line in each file is a header and is skipped.
     """
-    with db.session.begin():
-        # Iterate through all files in the directory
+    try:
+        all_data = []
+
         for filename in os.listdir(directory):
-            if filename.endswith(".Tajima.D"): # Process only '.Tajima.D' files
-                # Extract population and chromosome number from filename
+            if filename.endswith(".Tajima.D"):  # Process only '.Tajima.D' files
+                # Extract population and chromosome from filename
                 population, chromosome = filename.split("_")[0], filename.split("_")[1].split(".")[0].replace("chr", "")
 
-                with open(os.path.join(directory, filename), "r") as file:
-                    next(file)# Skip the header line
-                    for line in file:
-                        columns = line.strip().split("\t") # Split columns based on tab separation
-                        
-                        # Skip lines with invalid or missing Tajima's D values
-                        if len(columns) < 4 or columns[3] in ["", "NA", ".", "nan"]:
-                            continue
-                            
-                        bin_start = int(columns[1])
-                        bin_end = bin_start + 10000  # Assuming 10kb bin size
-                        n_snps = int(columns[2])
-                        tajima_d = float(columns[3])
+                print(f"Processing file: {filename}")
+                file_path = os.path.join(directory, filename)
 
-                        # Check if this population + chromosome + bin already exists
-                        existing_tajima = db.session.query(TajimaD).filter_by(
-                            population=population, chromosome=chromosome, bin_start=bin_start
-                        ).first()
-                        
-                        if not existing_tajima:
-                            # If this combination does NOT exist, insert it
-                            db.session.add(TajimaD(
-                                population=population,
-                                chromosome=chromosome,
-                                bin_start=bin_start,
-                                bin_end=bin_end,
-                                n_snps=n_snps,
-                                tajima_d=tajima_d
-                            ))
-                            
-    db.session.commit() # Save changes to the database
+                # Read the file into a DataFrame, skipping the first row (header)
+                df = pd.read_csv(file_path, sep='\t', skiprows=1, names=['midpoint', 'bin_start', 'n_snps', 'tajima_d'])
+
+                # Clean up data by removing invalid values
+                df = df[pd.to_numeric(df['tajima_d'], errors='coerce').notnull()]  # Remove non-numeric TajimaD values
+
+                # Compute bin_end (assuming 10kb bin size)
+                df['bin_end'] = df['bin_start'] + 10000
+
+                # Add population and chromosome columns
+                df['population'] = population
+                df['chromosome'] = chromosome
+
+                # Select only the necessary columns
+                df = df[['population', 'chromosome', 'bin_start', 'bin_end', 'n_snps', 'tajima_d']]
+
+                # Append to the list of all data
+                all_data.append(df)
+
+        if all_data:
+            # Concatenate all dataframes into a single dataframe
+            final_df = pd.concat(all_data, ignore_index=True)
+
+            # Connect to the SQLite database
+            conn = sqlite3.connect(db_path)
+
+            # Insert data into the database using to_sql
+            final_df.to_sql('tajima_d_results', conn, if_exists='append', index=False)
+
+            # Close the connection
+            conn.close()
+
+            print("Tajima D Data loaded successfully.")
+        else:
+            print("No valid data found to load.")
+
+    except Exception as e:
+        print(f"Error loading Tajima's D results: {e}")
 
 
 def load_clr_results(directory):
@@ -781,10 +792,8 @@ def load_clr_results(directory):
     Assumptions:
     - The first two lines in the TSV file are headers and are skipped.
     """
-    with db.session.begin():
-        max_id = db.session.query(func.max(CLRTest.id)).scalar()
-        if max_id is None:
-            max_id = 0  # Start ID numbering from 1 if table is empty
+    try:
+        all_data = []
 
         for filename in os.listdir(directory):
             if filename.startswith('SweeD_Report'):
@@ -793,9 +802,10 @@ def load_clr_results(directory):
                 population = parts[1].split('_')[0]
                 chromosome = parts[1].split('_')[1].replace('chr', '')
 
-                file_path = os.path.join(directory, filename)
+                print(f"Processing file: {filename}")
+                print(f"Extracted population: {population}, chromosome: {chromosome}")
 
-                # Read the TSV file, skipping the first two rows
+                file_path = os.path.join(directory, filename)
                 df = pd.read_csv(file_path, sep='\t', skiprows=2)
 
                 # Clean up data by removing rows where 'Position' is not a number
@@ -808,38 +818,28 @@ def load_clr_results(directory):
                 df['population'] = population
                 df['chromosome'] = chromosome
 
-                # Assign unique IDs starting from max_id + 1
-                df['id'] = range(max_id + 1, max_id + 1 + len(df))
-                max_id += len(df)  # Update max_id for the next batch
+                # Append to the list of all data
+                all_data.append(df)
 
-                # Reorder columns
-                df = df[['id', 'population', 'chromosome', 'position', 'clr', 'alpha']]
+        if all_data:
+            # Concatenate all dataframes into a single dataframe
+            final_df = pd.concat(all_data, ignore_index=True)
 
-                # Insert only if the entry does not already exist
-                for _, row in df.iterrows():
-                    existing_clr = db.session.query(CLRTest).filter_by(
-                        population=row['population'],
-                        chromosome=row['chromosome'],
-                        position=row['position']
-                    ).first()
+            # Connect to the SQLite database
+            conn = sqlite3.connect(db_path)
 
-                    if not existing_clr:
-                        clr_test = CLRTest(
-                            id=row['id'],
-                            population=row['population'],
-                            chromosome=row['chromosome'],
-                            position=row['position'],
-                            clr=row['clr'],
-                            alpha=row['alpha']
-                        )
-                        db.session.add(clr_test)
-    try: 
-        db.session.commit()  # Save changes to the database
+            # Insert data into the database using to_sql
+            final_df.to_sql('clr_results', conn, if_exists='append', index=False)
+
+            # Close the connection
+            conn.close()
+
+            print("CLR Data loaded successfully.")
+        else:
+            print("No valid data found to load.")
+
     except Exception as e:
-        db.session.rollback()
-        print(f"Error: {e}")
-    finally:
-        db.session.close()
+        print(f"Error loading CLR results: {e}")
 
 
 
