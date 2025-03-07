@@ -49,9 +49,10 @@ pip install -r application_requirements.txt
      load_fst_snp_results(r"C:/path/to/file/e.g/fst_results")
      load_clr_results(r"C:/path/to/file/e.g/Positive_summary_data/SweeD_results", r"C:/path/to/file/instance/database.db")
      ```
+
      - Paths to the data are found in the Positive_summary_data directory
      - Fill in the correct paths for the function parameters (e.g. directory, db_path)
-    
+
   - Check if Flask is installed in the virtual environment:
   ```sh
   pip list
