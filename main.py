@@ -32,7 +32,7 @@ if __name__ == '__main__':
         #load_snps_from_csv(r"/path/to/file/e.g/csv")
         #load_tajima_d_results(r"C/path/to/file/e.g/.Tajima.D", r"C:/path/to/file/instance/database.db")
         # load_fst_snp_results(r"C:/path/to/file/e.g/fst_results")
-        #load_clr_results(r"C:/path/to/file/e.g/chrx_results", r"C:/path/to/file/instance/database.db")
+        #load_clr_results(r"C:/path/to/file/e.g/Positive_summary_data/SweeD_results", r"C:/path/to/file/instance/database.db")
        
     app.run(debug=False) # Runs the Flask application
     
