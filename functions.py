@@ -662,7 +662,7 @@ def get_gene_ontology_terms(gene_name):
 
 
 
-def load_tajima_d_results(directory):
+def load_tajima_d_results(directory, db_path):
     """
     Loads Tajima's D statistics from files in a directory into the database.
 
@@ -754,7 +754,7 @@ def load_tajima_d_results(directory):
         print(f"Error loading Tajima's D results: {e}")
 
 
-def load_clr_results(directory):
+def load_clr_results(directory, db_path):
     """
     Loads CLR results from a single file into the database.
 
