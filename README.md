@@ -53,7 +53,7 @@ pip install -r application_requirements.txt
      - Paths to the data are found in the Positive_summary_data directory
      - Fill in the correct paths for the function parameters (e.g. directory, db_path)
 
-  - Check if Flask is installed in the virtual environment:
+- Check if Flask is installed in the virtual environment:
   ```sh
   pip list
   ```
