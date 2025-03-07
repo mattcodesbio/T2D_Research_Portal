@@ -29,16 +29,18 @@ source venv/bin/activate  # On Windows use `venv\Scripts\activate`
 ```sh
 pip install -r application_requirements.txt
 ```
-- Database can be accessed two ways (pick one): 
-  1a.  Download the database.db using one of the following links:
+- Database can be accessed two ways (pick one):
+
+  
+  1.  a) Download the database.db using one of the following links:
       - OneDrive for QMUL users: https://qmulprod-my.sharepoint.com/:u:/g/personal/bt24998_qmul_ac_uk/ETRaNZlY4IhOs9KKHHsj_0MBd1g0J1o5JU7s_MYJi1V4Vw?e=fZ6zm7 
       - Google Drive for external users: https://drive.google.com/file/d/18Vs4v6xwc82HT8j-Ob22cYc9edrDHjbI/view?usp=sharing
 
-  1b. Copy the database.db from the file path it was downloaded in, into the instance directory of the user's locally cloned repository
+  1. b) Copy the database.db from the file path it was downloaded in, into the instance directory of the user's locally cloned repository
   ```sh
   cp /path/to/downloads/database.db path/to/T2D_Research_Portal/instance 
   ```
-  ### OR
+  #### OR 
 
   2. Loading the data into the database by uncommeting the load functions in main.py
      ```sh
