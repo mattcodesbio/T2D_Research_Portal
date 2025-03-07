@@ -592,7 +592,57 @@
             </div>`;
         });
     }
-  
+
+    function downloadTajimaD(){
+      let start = document.getElementById("region_start").value.trim();
+      let end = document.getElementById("region_end").value.trim();
+      let geneName = document.getElementById("gene_name").value.trim();
+      let chromosome = document.getElementById("selected_chromosome").value;
+      let selectedPopulationsArray = Array.from(selectedPopulations);
+      let analysisId = localStorage.getItem("analysis_id"); // Retrieve analysis ID
+    
+      if (!analysisId) {
+        alert("No analysis has been performed yet. Please run an analysis first.");
+        return;
+      }
+    
+      if (selectedPopulationsArray.length === 0) {
+        alert("Please select at least one population before downloading.");
+        return;
+      }
+    
+      let url = `/download_tajima_d?analysis_id=${analysisId}`; // Include analysis ID
+    
+      fetch(url)
+        .then(response => {
+          if (!response.ok) {
+            return response.json().then(errData => {
+              throw new Error(errData.error);
+            });
+          }
+          return response.blob();
+        })
+        .then(blob => {
+          const fileURL = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = fileURL;
+          link.setAttribute(
+            "download",
+            `TajimaD_chr${chromosome}_${start || geneName}_${end || ""}.txt`
+          );
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(fileURL);
+        })
+        .catch(error => {
+          document.getElementById("region-plot-container").innerHTML = `
+            <div class="alert alert-danger" role="alert">
+              ${error.message}
+            </div>`;
+        });
+    }
+    
     function downloadCLR() {
       let start = document.getElementById("region_start").value.trim();
       let end = document.getElementById("region_end").value.trim();
